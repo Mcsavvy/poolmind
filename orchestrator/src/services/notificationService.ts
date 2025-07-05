@@ -82,13 +82,7 @@ class NotificationService {
   constructor() {
     // Initialize Redis publisher
     this.publisher = createClient({
-      url: config.redis.url,
-      socket: {
-        host: config.redis.host,
-        port: config.redis.port,
-      },
-      password: config.redis.password,
-      database: config.redis.db,
+      url: config.redis.url
     });
 
     this.publisher.on("error", (error: Error) => {
@@ -99,9 +93,7 @@ class NotificationService {
 
     this.publisher.on("connect", () => {
       logger.info("Redis publisher connected", {
-        host: config.redis.host,
-        port: config.redis.port,
-        db: config.redis.db,
+        redisUrl: config.redis.url.replace(/\/\/.*@/, "//********@"),
       });
     });
 
@@ -125,9 +117,7 @@ class NotificationService {
       await this.publisher.connect();
       logger.info("Notification service initialized", {
         channelName: this.channelName,
-        redisHost: config.redis.host,
-        redisPort: config.redis.port,
-        redisDb: config.redis.db,
+        redisUrl: config.redis.url.replace(/\/\/.*@/, "//********@"),
       });
     } catch (error) {
       logger.error("Failed to connect to Redis", {

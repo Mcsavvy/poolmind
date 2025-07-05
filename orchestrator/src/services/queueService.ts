@@ -45,12 +45,7 @@ class QueueService {
   constructor() {
     // Initialize transaction polling queue
     this.transactionQueue = new Bull("transaction-polling", {
-      redis: {
-        host: config.redis.host,
-        port: config.redis.port,
-        password: config.redis.password,
-        db: config.redis.db,
-      },
+      redis: config.queue.redisUrl,
       defaultJobOptions: {
         removeOnComplete: 10, // Keep last 10 completed jobs
         removeOnFail: 50, // Keep last 50 failed jobs
@@ -64,12 +59,7 @@ class QueueService {
 
     // Initialize cleanup queue for timed-out transactions
     this.cleanupQueue = new Bull("transaction-cleanup", {
-      redis: {
-        host: config.redis.host,
-        port: config.redis.port,
-        password: config.redis.password,
-        db: config.redis.db,
-      },
+      redis: config.queue.redisUrl,
       defaultJobOptions: {
         removeOnComplete: 5,
         removeOnFail: 10,
@@ -78,9 +68,7 @@ class QueueService {
     });
 
     logger.info("Queue service initialized", {
-      redisHost: config.redis.host,
-      redisPort: config.redis.port,
-      redisDb: config.redis.db,
+      redisUrl: config.queue.redisUrl.replace(/\/\/.*@/, "//********@"),
     });
   }
 
