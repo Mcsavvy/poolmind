@@ -14,12 +14,14 @@ services:
     container_name: orchestrator-app
     restart: unless-stopped
     ports:
-      - "${PORT:-3000}:3000"
+      - "${EXTERNAL_PORT}:${PORT}"
     environment:
       # Server Configuration
       NODE_ENV: ${NODE_ENV:-production}
-      PORT: 3000
-      HOST: 0.0.0.0
+      PORT: ${PORT:-3000}
+      HOST: ${HOST:-0.0.0.0}
+      EXTERNAL_PORT: ${EXTERNAL_PORT:-30001}
+      APP_URL: ${APP_URL}
       USE_HTTPS: ${USE_HTTPS:-false}
       
       # Database Configuration (external)

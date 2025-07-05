@@ -17,6 +17,7 @@ const envSchema = z.object({
     .string()
     .transform((val) => val === "true")
     .default("false"),
+  APP_URL: z.string().min(1, "APP_URL is required"),
   FRONTEND_URL: z.string().optional(),
   // Database Configuration
   MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
@@ -104,19 +105,11 @@ export const config = {
     port: env.PORT,
     host: env.HOST,
     useHttps: env.USE_HTTPS,
+    appUrl: env.APP_URL,
     isProduction: env.NODE_ENV === "production",
     isDevelopment: env.NODE_ENV === "development",
     isTest: env.NODE_ENV === "test",
     frontendUrl: env.NODE_ENV === "production" ? env.FRONTEND_URL : undefined,
-    getBaseUrl: () => {
-      if (env.USE_HTTPS) {
-        return `https://${env.HOST}:${env.PORT}`;
-      }
-      if (env.PORT === 443) {
-        return `https://${env.HOST}`;
-      }
-      return `http://${env.HOST}:${env.PORT}`;
-    },
   },
 
   // Database settings

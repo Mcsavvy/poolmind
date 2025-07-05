@@ -239,7 +239,7 @@ export class AuthController {
       const token = AuthUtils.generateToken(authenticatedUser);
 
       // Build the wallet connection URL
-      const baseUrl = config.server.frontendUrl || config.server.getBaseUrl();
+      const baseUrl = config.server.frontendUrl || config.server.appUrl;
       const connectUrl = `${baseUrl}/wallet/connect?access_token=${token}`;
 
       const response: WalletConnectUrlResponse = {
