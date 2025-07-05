@@ -1,0 +1,88 @@
+version: '3.3'
+
+services:
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # target: production
+      args:
+        NODE_ENV: ${NODE_ENV:-production}
+        STACKS_NETWORK: ${STACKS_NETWORK:-devnet}
+        POOLMIND_CONTRACT_ADDRESS: ${POOLMIND_CONTRACT_ADDRESS}
+        POOLMIND_CONTRACT_NAME: ${POOLMIND_CONTRACT_NAME}
+    container_name: orchestrator-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      # Server Configuration
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      HOST: 0.0.0.0
+      USE_HTTPS: ${USE_HTTPS:-false}
+      
+      # Database Configuration (external)
+      MONGODB_URI: ${MONGODB_URI}
+      
+      # Redis Configuration (external)
+      REDIS_URL: ${REDIS_URL}
+      
+      # Authentication Configuration
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-30d}
+      
+      # Telegram Configuration
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
+      
+      # Stacks Network Configuration
+      STACKS_NETWORK: ${STACKS_NETWORK:-devnet}
+      
+      # Smart Contract Configuration
+      POOLMIND_CONTRACT_ADDRESS: ${POOLMIND_CONTRACT_ADDRESS}
+      POOLMIND_CONTRACT_NAME: ${POOLMIND_CONTRACT_NAME}
+      POOLMIND_ADMIN_PRIVATE_KEY: ${POOLMIND_ADMIN_PRIVATE_KEY}
+      
+      # Logging Configuration
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FILE_ERROR: logs/error.log
+      LOG_FILE_COMBINED: logs/combined.log
+      LOG_FILE_AUTH: logs/auth-combined.log
+      
+      # Security Configuration
+      BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS:-12}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+      HMAC_SECRET: ${HMAC_SECRET}
+      
+      # API Configuration
+      API_VERSION: ${API_VERSION:-v1}
+      API_PREFIX: ${API_PREFIX:-/api}
+      
+      # Queue Configuration
+      QUEUE_REDIS_URL: ${QUEUE_REDIS_URL}
+      QUEUE_CONCURRENCY: ${QUEUE_CONCURRENCY:-5}
+      
+      # Contract Call Configuration
+      CONTRACT_CALL_RETRY_COUNT: ${CONTRACT_CALL_RETRY_COUNT:-3}
+      CONTRACT_CALL_RETRY_DELAY_MS: ${CONTRACT_CALL_RETRY_DELAY_MS:-1000}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - orchestrator-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "const http = require('http'); const options = { host: 'localhost', port: 3000, path: '/health', timeout: 2000 }; const req = http.request(options, (res) => { if (res.statusCode === 200) process.exit(0); else process.exit(1); }); req.on('error', () => process.exit(1)); req.end();"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      # start_period: 40s
+
+networks:
+  orchestrator-network:
+    driver: bridge
+
+volumes:
+  logs:
+  uploads: 
