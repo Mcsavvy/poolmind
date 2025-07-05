@@ -1,0 +1,16 @@
+# Dependencies
+/node_modules
+
+# Production
+/dist
+
+# Env
+.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log* 
+logs/
+guide.md
