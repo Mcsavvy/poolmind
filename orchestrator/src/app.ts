@@ -42,14 +42,17 @@ app.get("/api-docs.json", (req: Request, res: Response) => {
   res.send(swaggerSpec);
 });
 
+// Serve static files from frontend build
+app.use(express.static(frontendBuildPath));
+
 // API routes
 app.use(config.api.baseUrl, mainRouter);
 
 // Catch-all handler for client-side routing (must be last)
 app.get("/*splat", (req: Request, res: Response): void => {
-  // Don't serve index.html for API routes, docs, or if file not found
+  // Don't serve index.html for API routes, docs, or health check
   if (
-    req.path.startsWith("/api") ||
+    req.path.startsWith(config.api.baseUrl) ||
     req.path.startsWith("/api-docs") ||
     req.path.startsWith("/health")
   ) {
@@ -60,6 +63,7 @@ app.get("/*splat", (req: Request, res: Response): void => {
   // For all other routes, serve the React app
   res.sendFile(path.join(frontendBuildPath, "index.html"), (err?: Error) => {
     if (err) {
+      console.error("Error serving frontend:", err);
       res.status(500).json({ error: "Unable to serve frontend" });
     }
   });

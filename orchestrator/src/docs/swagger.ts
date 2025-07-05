@@ -16,8 +16,8 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: `http://${config.server.host}:${config.server.port}`,
-        description: "Development server",
+        url: config.server.appUrl,
+        description: config.server.isDevelopment ? "Development server" : "Production server",
       },
     ],
     components: {
