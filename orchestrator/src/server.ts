@@ -19,11 +19,11 @@ const startServer = async () => {
         `🚀 Server is running on ${config.server.host}:${config.server.port}`,
       );
       console.log(
-        `📖 API Documentation available at http://${config.server.host}:${config.server.port}/api-docs`,
+        `📖 API Documentation available at ${config.server.appUrl}/api-docs`,
       );
       console.log(`🌍 Environment: ${config.server.nodeEnv}`);
       console.log(
-        `📊 API Base URL: http://${config.server.host}:${config.server.port}${config.api.baseUrl}`,
+        `📊 API Base URL: ${config.server.appUrl}${config.api.baseUrl}`,
       );
       console.log(
         `📜 Smart Contract Address: ${config.contracts.poolmind.address}.${config.contracts.poolmind.name}`,
