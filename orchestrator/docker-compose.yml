@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      # target: production
+      target: production
       args:
         NODE_ENV: ${NODE_ENV:-production}
         STACKS_NETWORK: ${STACKS_NETWORK:-devnet}
@@ -15,6 +15,8 @@ services:
     restart: unless-stopped
     ports:
       - "${EXTERNAL_PORT}:${PORT}"
+    expose:
+      - "${EXTERNAL_PORT}"
     environment:
       # Server Configuration
       NODE_ENV: ${NODE_ENV:-production}
@@ -79,7 +81,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      # start_period: 40s
+      start_period: 40s
 
 networks:
   orchestrator-network:
@@ -87,4 +89,3 @@ networks:
 
 volumes:
   logs:
-  uploads: 
