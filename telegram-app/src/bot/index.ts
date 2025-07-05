@@ -1,10 +1,11 @@
 import { Telegraf } from 'telegraf';
 import { config } from '../config/env';
 import { logger, logError } from '../utils/logger';
-import { webSocketService } from '../services/websocket';
+import { authService } from '../services/auth';
 import {
   sessionMiddleware,
   activityMiddleware,
+  sessionSaveMiddleware,
   authMiddleware,
   rateLimitMiddleware,
   errorMiddleware,
@@ -16,25 +17,13 @@ import {
 // Import command handlers
 import { startCommand, helpCommand } from './commands/start';
 import {
-  poolsCommand,
-  poolInfoCommand,
-  joinPoolCommand,
-  handlePoolCallback,
-} from './commands/pools';
-import {
-  balanceCommand,
-  performanceCommand,
-  portfolioCommand,
-} from './commands/portfolio';
-import { contributionCommand, withdrawalCommand } from './commands/financial';
-import { tradesCommand, statusCommand, settingsCommand } from './commands/misc';
-import { adminCommand } from './commands/admin';
-
-// Import callback handlers
+  profileCommand,
+  handleProfileCallback,
+  handleWalletCallback,
+  handleToggleAllNotifications,
+  handleNotificationSettings,
+} from './commands/profile';
 import { handleMainMenuCallback } from './callbacks/menu';
-import { handleContributionCallback } from './callbacks/contribution';
-import { handleWithdrawalCallback } from './callbacks/withdrawal';
-import { handleSettingsCallback } from './callbacks/settings';
 
 class PoolMindBot {
   private bot: Telegraf<SessionContext>;
@@ -44,16 +33,16 @@ class PoolMindBot {
     this.bot = new Telegraf<SessionContext>(config.bot.token, {
       handlerTimeout: 90_000, // 90 seconds for handlers
     });
-    
+
     this.setupMiddleware();
     this.setupCommands();
     this.setupCallbackHandlers();
-    this.setupWebSocketHandlers();
     this.setupScheduledTasks();
   }
 
   private setupMiddleware(): void {
     // Apply middleware in order
+    this.bot.use(sessionSaveMiddleware); // Must be first to save session after all processing
     this.bot.use(errorMiddleware);
     this.bot.use(loggingMiddleware);
     this.bot.use(sessionMiddleware);
@@ -67,93 +56,14 @@ class PoolMindBot {
     this.bot.command('start', startCommand);
     this.bot.command('help', helpCommand);
 
-    // Pool management commands
-    this.bot.command('pools', poolsCommand);
-    this.bot.command('pool_info', ctx => poolInfoCommand(ctx));
-    this.bot.command('join', joinPoolCommand);
-
-    // Portfolio commands
-    this.bot.command('balance', balanceCommand);
-    this.bot.command('portfolio', portfolioCommand);
-    this.bot.command('performance', performanceCommand);
-
-    // Financial commands
-    this.bot.command('contribute', contributionCommand);
-    this.bot.command('withdraw', withdrawalCommand);
-
-    // Information commands
-    this.bot.command('trades', tradesCommand);
-    this.bot.command('status', statusCommand);
-    this.bot.command('settings', settingsCommand);
-
-    // Admin commands
-    this.bot.command('admin', adminCommand);
+    // Profile commands
+    this.bot.command('profile', profileCommand);
   }
 
   private setupCallbackHandlers(): void {
     // Main menu callbacks
     this.bot.action(/^main_menu$/, handleMainMenuCallback);
     this.bot.action(/^menu_(.+)$/, handleMainMenuCallback);
-
-    // Pool-related callbacks
-    this.bot.action(/^pool_(.+)$/, async ctx => {
-      const poolId = ctx.match[1];
-      await handlePoolCallback(ctx, 'pool', poolId);
-    });
-
-    this.bot.action(
-      /^(contribute|withdraw|performance|trades|participants)_(.+)$/,
-      async ctx => {
-        const action = ctx.match[1];
-        const poolId = ctx.match[2];
-        await handlePoolCallback(ctx, action, poolId);
-      }
-    );
-
-    // Pagination callbacks
-    this.bot.action(/^pools_page_(\d+)$/, async ctx => {
-      await poolsCommand(ctx);
-    });
-
-    this.bot.action(/^pools_refresh$/, poolsCommand);
-
-    // Contribution callbacks
-    this.bot.action(
-      /^contribute_amount_(.+)_(.+)$/,
-      handleContributionCallback
-    );
-    this.bot.action(/^contribute_custom_(.+)$/, handleContributionCallback);
-    this.bot.action(
-      /^confirm_contribute_(.+)_(.+)$/,
-      handleContributionCallback
-    );
-
-    // Withdrawal callbacks
-    this.bot.action(/^withdraw_amount_(.+)_(.+)$/, handleWithdrawalCallback);
-    this.bot.action(/^withdraw_custom_(.+)$/, handleWithdrawalCallback);
-    this.bot.action(/^confirm_withdraw_(.+)_(.+)$/, handleWithdrawalCallback);
-
-    // Settings callbacks
-    this.bot.action(/^settings_(.+)$/, handleSettingsCallback);
-    this.bot.action(/^toggle_(.+)$/, handleSettingsCallback);
-
-    // Portfolio callbacks
-    this.bot.action(/^portfolio_(.+)$/, async ctx => {
-      const action = ctx.match[1];
-      switch (action) {
-        case 'holdings':
-          await portfolioCommand(ctx);
-          break;
-        case 'performance':
-          await performanceCommand(ctx);
-          break;
-        case 'refresh':
-          await balanceCommand(ctx);
-          break;
-        default:
-          logger.warn(`Unknown portfolio action: ${action}`);
-      }
-    });
 
     // Utility callbacks
     this.bot.action(/^close_message$/, async ctx => {
@@ -184,98 +94,183 @@ class PoolMindBot {
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
-              [
-                {
-                  text: '🌐 Open Support Portal',
-                  url: 'https://poolmind.com/support',
-                },
-              ],
               [{ text: '🏠 Main Menu', callback_data: 'main_menu' }],
             ],
           },
         });
       } catch (error) {
         logError('Failed to edit contact support message:', error);
-        await ctx.answerCbQuery('Failed to load support information. Please try again.');
+        await ctx.answerCbQuery(
+          'Failed to load support information. Please try again.'
+        );
       }
     });
-  }
 
-  private setupWebSocketHandlers(): void {
-    // Handle real-time pool updates
-    webSocketService.on('poolUpdate', update => {
-      this.handlePoolUpdate(update);
+    // Profile callbacks
+    this.bot.action(/^profile_(.+)$/, async ctx => {
+      const action = ctx.match[1];
+      await handleProfileCallback(ctx, action);
     });
 
-    webSocketService.on('tradeExecuted', trade => {
-      this.handleTradeExecuted(trade);
+    this.bot.action(/^wallet_(.+)$/, async ctx => {
+      const action = ctx.match[1];
+      await handleWalletCallback(ctx, action);
     });
 
-    webSocketService.on('profitDistribution', distribution => {
-      this.handleProfitDistribution(distribution);
+    // Handle single notification toggle
+    this.bot.action(/^toggle_notifications$/, async ctx => {
+      await handleToggleAllNotifications(ctx);
     });
 
-    webSocketService.on('systemAlert', alert => {
-      this.handleSystemAlert(alert);
+    // Handle settings menu callbacks
+    this.bot.action(/^settings_notifications$/, async ctx => {
+      await handleNotificationSettings(ctx);
     });
-  }
 
-  private async handlePoolUpdate(update: any): Promise<void> {
-    try {
-      logger.info('Pool update received:', update);
-    } catch (error) {
-      logError('Error handling pool update:', error);
-    }
-  }
+    // Handle authenticate callback
+    this.bot.action(/^authenticate$/, async ctx => {
+      const user = ctx.from;
+      if (!user) {
+        await ctx.answerCbQuery('Unable to identify user');
+        return;
+      }
 
-  private async handleTradeExecuted(trade: any): Promise<void> {
-    try {
-      logger.info('Trade executed:', trade);
-    } catch (error) {
-      logError('Error handling trade notification:', error);
-    }
-  }
+      try {
+        logger.info(`Processing authentication request for user ${user.id}`);
 
-  private async handleProfitDistribution(distribution: any): Promise<void> {
-    try {
-      logger.info('Profit distribution:', distribution);
+        const authResult = await authService.authenticateUser(ctx);
 
-      // Notify affected users about their profit distribution
-      const notificationMessage =
-        `💰 <b>Profit Distributed</b>\n\n` +
-        `Daily profits have been distributed to your account!\n\n` +
-        `💵 Your Share: $${distribution.userShare?.toFixed(2) || '0.00'}\n` +
-        `📊 Pool: ${distribution.poolName}\n` +
-        `📈 Total Distributed: $${distribution.totalAmount.toFixed(2)}`;
+        if (authResult && authResult.success) {
+          await ctx.answerCbQuery('Authentication successful! ✅');
 
-      // Send to specific user
-      if (distribution.userId) {
-        try {
-          await this.bot.telegram.sendMessage(
-            distribution.userId,
-            notificationMessage,
+          // Send welcome message for successful authentication
+          const userName =
+            authResult.data?.user.firstName || user.first_name || 'there';
+          const welcomeMessage = authResult.data?.isNewUser
+            ? `🎉 Welcome to PoolMind, ${userName}!
+
+Your account has been created successfully. You can now:
+• 💰 Contribute to the pool
+• 📊 Track your performance  
+• 🔔 Receive trading notifications
+• 💎 Withdraw your share anytime
+
+Let's get started! 🚀`
+            : `👋 Welcome back, ${userName}!
+
+You can now:
+• 💰 Contribute to the pool
+• 📊 Track your performance  
+• 🔔 Receive trading notifications
+• 💎 Withdraw your share anytime
+
+Let's get started! 🚀`;
+
+          await ctx.editMessageText(welcomeMessage, {
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🏠 Main Menu', callback_data: 'main_menu' }],
+                [{ text: '👤 View Profile', callback_data: 'profile_refresh' }],
+              ],
+            },
+          });
+
+          if (authResult.data?.isNewUser) {
+            logger.info(`New user registered: ${user.id}`);
+          }
+        } else {
+          await ctx.answerCbQuery('Authentication failed ❌');
+          await ctx.editMessageText(
+            '❌ Authentication failed. Please try again.\n\n' +
+              'If the problem persists, please contact our support team.',
             {
-              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: '🔄 Try Again', callback_data: 'authenticate' }],
+                  [
+                    {
+                      text: '💬 Contact Support',
+                      callback_data: 'contact_support',
+                    },
+                  ],
+                ],
+              },
             }
           );
-        } catch (error) {
-          logError(
-            `Failed to send profit notification to user ${distribution.userId}:`,
-            error
-          );
         }
+      } catch (error) {
+        logger.error('Authentication error in callback handler:', error);
+        await ctx.answerCbQuery('Authentication error ❌');
+        await ctx.editMessageText(
+          '⚠️ Authentication error. Please try again.\n\n' +
+            'If the problem persists, please contact support.',
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🔄 Try Again', callback_data: 'authenticate' }],
+                [
+                  {
+                    text: '💬 Contact Support',
+                    callback_data: 'contact_support',
+                  },
+                ],
+              ],
+            },
+          }
+        );
       }
-    } catch (error) {
-      logError('Error handling profit distribution:', error);
-    }
-  }
+    });
 
-  private async handleSystemAlert(alert: any): Promise<void> {
-    try {
-      logger.info('System alert:', alert);
-    } catch (error) {
-      logError('Error handling system alert:', error);
-    }
+    // Handle text messages for profile editing
+    this.bot.on('text', async ctx => {
+      if (ctx.session?.step === 'awaiting_firstname') {
+        const firstName = ctx.message.text.trim();
+        await this.handleFirstNameInput(ctx, firstName);
+      } else if (ctx.session?.step === 'awaiting_lastname') {
+        const lastName = ctx.message.text.trim();
+        await this.handleLastNameInput(ctx, lastName);
+      }
+    });
+
+    // Handle edit name callbacks
+    this.bot.action(/^edit_firstname$/, async ctx => {
+      await ctx.answerCbQuery();
+      await ctx.editMessageText(
+        '✏️ <b>Edit First Name</b>\n\n' + 'Please type your new first name:',
+        {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '← Back to Profile', callback_data: 'profile_refresh' }],
+            ],
+          },
+        }
+      );
+      // Set session state to expect first name input
+      if (ctx.session) {
+        ctx.session.step = 'awaiting_firstname';
+      }
+    });
+
+    this.bot.action(/^edit_lastname$/, async ctx => {
+      await ctx.answerCbQuery();
+      await ctx.editMessageText(
+        '✏️ <b>Edit Last Name</b>\n\n' + 'Please type your new last name:',
+        {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '← Back to Profile', callback_data: 'profile_refresh' }],
+            ],
+          },
+        }
+      );
+      // Set session state to expect last name input
+      if (ctx.session) {
+        ctx.session.step = 'awaiting_lastname';
+      }
+    });
   }
 
   private setupScheduledTasks(): void {
@@ -324,8 +319,10 @@ class PoolMindBot {
   private async startBotWithRetry(maxRetries: number = 5): Promise<void> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        logger.info(`Attempting to start bot (attempt ${attempt}/${maxRetries})...`);
-        
+        logger.info(
+          `Attempting to start bot (attempt ${attempt}/${maxRetries})...`
+        );
+
         if (config.bot.webhookUrl) {
           // Production: Use webhooks
           await this.bot.launch({
@@ -340,13 +337,15 @@ class PoolMindBot {
           await this.bot.launch();
           logger.info('Bot started with polling');
         }
-        
+
         return; // Success, exit retry loop
       } catch (error: any) {
         if (this.isNetworkError(error)) {
           const delay = Math.min(1000 * Math.pow(2, attempt - 1), 30000); // Exponential backoff, max 30s
-          logger.warn(`Network error on attempt ${attempt}/${maxRetries}: ${error.message}`);
-          
+          logger.warn(
+            `Network error on attempt ${attempt}/${maxRetries}: ${error.message}`
+          );
+
           if (attempt < maxRetries) {
             logger.info(`Retrying in ${delay}ms...`);
             await this.sleep(delay);
@@ -366,8 +365,10 @@ class PoolMindBot {
       } catch (error: any) {
         if (this.isNetworkError(error)) {
           const delay = Math.min(2000 * attempt, 10000); // Linear backoff, max 10s
-          logger.warn(`Network error getting bot info on attempt ${attempt}/${maxRetries}: ${error.message}`);
-          
+          logger.warn(
+            `Network error getting bot info on attempt ${attempt}/${maxRetries}: ${error.message}`
+          );
+
           if (attempt < maxRetries) {
             logger.info(`Retrying getMe in ${delay}ms...`);
             await this.sleep(delay);
@@ -380,15 +381,115 @@ class PoolMindBot {
   }
 
   private isNetworkError(error: any): boolean {
-    const networkErrorCodes = ['ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN'];
-    return networkErrorCodes.includes(error.code) || 
-           error.message?.includes('timeout') ||
-           error.message?.includes('network') ||
-           error.message?.includes('fetch');
+    const networkErrorCodes = [
+      'ETIMEDOUT',
+      'ECONNRESET',
+      'ECONNREFUSED',
+      'ENOTFOUND',
+      'EAI_AGAIN',
+    ];
+    return (
+      networkErrorCodes.includes(error.code) ||
+      error.message?.includes('timeout') ||
+      error.message?.includes('network') ||
+      error.message?.includes('fetch')
+    );
   }
 
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private async handleFirstNameInput(
+    ctx: SessionContext,
+    firstName: string
+  ): Promise<void> {
+    try {
+      // Validate first name
+      if (!firstName || firstName.length < 1 || firstName.length > 50) {
+        await ctx.reply(
+          '❌ Invalid first name. Please provide a name between 1-50 characters.\n\n' +
+            '📝 Try again:'
+        );
+        return;
+      }
+
+      // Update profile
+      const updatedUser = await authService.updateUserProfile(ctx, {
+        firstName: firstName,
+      });
+
+      if (updatedUser) {
+        ctx.session.step = undefined; // Clear the step
+
+        await ctx.reply(
+          `✅ <b>First Name Updated!</b>\n\n` +
+            `Your first name has been updated to: <b>${firstName}</b>`,
+          {
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '👤 View Profile', callback_data: 'profile_refresh' }],
+                [{ text: '🏠 Main Menu', callback_data: 'main_menu' }],
+              ],
+            },
+          }
+        );
+      } else {
+        await ctx.reply(
+          '❌ Failed to update first name. Please try again later.'
+        );
+      }
+    } catch (error) {
+      logger.error('Error updating first name:', error);
+      await ctx.reply('❌ Error updating first name. Please try again.');
+    }
+  }
+
+  private async handleLastNameInput(
+    ctx: SessionContext,
+    lastName: string
+  ): Promise<void> {
+    try {
+      // Validate last name
+      if (!lastName || lastName.length < 1 || lastName.length > 50) {
+        await ctx.reply(
+          '❌ Invalid last name. Please provide a name between 1-50 characters.\n\n' +
+            '📝 Try again:'
+        );
+        return;
+      }
+
+      // Update profile
+      const updatedUser = await authService.updateUserProfile(ctx, {
+        lastName: lastName,
+      });
+
+      if (updatedUser) {
+        ctx.session.step = undefined; // Clear the step
+
+        await ctx.reply(
+          `✅ <b>Last Name Updated!</b>\n\n` +
+            `Your last name has been updated to: <b>${lastName}</b>`,
+          {
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '👤 View Profile', callback_data: 'profile_refresh' }],
+                [{ text: '🏠 Main Menu', callback_data: 'main_menu' }],
+              ],
+            },
+          }
+        );
+      } else {
+        await ctx.reply(
+          '❌ Failed to update last name. Please try again later.'
+        );
+      }
+    } catch (error) {
+      logger.error('Error updating last name:', error);
+      await ctx.reply('❌ Error updating last name. Please try again.');
+    }
   }
 
   public async stop(signal: string): Promise<void> {
@@ -397,10 +498,6 @@ class PoolMindBot {
     try {
       // Stop the bot
       this.bot.stop(signal);
-
-      // Disconnect WebSocket
-      webSocketService.disconnect();
-
       logger.info('Bot stopped gracefully');
       process.exit(0);
     } catch (error) {
