@@ -1,0 +1,18 @@
+---
+id: 0
+name: Mainnet deployment
+network: mainnet
+stacks-node: "https://api.hiro.so"
+bitcoin-node: "http://blockstack:blockstacksystem@bitcoin.blockstack.com:8332"
+plan:
+  batches:
+    - id: 0
+      transactions:
+        - contract-publish:
+            contract-name: poolmind
+            expected-sender: SP2T9D1D9EJWR3DGSJKBNSRMS1XT8RGWAFYNG563W
+            cost: 122360
+            path: contracts/poolmind.clar
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.1"

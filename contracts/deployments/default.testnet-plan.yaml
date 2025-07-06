@@ -1,0 +1,29 @@
+---
+id: 0
+name: Testnet deployment
+network: testnet
+stacks-node: "https://api.testnet.hiro.so"
+bitcoin-node: "http://blockstack:blockstacksystem@bitcoind.testnet.stacks.co:18332"
+plan:
+  batches:
+    - id: 0
+      transactions:
+        - requirement-publish:
+            contract-id: SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard
+            remap-sender: ST2T9D1D9EJWR3DGSJKBNSRMS1XT8RGWAFZX33XQB
+            remap-principals:
+              SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE: ST2T9D1D9EJWR3DGSJKBNSRMS1XT8RGWAFZX33XQB
+            cost: 8400
+            path: "./.cache/requirements/SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.clar"
+            clarity-version: 1
+      epoch: "2.0"
+    - id: 1
+      transactions:
+        - contract-publish:
+            contract-name: poolmind-v1-0
+            expected-sender: ST2T9D1D9EJWR3DGSJKBNSRMS1XT8RGWAFZX33XQB
+            cost: 125490
+            path: contracts/poolmind-v1-0.clar
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.1"
