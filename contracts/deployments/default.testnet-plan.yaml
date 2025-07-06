@@ -20,10 +20,10 @@ plan:
     - id: 1
       transactions:
         - contract-publish:
-            contract-name: poolmind-v1-0
+            contract-name: poolmind-v1-2
             expected-sender: ST2T9D1D9EJWR3DGSJKBNSRMS1XT8RGWAFZX33XQB
-            cost: 125490
-            path: contracts/poolmind-v1-0.clar
+            cost: 125540
+            path: contracts/poolmind-v1-2.clar
             anchor-block-only: true
             clarity-version: 3
       epoch: "3.1"

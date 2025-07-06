@@ -68,8 +68,8 @@ plan:
     - id: 1
       transactions:
         - emulated-contract-publish:
-            contract-name: poolmind-v1-0
+            contract-name: poolmind-v1-2
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/poolmind-v1-0.clar
+            path: contracts/poolmind-v1-2.clar
             clarity-version: 3
       epoch: "3.1"

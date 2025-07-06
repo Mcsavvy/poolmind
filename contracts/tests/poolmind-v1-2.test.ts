@@ -67,7 +67,7 @@ describe("PoolMind Contract Tests", () => {
         [],
         deployer
       );
-      
+
       expect(contractState.result).toBeOk(
         Cl.tuple({
           admin: Cl.principal(deployer),
@@ -76,7 +76,7 @@ describe("PoolMind Contract Tests", () => {
           nav: Cl.uint(1000000),
           "entry-fee": Cl.uint(5),
           "exit-fee": Cl.uint(5),
-          "stx-balance": Cl.uint(100000000000000)
+          "stx-balance": Cl.uint(100000000000000),
         })
       );
     });
@@ -86,14 +86,31 @@ describe("PoolMind Contract Tests", () => {
   describe("SIP-010 Token Standard", () => {
     it("should return correct token metadata", () => {
       const name = simnet.callReadOnlyFn("poolmind", "get-name", [], deployer);
-      const symbol = simnet.callReadOnlyFn("poolmind", "get-symbol", [], deployer);
-      const decimals = simnet.callReadOnlyFn("poolmind", "get-decimals", [], deployer);
-      const tokenUri = simnet.callReadOnlyFn("poolmind", "get-token-uri", [], deployer);
-      
+      const symbol = simnet.callReadOnlyFn(
+        "poolmind",
+        "get-symbol",
+        [],
+        deployer
+      );
+      const decimals = simnet.callReadOnlyFn(
+        "poolmind",
+        "get-decimals",
+        [],
+        deployer
+      );
+      const tokenUri = simnet.callReadOnlyFn(
+        "poolmind",
+        "get-token-uri",
+        [],
+        deployer
+      );
+
       expect(name.result).toBeOk(Cl.stringAscii("PoolMind"));
       expect(symbol.result).toBeOk(Cl.stringAscii("PLMD"));
       expect(decimals.result).toBeOk(Cl.uint(6));
-      expect(tokenUri.result).toBeOk(Cl.some(Cl.stringUtf8("https://poolmind.finance/token-metadata.json")));
+      expect(tokenUri.result).toBeOk(
+        Cl.some(Cl.stringUtf8("https://poolmind.futurdevs.com/plmd.metadata.json"))
+      );
     });
   });
 
@@ -121,7 +138,7 @@ describe("PoolMind Contract Tests", () => {
 
     it("should allow admin to pause/unpause contract", () => {
       setupAdmin();
-      
+
       const pauseResult = simnet.callPublicFn(
         "poolmind",
         "set-paused",
@@ -151,7 +168,7 @@ describe("PoolMind Contract Tests", () => {
 
     it("should allow admin to set token transferability", () => {
       setupAdmin();
-      
+
       const result = simnet.callPublicFn(
         "poolmind",
         "set-token-transferable",
@@ -163,7 +180,7 @@ describe("PoolMind Contract Tests", () => {
 
     it("should allow admin to set entry fee rate", () => {
       setupAdmin();
-      
+
       const result = simnet.callPublicFn(
         "poolmind",
         "set-entry-fee-rate",
@@ -175,7 +192,7 @@ describe("PoolMind Contract Tests", () => {
 
     it("should allow admin to set exit fee rate", () => {
       setupAdmin();
-      
+
       const result = simnet.callPublicFn(
         "poolmind",
         "set-exit-fee-rate",
@@ -187,7 +204,7 @@ describe("PoolMind Contract Tests", () => {
 
     it("should allow admin to update NAV", () => {
       setupAdmin();
-      
+
       const result = simnet.callPublicFn(
         "poolmind",
         "update-nav",
@@ -199,7 +216,7 @@ describe("PoolMind Contract Tests", () => {
 
     it("should allow admin to withdraw STX and deposit back", () => {
       setupAdmin();
-      
+
       // Admin withdraw
       const withdrawResult = simnet.callPublicFn(
         "poolmind",
@@ -224,7 +241,7 @@ describe("PoolMind Contract Tests", () => {
   describe("User Deposits and Withdrawals", () => {
     it("should allow user to deposit STX and receive PLMD tokens", () => {
       setupNAV();
-      
+
       const depositAmount = 10000000; // 10 STX
       const result = simnet.callPublicFn(
         "poolmind",
@@ -232,7 +249,7 @@ describe("PoolMind Contract Tests", () => {
         [Cl.uint(depositAmount)],
         address1
       );
-      
+
       expect(result.result).toBeOk(Cl.uint(9950000)); // After 0.5% fee
 
       // Check balance
@@ -248,14 +265,9 @@ describe("PoolMind Contract Tests", () => {
 
     it("should reject deposits when contract is paused", () => {
       setupNAV();
-      
+
       // Pause the contract
-      simnet.callPublicFn(
-        "poolmind",
-        "set-paused",
-        [Cl.bool(true)],
-        deployer
-      );
+      simnet.callPublicFn("poolmind", "set-paused", [Cl.bool(true)], deployer);
 
       const result = simnet.callPublicFn(
         "poolmind",
@@ -268,7 +280,7 @@ describe("PoolMind Contract Tests", () => {
 
     it("should reject zero deposits", () => {
       setupNAV();
-      
+
       const result = simnet.callPublicFn(
         "poolmind",
         "deposit",
@@ -281,7 +293,7 @@ describe("PoolMind Contract Tests", () => {
     it("should reject deposits when NAV is not positive", () => {
       setupAdmin();
       setupNAV(0);
-      
+
       const result = simnet.callPublicFn(
         "poolmind",
         "deposit",
@@ -293,14 +305,9 @@ describe("PoolMind Contract Tests", () => {
 
     it("should allow user to withdraw STX by burning PLMD tokens", () => {
       setupNAV();
-      
+
       // First deposit to get tokens
-      simnet.callPublicFn(
-        "poolmind",
-        "deposit",
-        [Cl.uint(10000000)],
-        address1
-      );
+      simnet.callPublicFn("poolmind", "deposit", [Cl.uint(10000000)], address1);
 
       const plmdBalance = simnet.callReadOnlyFn(
         "poolmind",
@@ -319,7 +326,7 @@ describe("PoolMind Contract Tests", () => {
       );
 
       // original balance minus 0.5% exit fee
-      expect(withdrawResult.result).toBeOk(Cl.uint(9950000 - (9950000 * 0.005)));
+      expect(withdrawResult.result).toBeOk(Cl.uint(9950000 - 9950000 * 0.005));
 
       const plmdBalanceAfterWithdraw = simnet.callReadOnlyFn(
         "poolmind",
@@ -332,7 +339,7 @@ describe("PoolMind Contract Tests", () => {
 
     it("should reject zero withdrawals", () => {
       setupNAV();
-      
+
       const result = simnet.callPublicFn(
         "poolmind",
         "withdraw",
@@ -344,7 +351,7 @@ describe("PoolMind Contract Tests", () => {
 
     it("should reject withdrawals when user has insufficient PLMD token balance", () => {
       setupNAV();
-      
+
       // Try to withdraw tokens without having any
       const result = simnet.callPublicFn(
         "poolmind",
@@ -357,11 +364,11 @@ describe("PoolMind Contract Tests", () => {
 
     it("should reject admin withdrawal when contract has insufficient STX balance", () => {
       setupAdmin();
-      
+
       // Try to withdraw more STX than the contract has
       const contractBalance = 100000000000000; // Default contract balance
       const excessiveAmount = contractBalance + 1000000; // More than available
-      
+
       const result = simnet.callPublicFn(
         "poolmind",
         "withdraw-to-admin",
@@ -376,20 +383,20 @@ describe("PoolMind Contract Tests", () => {
   describe("Token Transfers", () => {
     it("should reject transfers when transferability is disabled", () => {
       setupNAV();
-      
+
       // First get some tokens
-      simnet.callPublicFn(
-        "poolmind",
-        "deposit",
-        [Cl.uint(10000000)],
-        address1
-      );
+      simnet.callPublicFn("poolmind", "deposit", [Cl.uint(10000000)], address1);
 
       // Try to transfer (should fail as transfers are disabled by default)
       const transferResult = simnet.callPublicFn(
         "poolmind",
         "transfer",
-        [Cl.uint(1000000), Cl.principal(address1), Cl.principal(address2), Cl.none()],
+        [
+          Cl.uint(1000000),
+          Cl.principal(address1),
+          Cl.principal(address2),
+          Cl.none(),
+        ],
         address1
       );
       expect(transferResult.result).toBeErr(Cl.uint(ERR_TRANSFERS_DISABLED));
@@ -397,7 +404,7 @@ describe("PoolMind Contract Tests", () => {
 
     it("should allow transfers when transferability is enabled", () => {
       setupNAV();
-      
+
       // Enable transfers
       simnet.callPublicFn(
         "poolmind",
@@ -407,18 +414,18 @@ describe("PoolMind Contract Tests", () => {
       );
 
       // Get some tokens
-      simnet.callPublicFn(
-        "poolmind",
-        "deposit",
-        [Cl.uint(10000000)],
-        address1
-      );
+      simnet.callPublicFn("poolmind", "deposit", [Cl.uint(10000000)], address1);
 
       // Transfer tokens
       const transferResult = simnet.callPublicFn(
         "poolmind",
         "transfer",
-        [Cl.uint(1000000), Cl.principal(address1), Cl.principal(address2), Cl.none()],
+        [
+          Cl.uint(1000000),
+          Cl.principal(address1),
+          Cl.principal(address2),
+          Cl.none(),
+        ],
         address1
       );
       expect(transferResult.result).toBeOk(Cl.bool(true));
@@ -426,7 +433,7 @@ describe("PoolMind Contract Tests", () => {
 
     it("should reject unauthorized transfers", () => {
       setupNAV();
-      
+
       // Enable transfers
       simnet.callPublicFn(
         "poolmind",
@@ -436,18 +443,18 @@ describe("PoolMind Contract Tests", () => {
       );
 
       // Get some tokens for address1
-      simnet.callPublicFn(
-        "poolmind",
-        "deposit",
-        [Cl.uint(10000000)],
-        address1
-      );
+      simnet.callPublicFn("poolmind", "deposit", [Cl.uint(10000000)], address1);
 
       // Try to transfer from address1 but call from address2 (should fail)
       const transferResult = simnet.callPublicFn(
         "poolmind",
         "transfer",
-        [Cl.uint(1000000), Cl.principal(address1), Cl.principal(address2), Cl.none()],
+        [
+          Cl.uint(1000000),
+          Cl.principal(address1),
+          Cl.principal(address2),
+          Cl.none(),
+        ],
         address2
       );
       expect(transferResult.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
@@ -455,7 +462,7 @@ describe("PoolMind Contract Tests", () => {
 
     it("should reject self-transfers", () => {
       setupNAV();
-      
+
       // Enable transfers
       simnet.callPublicFn(
         "poolmind",
@@ -465,18 +472,18 @@ describe("PoolMind Contract Tests", () => {
       );
 
       // Get some tokens
-      simnet.callPublicFn(
-        "poolmind",
-        "deposit",
-        [Cl.uint(10000000)],
-        address1
-      );
+      simnet.callPublicFn("poolmind", "deposit", [Cl.uint(10000000)], address1);
 
       // Try to transfer to self
       const transferResult = simnet.callPublicFn(
         "poolmind",
         "transfer",
-        [Cl.uint(1000000), Cl.principal(address1), Cl.principal(address1), Cl.none()],
+        [
+          Cl.uint(1000000),
+          Cl.principal(address1),
+          Cl.principal(address1),
+          Cl.none(),
+        ],
         address1
       );
       expect(transferResult.result).toBeErr(Cl.uint(ERR_SELF_TRANSFER));
@@ -484,14 +491,9 @@ describe("PoolMind Contract Tests", () => {
 
     it("should correctly track token balances", () => {
       setupNAV();
-      
+
       // Deposit tokens
-      simnet.callPublicFn(
-        "poolmind",
-        "deposit",
-        [Cl.uint(10000000)],
-        address1
-      );
+      simnet.callPublicFn("poolmind", "deposit", [Cl.uint(10000000)], address1);
 
       // Check balance
       const balance = simnet.callReadOnlyFn(
@@ -500,8 +502,8 @@ describe("PoolMind Contract Tests", () => {
         [Cl.principal(address1)],
         deployer
       );
-      
+
       expect(balance.result).toBeOk(Cl.uint(9950000)); // 10 STX minus 0.5% fee
     });
   });
-}); 
+});

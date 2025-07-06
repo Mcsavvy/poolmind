@@ -119,7 +119,7 @@
 ;; @desc Gets the URI for the token's metadata.
 ;; @returns (response (optional (string-utf8 256)))
 (define-read-only (get-token-uri)
-  (ok (some u"https://poolmind.finance/token-metadata.json"))
+  (ok (some u"https://poolmind.futurdevs.com/plmd.metadata.json"))
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
