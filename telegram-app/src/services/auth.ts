@@ -206,8 +206,8 @@ class AuthService {
     ctx: SessionContext,
     profileData: { firstName?: string; lastName?: string; preferences?: any }
   ): Promise<User | null> {
-    if (!this.isAuthenticated(ctx)) {
-      logger.error('User not authenticated, cannot update profile');
+    if (!this.ensureApiToken(ctx)) {
+      logger.error('Cannot update profile - authentication token not available');
       return null;
     }
 
