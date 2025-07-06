@@ -1,34 +1,32 @@
 # PoolMind Telegram Bot
 
-A comprehensive Telegram interface for the PoolMind Arbitrage Trading Platform. This bot provides both command-based and web app interfaces for users to participate in pooled cross-exchange arbitrage trading.
+A Telegram bot interface for the PoolMind Arbitrage Trading Platform, built with TypeScript and Telegraf.
 
-## 🌟 Features
+## 🚀 Features
 
-### Dual Interface System
-- **Command-Based Interface**: Traditional Telegram bot commands
-- **Web App Interface**: Rich UI with charts, forms, and real-time updates
+- **Real-time Trading Alerts**: Get instant notifications about arbitrage opportunities
+- **Portfolio Management**: Monitor your trading positions and performance
+- **Interactive Commands**: Easy-to-use commands for trading operations
+- **Rate Limiting**: Built-in protection against spam and abuse
+- **Redis Session Management**: Persistent user sessions and data storage
+- **Comprehensive Logging**: Detailed logging with Winston
+- **Error Handling**: Robust error handling and recovery mechanisms
 
-### Core Functionality
-- **Pool Management**: Browse, join, and manage trading pool investments
-- **Real-Time Trading**: Live arbitrage trade notifications and updates
-- **Portfolio Tracking**: Comprehensive portfolio analytics and performance metrics
-- **Financial Operations**: Secure contributions and withdrawals
-- **Notifications**: Configurable alerts for trades, profits, and system updates
+## 📋 Prerequisites
 
-## 🚀 Quick Start
+- Node.js 20.x or higher
+- Redis server
+- Telegram Bot Token (from [@BotFather](https://t.me/botfather))
+- PoolMind API access
 
-### Prerequisites
-- Node.js 18+ 
-- Redis (for session storage)
-- PostgreSQL (for data persistence)
-- Telegram Bot Token
+## 🛠️ Installation
 
-### Installation
+### Local Development
 
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd poolmind-telegram-app
+   cd telegram-app
    ```
 
 2. **Install dependencies**
@@ -36,229 +34,193 @@ A comprehensive Telegram interface for the PoolMind Arbitrage Trading Platform. 
    npm install
    ```
 
-3. **Environment Configuration**
+3. **Configure environment variables**
    ```bash
    cp env.example .env
-   # Edit .env with your configuration
+   ```
+   
+   Edit `.env` with your configuration:
+   ```env
+   BOT_TOKEN=your_telegram_bot_token_here
+   REDIS_URL=redis://localhost:6379
+   API_BASE_URL=https://api.poolmind.com/v1
+   API_KEY=your_api_key_here
+   # ... other variables
    ```
 
-4. **Build the project**
+4. **Start Redis server**
    ```bash
-   npm run build
+   # On Ubuntu/Debian
+   sudo systemctl start redis-server
+   
+   # On macOS with Homebrew
+   brew services start redis
+   
+   # Using Docker
+   docker run -d -p 6379:6379 redis:alpine
    ```
 
-5. **Start the bot**
+5. **Run the application**
    ```bash
-   # Development
+   # Development mode with hot reload
    npm run dev
    
-   # Production
+   # Production build and start
+   npm run build
    npm start
    ```
 
-## ⚙️ Configuration
+### Docker Deployment
+
+1. **Build the Docker image**
+   ```bash
+   docker build -t poolmind-telegram-bot .
+   ```
+
+2. **Run with Docker Compose** (recommended)
+   
+   Create a `docker-compose.yml` file:
+   ```yaml
+   version: '3.8'
+   
+   services:
+     telegram-bot:
+       build: .
+       environment:
+         - BOT_TOKEN=${BOT_TOKEN}
+         - REDIS_URL=redis://redis:6379
+         - API_BASE_URL=${API_BASE_URL}
+         - API_KEY=${API_KEY}
+         - NODE_ENV=production
+       depends_on:
+         - redis
+       restart: unless-stopped
+   
+     redis:
+       image: redis:7-alpine
+       restart: unless-stopped
+       volumes:
+         - redis_data:/data
+   
+   volumes:
+     redis_data:
+   ```
+   
+   Run with:
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **Run standalone Docker container**
+   ```bash
+   docker run -d \
+     --name poolmind-bot \
+     -e BOT_TOKEN="your_bot_token" \
+     -e REDIS_URL="redis://your-redis-host:6379" \
+     -e API_BASE_URL="https://api.poolmind.com/v1" \
+     -e API_KEY="your_api_key" \
+     -p 3000:3000 \
+     poolmind-telegram-bot
+   ```
+
+## 🏗️ Project Structure
+
+```
+src/
+├── bot/                    # Bot implementation
+│   ├── callbacks/         # Callback query handlers
+│   ├── commands/          # Bot commands
+│   ├── keyboards/         # Inline keyboards
+│   ├── middleware/        # Bot middleware
+│   └── scenes/           # Conversation scenes
+├── config/               # Configuration files
+├── services/             # External service integrations
+├── types/                # TypeScript type definitions
+└── utils/                # Utility functions
+```
+
+## 🔧 Configuration
 
 ### Environment Variables
 
-Create a `.env` file with the following variables:
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `BOT_TOKEN` | Telegram Bot API token | ✅ | - |
+| `PORT` | Server port | ❌ | 3000 |
+| `NODE_ENV` | Environment mode | ❌ | development |
+| `REDIS_URL` | Redis connection URL | ✅ | - |
+| `API_BASE_URL` | PoolMind API base URL | ✅ | - |
+| `API_KEY` | PoolMind API key | ✅ | - |
+| `JWT_SECRET` | JWT signing secret | ✅ | - |
+| `ENCRYPTION_KEY` | Data encryption key | ✅ | - |
+| `RATE_LIMIT_WINDOW` | Rate limit window (ms) | ❌ | 900000 |
+| `RATE_LIMIT_MAX` | Max requests per window | ❌ | 100 |
+| `LOG_LEVEL` | Logging level | ❌ | info |
+| `LOG_FILE_PATH` | Log file path | ❌ | ./logs/app.log |
 
-```bash
-# Telegram Bot Configuration
-BOT_TOKEN=your_telegram_bot_token_here
-WEBHOOK_URL=https://your-domain.com/webhook
+## 🤖 Bot Commands
 
-# Server Configuration
-PORT=3000
-NODE_ENV=development
+- `/start` - Initialize the bot and user registration
+- `/help` - Display available commands and features
+- `/portfolio` - View your current trading portfolio
+- `/alerts` - Configure trading alerts and notifications
+- `/settings` - Manage bot preferences and configurations
+- `/status` - Check bot and API connection status
 
-# Database Configuration
-REDIS_URL=redis://localhost:6379
-DATABASE_URL=postgresql://username:password@localhost:5432/poolmind
+## 🧪 Development
 
-# API Configuration
-API_BASE_URL=https://api.poolmind.com/v1
-API_KEY=your_api_key_here
+### Available Scripts
 
-# Security
-JWT_SECRET=your_jwt_secret_here
-ENCRYPTION_KEY=your_encryption_key_here
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build the TypeScript project
+- `npm start` - Start the production server
+- `npm test` - Run test suite
+- `npm run lint` - Lint TypeScript files
+- `npm run lint:fix` - Fix linting issues automatically
+- `npm run format` - Format code with Prettier
+- `npm run format:check` - Check code formatting
 
-# WebSocket Configuration
-WS_PORT=3001
+### Code Style
 
-# Brand Colors (PoolMind)
-PRIMARY_COLOR=#0B1F3A
-SECONDARY_COLOR=#3AA6FF
-ACCENT_COLOR=#D4AF37
+This project uses:
+- **ESLint** for code linting
+- **Prettier** for code formatting
+- **TypeScript** for type safety
 
-# Rate Limiting
-RATE_LIMIT_WINDOW=900000
-RATE_LIMIT_MAX=100
+Run `npm run lint:fix && npm run format` before committing.
 
-# Logging
-LOG_LEVEL=info
-LOG_FILE_PATH=./logs/app.log
-```
+## 📝 Logging
 
-## 🏗️ Architecture
+The application uses Winston for structured logging:
 
-### Project Structure
-```
-src/
-├── bot/
-│   ├── commands/           # Command handlers
-│   ├── scenes/            # Multi-step interactions
-│   ├── middleware/        # Authentication, logging
-│   ├── keyboards/         # Inline keyboards
-│   └── callbacks/         # Callback query handlers
-├── webapp/
-│   ├── components/        # React components
-│   ├── pages/            # Main app pages
-│   ├── hooks/            # Custom React hooks
-│   └── utils/            # Utility functions
-├── services/
-│   ├── api.ts            # Backend API client
-│   ├── websocket.ts      # Real-time connections
-│   └── notifications.ts  # Push notifications
-├── types/
-│   └── index.ts          # TypeScript interfaces
-├── config/
-│   └── env.ts            # Environment configuration
-└── utils/
-    └── logger.ts         # Logging utilities
-```
+- **Console output**: Formatted logs in development
+- **File output**: JSON logs written to `LOG_FILE_PATH`
+- **Log levels**: error, warn, info, debug
 
-### Key Components
+## 🔒 Security Features
 
-- **Bot Engine**: Built with Telegraf framework
-- **Session Management**: Redis-backed session storage
-- **Real-Time Updates**: WebSocket integration for live data
-- **API Client**: Axios-based HTTP client with retry logic
-- **Middleware Chain**: Authentication, rate limiting, error handling
-- **Logging**: Winston-based structured logging
-
-## 📱 Bot Commands
-
-### User Commands
-- `/start` - Welcome message and pool overview
-- `/pools` - List available trading pools
-- `/join <pool_id>` - Join a specific pool
-- `/contribute <amount>` - Add funds to current pool
-- `/balance` - Show portfolio and shares
-- `/withdraw <amount>` - Request withdrawal
-- `/performance` - Personal performance metrics
-- `/pool_info <pool_id>` - Detailed pool information
-- `/trades` - Recent trading activity
-- `/settings` - User preferences and notifications
-- `/help` - Command reference
-
-### Admin Commands
-- `/admin` - Admin panel access
-- `/create_pool` - Create new trading pool
-- `/configure <pool_id>` - Pool configuration
-- `/analytics <pool_id>` - Pool analytics dashboard
-
-## 🔐 Security Features
-
-### Authentication & Authorization
-- Telegram user verification
-- Session-based authentication
-- Role-based access control
-- Rate limiting per user
-
-### Data Protection
-- Input validation and sanitization
-- Encrypted data transmission
-- Secure API key management
-- CSRF protection for web components
-
-## 📊 Real-Time Features
-
-### WebSocket Integration
-- Live trading notifications
-- NAV updates
-- Pool status changes
-- Profit distributions
-- System announcements
-
-### Notification System
-- Trade execution alerts
-- Profit distribution notifications
-- Pool updates
-- System maintenance alerts
-- Achievement notifications
+- **Rate limiting**: Prevents spam and abuse
+- **Input validation**: Joi schema validation
+- **Error handling**: Secure error messages
+- **Session management**: Redis-based session storage
+- **Environment isolation**: Separate configs per environment
 
 ## 🚀 Deployment
 
-### Development
-```bash
-npm run dev
-```
+### Production Checklist
 
-### Production with Docker
-```bash
-# Build image
-docker build -t poolmind-telegram-bot .
+- [ ] Set `NODE_ENV=production`
+- [ ] Configure secure Redis instance
+- [ ] Set strong `JWT_SECRET` and `ENCRYPTION_KEY`
+- [ ] Configure proper logging levels
+- [ ] Set up monitoring and health checks
+- [ ] Configure reverse proxy (nginx/Apache)
+- [ ] Set up SSL certificates
+- [ ] Configure firewall rules
 
-# Run container
-docker run -d \
-  --name poolmind-bot \
-  --env-file .env \
-  -p 3000:3000 \
-  poolmind-telegram-bot
-```
+### Health Monitoring
 
-### Production with PM2
-```bash
-# Install PM2
-npm install -g pm2
-
-# Start application
-pm2 start dist/index.js --name poolmind-bot
-
-# Monitor
-pm2 monit
-
-# Auto-restart on server reboot
-pm2 startup
-pm2 save
-```
-
-## 🧪 Testing
-
-```bash
-# Run tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run linting
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-```
-
-## 📈 Monitoring & Logging
-
-### Logging Levels
-- `error` - Error conditions
-- `warn` - Warning conditions
-- `info` - Informational messages
-- `debug` - Debug messages
-
-### Log Files
-- `logs/error.log` - Error logs only
-- `logs/combined.log` - All log levels
-- `logs/exceptions.log` - Uncaught exceptions
-- `logs/rejections.log` - Unhandled promise rejections
-
-### Health Checks
-- Bot responsiveness check every 5 minutes
-- WebSocket connection monitoring
-- API endpoint health validation
-- Session store connectivity
+The application includes health check endpoints and proper signal handling for graceful shutdowns.
 
 ## 🤝 Contributing
 
@@ -268,50 +230,17 @@ npm run lint:fix
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### Code Style
-- Use TypeScript for type safety
-- Follow ESLint configuration
-- Write comprehensive tests
-- Document public APIs
-- Use conventional commit messages
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
-### Documentation
-- [API Documentation](https://docs.poolmind.com/api)
-- [Bot Commands Guide](https://docs.poolmind.com/bot)
-- [Web App Guide](https://docs.poolmind.com/webapp)
-
-### Contact
-- 📧 Email: support@poolmind.com
-- 💬 Telegram: @poolmind_support
-- 🌐 Website: https://poolmind.com
-- 📱 Status Page: https://status.poolmind.com
-
-## 🎯 Roadmap
-
-### Upcoming Features
-- [ ] Advanced charting in Web App
-- [ ] Multi-language support
-- [ ] Voice command integration
-- [ ] Mobile push notifications
-- [ ] Advanced portfolio analytics
-- [ ] Social trading features
-- [ ] Automated trading strategies
-- [ ] Integration with external wallets
-
-### Version History
-- **v1.0.0** - Initial release with core functionality
-- **v1.1.0** - Web App integration
-- **v1.2.0** - Real-time WebSocket updates
-- **v1.3.0** - Advanced portfolio analytics
+For support and questions:
+- Create an issue in this repository
+- Contact the PoolMind team
+- Check the [documentation](https://docs.poolmind.com)
 
 ---
 
-**Built with ❤️ by the PoolMind Team**
-
-*Making arbitrage trading accessible to everyone.* 
+**PoolMind Team** - Building the future of arbitrage trading 

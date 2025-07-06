@@ -1,131 +1,64 @@
 // User and Authentication Types
 export interface User {
-  id: number;
+  id?: string;
   telegramId: number;
   username?: string | undefined;
   firstName?: string | undefined;
   lastName?: string | undefined;
+  walletAddress?: string;
+  kycStatus?: 'pending' | 'approved' | 'rejected';
+  isActive?: boolean;
   isKycVerified: boolean;
   preferences: UserPreferences;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface UserPreferences {
-  notifications: {
-    tradeAlerts: boolean;
-    profitDistributions: boolean;
-    poolUpdates: boolean;
-    systemAlerts: boolean;
+// Telegram Authentication Request (from API schema)
+export interface TelegramAuthRequest {
+  chatId: string;
+  user: {
+    id: number;
+    username: string;
+    first_name?: string;
+    last_name?: string;
+    language_code?: string;
   };
+  auth_date?: number;
+  hash?: string;
+}
+
+// Authentication Response (from API schema)
+export interface AuthResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    user: User;
+    token: string;
+    isNewUser: boolean;
+  };
+}
+
+// Update Profile Request (from API schema)
+export interface UpdateProfileRequest {
+  firstName?: string;
+  lastName?: string;
+  preferences?: {
+    notifications?: boolean;
+    language?: string;
+  };
+}
+
+// Link Wallet Request (from API schema)
+export interface LinkWalletRequest {
+  walletAddress: string;
+  signature?: string;
+}
+
+export interface UserPreferences {
+  notifications: boolean;
   language: string;
   timezone: string;
-}
-
-// Pool Types
-export interface Pool {
-  id: string;
-  name: string;
-  description: string;
-  totalValue: number;
-  participantCount: number;
-  minimumContribution: number;
-  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
-  performanceMetrics: PoolPerformance;
-  status: 'ACTIVE' | 'PAUSED' | 'CLOSED';
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface PoolPerformance {
-  nav: number;
-  dailyReturn: number;
-  weeklyReturn: number;
-  monthlyReturn: number;
-  yearlyReturn: number;
-  sharpeRatio: number;
-  maxDrawdown: number;
-  totalTrades: number;
-  winRate: number;
-}
-
-// Portfolio Types
-export interface Portfolio {
-  userId: number;
-  poolId: string;
-  shares: number;
-  totalContributed: number;
-  currentValue: number;
-  unrealizedPnL: number;
-  realizedPnL: number;
-  contributions: Contribution[];
-  withdrawals: Withdrawal[];
-}
-
-export interface Contribution {
-  id: string;
-  userId: number;
-  poolId: string;
-  amount: number;
-  shares: number;
-  navAtContribution: number;
-  status: 'PENDING' | 'CONFIRMED' | 'FAILED';
-  timestamp: Date;
-}
-
-export interface Withdrawal {
-  id: string;
-  userId: number;
-  poolId: string;
-  amount: number;
-  shares: number;
-  navAtWithdrawal: number;
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
-  requestedAt: Date;
-  processedAt?: Date;
-}
-
-// Trading Types
-export interface Trade {
-  id: string;
-  poolId: string;
-  fromExchange: string;
-  toExchange: string;
-  asset: string;
-  quantity: number;
-  buyPrice: number;
-  sellPrice: number;
-  profit: number;
-  profitPercentage: number;
-  executedAt: Date;
-  status: 'EXECUTED' | 'FAILED' | 'PARTIAL';
-}
-
-export interface TradingActivity {
-  poolId: string;
-  trades: Trade[];
-  totalProfit: number;
-  totalVolume: number;
-  successRate: number;
-  period: string;
-}
-
-// WebSocket Types
-export interface PoolUpdate {
-  type:
-    | 'nav_update'
-    | 'trade_executed'
-    | 'participant_joined'
-    | 'profit_distribution';
-  poolId: string;
-  data: any;
-  timestamp: number;
-}
-
-export interface WebSocketMessage {
-  event: string;
-  data: any;
-  timestamp: number;
 }
 
 // Session Types - Fixed to allow undefined properly
@@ -135,6 +68,11 @@ export interface SessionData {
   step?: string | undefined;
   tempData?: any;
   lastActivity?: Date | undefined;
+  // Authentication data
+  isAuthenticated?: boolean;
+  jwtToken?: string;
+  user?: User;
+  authTimestamp?: Date;
 }
 
 // API Response Types
@@ -154,83 +92,67 @@ export interface PaginatedResponse<T> {
   hasPrev: boolean;
 }
 
-// Notification Types
-export interface Notification {
-  id: string;
-  userId: number;
-  type: 'TRADE_ALERT' | 'PROFIT_DISTRIBUTION' | 'POOL_UPDATE' | 'SYSTEM_ALERT';
-  title: string;
-  message: string;
-  data?: any;
-  read: boolean;
-  createdAt: Date;
+// Notification Event Types
+export enum NotificationEventType {
+  WALLET_LINKED = 'wallet_linked',
+  WALLET_UNLINKED = 'wallet_unlinked',
+  DEPOSIT_SUCCESS = 'deposit_success',
+  WITHDRAWAL_SUCCESS = 'withdrawal_success',
 }
 
-// Admin Types
-export interface AdminUser {
-  userId: number;
-  role: 'ADMIN' | 'POOL_MANAGER';
-  permissions: string[];
-  managedPools?: string[];
-}
-
-// Chart Data Types
-export interface ChartDataPoint {
+// Base notification event interface
+export interface BaseNotificationEvent {
+  eventType: NotificationEventType;
+  telegramId: string;
+  userId: string;
   timestamp: Date;
-  value: number;
-  label?: string;
 }
 
-export interface PerformanceChart {
-  poolId: string;
-  timeframe: '1D' | '7D' | '30D' | '90D' | '1Y';
-  data: ChartDataPoint[];
+// Wallet linking/unlinking events
+export interface WalletLinkedEvent extends BaseNotificationEvent {
+  eventType: NotificationEventType.WALLET_LINKED;
+  walletAddress: string;
 }
 
-// Form Types
-export interface ContributionForm {
-  poolId: string;
-  amount: number;
-  paymentMethod: string;
+export interface WalletUnlinkedEvent extends BaseNotificationEvent {
+  eventType: NotificationEventType.WALLET_UNLINKED;
+  walletAddress: string;
 }
 
-export interface WithdrawalForm {
-  poolId: string;
-  amount: number;
-  withdrawalMethod: string;
+// Transaction success events
+export interface DepositSuccessEvent extends BaseNotificationEvent {
+  eventType: NotificationEventType.DEPOSIT_SUCCESS;
+  txId: string;
+  stxAmount: number;
+  plmdAmount: number;
+  fee: number;
+  netAmount: number;
+  nav?: number;
+  blockHeight?: number;
 }
 
-// Error Types
-export interface AppError {
-  code: string;
-  message: string;
-  details?: any;
+export interface WithdrawalSuccessEvent extends BaseNotificationEvent {
+  eventType: NotificationEventType.WITHDRAWAL_SUCCESS;
+  txId: string;
+  plmdAmount: number;
+  stxAmount: number;
+  fee: number;
+  netAmount: number;
+  nav?: number;
+  blockHeight?: number;
 }
 
-// Rate Limiting Types
-export interface RateLimitInfo {
-  remaining: number;
-  resetTime: Date;
-  limit: number;
-}
-
-// Brand Types
-export interface BrandColors {
-  primary: string;
-  secondary: string;
-  accent: string;
-  background: string;
-  text: string;
-  success: string;
-  warning: string;
-  error: string;
-}
+// Union type for all notification events
+export type NotificationEvent =
+  | WalletLinkedEvent
+  | WalletUnlinkedEvent
+  | DepositSuccessEvent
+  | WithdrawalSuccessEvent;
 
 // Configuration Types
 export interface AppConfig {
   bot: {
     token: string;
-    webhookUrl?: string;
   };
   server: {
     port: number;
@@ -241,7 +163,13 @@ export interface AppConfig {
     apiKey: string;
   };
   redis: {
-    url: string;
+    url?: string;
+  };
+  storage: {
+    type: 'memory' | 'redis';
+  };
+  stacks: {
+    network: 'mainnet' | 'testnet';
   };
   security: {
     jwtSecret: string;
@@ -251,5 +179,4 @@ export interface AppConfig {
     windowMs: number;
     max: number;
   };
-  brand: BrandColors;
 }

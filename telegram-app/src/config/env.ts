@@ -3,25 +3,39 @@ import { AppConfig } from '../types';
 
 dotenv.config();
 
-const requiredEnvVars = [
+const requiredEnvVars: (string | (() => string[]))[] = [
   'BOT_TOKEN',
   'API_BASE_URL',
-  'API_KEY',
   'JWT_SECRET',
   'ENCRYPTION_KEY',
+  'STORAGE_TYPE',
+  'REDIS_URL',
+  'STACKS_NETWORK',
+  'RATE_LIMIT_WINDOW',
+  'RATE_LIMIT_MAX',
 ];
 
 // Validate required environment variables
 for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`);
+  if (typeof envVar === 'string') {
+    if (!process.env[envVar]) {
+      throw new Error(`Missing required environment variable: ${envVar}`);
+    }
+  } else {
+    const requiredVars = envVar();
+    for (const requiredVar of requiredVars) {
+      if (!process.env[requiredVar]) {
+        throw new Error(
+          `Missing required environment variable: ${requiredVar}`
+        );
+      }
+    }
   }
 }
 
 export const config: AppConfig = {
   bot: {
     token: process.env.BOT_TOKEN!,
-    webhookUrl: process.env.WEBHOOK_URL,
   },
   server: {
     port: parseInt(process.env.PORT || '3000', 10),
@@ -32,7 +46,13 @@ export const config: AppConfig = {
     apiKey: process.env.API_KEY!,
   },
   redis: {
-    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    url: process.env.REDIS_URL,
+  },
+  storage: {
+    type: (process.env.STORAGE_TYPE as 'memory' | 'redis') || 'memory',
+  },
+  stacks: {
+    network: (process.env.STACKS_NETWORK as 'mainnet' | 'testnet') || 'testnet',
   },
   security: {
     jwtSecret: process.env.JWT_SECRET!,
@@ -41,16 +61,6 @@ export const config: AppConfig = {
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW || '900000', 10),
     max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
-  },
-  brand: {
-    primary: process.env.PRIMARY_COLOR || '#0B1F3A',
-    secondary: process.env.SECONDARY_COLOR || '#3AA6FF',
-    accent: process.env.ACCENT_COLOR || '#D4AF37',
-    background: '#FFFFFF',
-    text: '#333333',
-    success: '#28A745',
-    warning: '#FFC107',
-    error: '#DC3545',
   },
 };
 

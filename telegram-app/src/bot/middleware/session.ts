@@ -1,68 +1,48 @@
 import { Context, Middleware } from 'telegraf';
-import { createClient, RedisClientType } from 'redis';
-import { config } from '../../config/env';
 import { logger } from '../../utils/logger';
 import { SessionData } from '../../types';
-
-// Redis client for session storage
-let redisClient: RedisClientType | null = null;
-
-// Initialize Redis client
-async function initRedis(): Promise<void> {
-  try {
-    redisClient = createClient({
-      url: config.redis.url,
-    });
-
-    redisClient.on('error', err => {
-      logger.error('Redis Client Error:', err);
-    });
-
-    redisClient.on('connect', () => {
-      logger.info('Connected to Redis');
-    });
-
-    await redisClient.connect();
-  } catch (error) {
-    logger.error('Failed to initialize Redis:', error);
-    logger.warn('Falling back to memory session storage');
-    redisClient = null;
-  }
-}
-
-// Initialize Redis on module load
-initRedis();
-
-// Memory fallback for session storage
-const memoryStore = new Map<string, SessionData>();
+import { authService } from '../../services/auth';
+import { storage } from '../../utils/storage';
 
 interface SessionContext extends Context {
   session: SessionData;
 }
 
 // Simple session middleware
-export const sessionMiddleware: Middleware<SessionContext> = (ctx, next) => {
+export const sessionMiddleware: Middleware<SessionContext> = async (
+  ctx,
+  next
+) => {
   const userId = ctx.from?.id?.toString() || 'anonymous';
+  const sessionKey = `session:${userId}`;
 
   // Initialize session if not exists
-  if (!memoryStore.has(userId)) {
-    memoryStore.set(userId, {
+  let session = await storage.getObject<SessionData>(sessionKey);
+
+  if (!session) {
+    session = {
       userId: ctx.from?.id,
       currentPool: undefined,
       step: undefined,
       tempData: undefined,
       lastActivity: new Date(),
-    });
+    };
+
+    // Set session with 1 hour TTL
+    await storage.setObject(sessionKey, session, 3600);
   }
 
   // Add session to context
-  (ctx as any).session = memoryStore.get(userId);
+  (ctx as any).session = session;
 
   return next();
 };
 
 // Middleware to update last activity
-export const activityMiddleware: Middleware<SessionContext> = (ctx, next) => {
+export const activityMiddleware: Middleware<SessionContext> = async (
+  ctx,
+  next
+) => {
   if ((ctx as any).session) {
     (ctx as any).session.lastActivity = new Date();
 
@@ -76,21 +56,36 @@ export const activityMiddleware: Middleware<SessionContext> = (ctx, next) => {
   return next();
 };
 
+// Middleware to save session after all processing is complete
+export const sessionSaveMiddleware: Middleware<SessionContext> = async (
+  ctx,
+  next
+) => {
+  // Process the request first
+  await next();
+
+  // Then save the session (after all other middleware has potentially modified it)
+  if ((ctx as any).session) {
+    const userId = ctx.from?.id?.toString() || 'anonymous';
+    const sessionKey = `session:${userId}`;
+    await storage.setObject(sessionKey, (ctx as any).session, 3600);
+    logger.debug(`Session saved for user: ${userId}`);
+  }
+};
+
 // Helper function to clear expired sessions (cleanup job)
 export async function cleanupExpiredSessions(): Promise<void> {
   try {
-    if (redisClient) {
-      // Redis TTL handles this automatically
-      return;
-    }
-
-    // Manual cleanup for memory store
+    // Get all session keys
+    const sessionKeys = await storage.keys('session:*');
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
-    for (const [key, session] of memoryStore.entries()) {
-      if (session.lastActivity && session.lastActivity < oneHourAgo) {
-        memoryStore.delete(key);
+    // Check each session for expiration
+    for (const key of sessionKeys) {
+      const session = await storage.getObject<SessionData>(key);
+      if (session?.lastActivity && session.lastActivity < oneHourAgo) {
+        await storage.delete(key);
         logger.debug(`Cleaned up expired session: ${key}`);
       }
     }
@@ -99,7 +94,7 @@ export async function cleanupExpiredSessions(): Promise<void> {
   }
 }
 
-// Authentication middleware
+// Authentication middleware - Updated to be selective about when auth is required
 export const authMiddleware: Middleware<SessionContext> = async (ctx, next) => {
   const user = ctx.from;
 
@@ -110,14 +105,133 @@ export const authMiddleware: Middleware<SessionContext> = async (ctx, next) => {
     return;
   }
 
-  // Set session user data
-  if ((ctx as any).session) {
-    (ctx as any).session.userId = user.id;
+  // Set basic session user data
+  if (ctx.session) {
+    ctx.session.userId = user.id;
   }
 
-  logger.debug(
-    `Authenticated user: ${user.id} (${user.username || user.first_name})`
-  );
+  // Commands/actions that don't require authentication
+  const publicCommands = [
+    '/start',
+    '/help',
+    '/pools',
+    '/status',
+    'pools_page_',
+    'pools_refresh',
+    'pool_',
+    'menu_pools',
+    'contact_support',
+    'close_message',
+    'ignore',
+  ];
+
+  // Commands/actions that require authentication
+  const protectedCommands = [
+    '/profile',
+    '/balance',
+    '/portfolio',
+    '/performance',
+    '/contribute',
+    '/withdraw',
+    '/trades',
+    '/settings',
+    'profile_',
+    'wallet_',
+    'toggle_notifications',
+    'contribute_',
+    'withdraw_',
+    'portfolio_',
+    'settings_',
+  ];
+
+  // Get the current command or callback action
+  const messageText =
+    'text' in (ctx.message || {}) ? (ctx.message as any).text : '';
+  const callbackData =
+    'data' in (ctx.callbackQuery || {}) ? (ctx.callbackQuery as any).data : '';
+  const currentAction = messageText || callbackData || '';
+
+  // For protected actions, require authentication
+  if (!authService.isAuthenticated(ctx)) {
+    logger.info(
+      `Protected action: ${currentAction} - attempting background authentication for user ${user.id}`
+    );
+
+    // Attempt automatic background authentication for all protected actions
+    try {
+      const authResult = await authService.authenticateUser(ctx);
+
+      if (!authResult || !authResult.success) {
+        logger.warn(`Background authentication failed for user ${user.id}`);
+
+        // Only show explicit login prompt if automatic authentication fails
+        const actionName = currentAction.split('_')[0] || 'this feature';
+        await ctx.reply(
+          `🔐 <b>Authentication Required</b>\n\n` +
+            `To use ${actionName}, we need to verify your account. ` +
+            `This ensures your data security and enables personalized features.\n\n` +
+            `Please try again or contact support if the issue persists.`,
+          {
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🔄 Try Again', callback_data: currentAction }],
+                [
+                  {
+                    text: '🏠 Main Menu',
+                    callback_data: 'main_menu',
+                  },
+                ],
+                [
+                  {
+                    text: '💬 Contact Support',
+                    callback_data: 'contact_support',
+                  },
+                ],
+              ],
+            },
+          }
+        );
+        return;
+      }
+
+      if (authResult.data?.isNewUser) {
+        logger.info(`New user registered during background auth: ${user.id}`);
+      } else {
+        logger.info(`Background authentication successful for user ${user.id}`);
+      }
+
+      // Continue with the protected action after successful authentication
+    } catch (error) {
+      logger.error('Background authentication error:', error);
+      await ctx.reply(
+        '⚠️ Authentication error. Please try again.\n\n' +
+          'If the problem persists, please contact our support team.',
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔄 Try Again', callback_data: currentAction }],
+              [
+                {
+                  text: '💬 Contact Support',
+                  callback_data: 'contact_support',
+                },
+              ],
+            ],
+          },
+        }
+      );
+      return;
+    }
+  } else {
+    // User is authenticated, refresh profile periodically for protected actions
+    const user = authService.getAuthenticatedUser(ctx);
+    if (user) {
+      logger.debug(
+        `Authenticated user: ${user.telegramId} (${user.username || user.firstName})`
+      );
+    }
+  }
 
   return next();
 };

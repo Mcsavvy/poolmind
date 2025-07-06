@@ -1,37 +1,45 @@
 import axios, {
   AxiosInstance,
-  AxiosRequestConfig,
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
 import { config } from '../config/env';
 import { logger } from '../utils/logger';
 import {
-  Pool,
-  Portfolio,
-  Trade,
   User,
   ApiResponse,
-  PaginatedResponse,
-  TradingActivity,
-  PerformanceChart,
+  TelegramAuthRequest,
+  AuthResponse,
+  UpdateProfileRequest,
 } from '../types';
 
 class ApiService {
   private client: AxiosInstance;
+  private authToken: string | null = null;
 
   constructor() {
     this.client = axios.create({
       baseURL: config.api.baseUrl,
-      timeout: 10000,
+      timeout: 30000, // Increased timeout for authentication requests
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${config.api.apiKey}`,
         'User-Agent': 'PoolMind-Telegram-Bot/1.0.0',
       },
     });
 
     this.setupInterceptors();
+  }
+
+  // Set authentication token for API requests
+  setAuthToken(token: string): void {
+    this.authToken = token;
+    this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Clear authentication token
+  clearAuthToken(): void {
+    this.authToken = null;
+    delete this.client.defaults.headers.common['Authorization'];
   }
 
   private setupInterceptors(): void {
@@ -61,20 +69,114 @@ class ApiService {
           url: error.config?.url,
           message: error.response?.data?.message || error.message,
         });
+
+        // Handle 401 unauthorized - clear token
+        if (error.response?.status === 401) {
+          this.clearAuthToken();
+        }
+
         return Promise.reject(error);
       }
     );
   }
 
-  // User Management
-  async getUserProfile(telegramId: number): Promise<ApiResponse<User>> {
+  // Authentication Methods
+  async authenticateTelegram(
+    authData: TelegramAuthRequest
+  ): Promise<AuthResponse> {
     try {
-      const response = await this.client.get(`/user/profile`, {
-        params: { telegramId },
-      });
+      const response = await this.client.post(
+        '/api/v1/auth/telegram',
+        authData
+      );
+      const authResponse: AuthResponse = response.data;
+
+      // Store the JWT token for future requests
+      if (authResponse.success && authResponse.data?.token) {
+        this.setAuthToken(authResponse.data.token);
+      }
+
+      return authResponse;
+    } catch (error) {
+      logger.error('Failed to authenticate with Telegram:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  async getUserProfile(): Promise<ApiResponse<User>> {
+    try {
+      const response = await this.client.get('/api/v1/auth/profile');
       return response.data;
     } catch (error) {
       logger.error('Failed to get user profile:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  async updateUserProfile(
+    profileData: UpdateProfileRequest
+  ): Promise<ApiResponse<User>> {
+    try {
+      logger.info(
+        'Sending profile update to API:',
+        JSON.stringify(profileData, null, 2)
+      );
+      logger.info('API endpoint: PUT /api/v1/auth/profile');
+      logger.info('Auth token present:', !!this.authToken);
+
+      const response = await this.client.put(
+        '/api/v1/auth/profile',
+        profileData
+      );
+
+      logger.info('Profile update API response status:', response.status);
+      logger.info(
+        'Profile update API response data:',
+        JSON.stringify(response.data, null, 2)
+      );
+
+      return response.data;
+    } catch (error: any) {
+      logger.error('Failed to update user profile:', error);
+      if (error.response) {
+        logger.error('Response status:', error.response.status);
+        logger.error(
+          'Response data:',
+          JSON.stringify(error.response.data, null, 2)
+        );
+      }
+      throw this.handleError(error);
+    }
+  }
+
+  async getWalletConnectUrl(redirectUrl?: string): Promise<{
+    url: string;
+    accessToken: string;
+  }> {
+    try {
+      const params = redirectUrl ? { redirectUrl } : {};
+      const response = await this.client.get(
+        '/api/v1/auth/wallet/connect-url',
+        {
+          params,
+        }
+      );
+      logger.info(
+        `Wallet connect URL: ${JSON.stringify(response.data, null, 2)}`
+      );
+      return response.data;
+    } catch (error) {
+      logger.error('Failed to get wallet connect URL:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  async unlinkWallet(): Promise<ApiResponse<User>> {
+    try {
+      const response = await this.client.delete('/api/v1/auth/wallet');
+      return response.data;
+    } catch (error) {
+      logger.error('Failed to unlink wallet:', error);
       throw this.handleError(error);
     }
   }
@@ -101,203 +203,6 @@ class ApiService {
       return response.data;
     } catch (error) {
       logger.error('Failed to update user preferences:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  // Pool Operations
-  async getPools(
-    page: number = 1,
-    limit: number = 10
-  ): Promise<PaginatedResponse<Pool>> {
-    try {
-      const response = await this.client.get('/pools', {
-        params: { page, limit },
-      });
-      return response.data;
-    } catch (error) {
-      logger.error('Failed to get pools:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  async getPool(poolId: string): Promise<ApiResponse<Pool>> {
-    try {
-      const response = await this.client.get(`/pools/${poolId}`);
-      return response.data;
-    } catch (error) {
-      logger.error(`Failed to get pool ${poolId}:`, error);
-      throw this.handleError(error);
-    }
-  }
-
-  async getPoolPerformance(
-    poolId: string,
-    timeframe: string = '30D'
-  ): Promise<ApiResponse<PerformanceChart>> {
-    try {
-      const response = await this.client.get(`/pools/${poolId}/performance`, {
-        params: { timeframe },
-      });
-      return response.data;
-    } catch (error) {
-      logger.error(`Failed to get pool performance for ${poolId}:`, error);
-      throw this.handleError(error);
-    }
-  }
-
-  async contributeToPool(
-    poolId: string,
-    userId: number,
-    amount: number
-  ): Promise<ApiResponse<any>> {
-    try {
-      const response = await this.client.post(`/pools/${poolId}/contribute`, {
-        userId,
-        amount,
-      });
-      return response.data;
-    } catch (error) {
-      logger.error(`Failed to contribute to pool ${poolId}:`, error);
-      throw this.handleError(error);
-    }
-  }
-
-  async withdrawFromPool(
-    poolId: string,
-    userId: number,
-    amount: number
-  ): Promise<ApiResponse<any>> {
-    try {
-      const response = await this.client.post(`/pools/${poolId}/withdraw`, {
-        userId,
-        amount,
-      });
-      return response.data;
-    } catch (error) {
-      logger.error(`Failed to withdraw from pool ${poolId}:`, error);
-      throw this.handleError(error);
-    }
-  }
-
-  // Portfolio
-  async getUserPortfolio(userId: number): Promise<ApiResponse<Portfolio[]>> {
-    try {
-      const response = await this.client.get('/user/portfolio', {
-        params: { userId },
-      });
-      return response.data;
-    } catch (error) {
-      logger.error('Failed to get user portfolio:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  async getUserTransactions(
-    userId: number,
-    page: number = 1,
-    limit: number = 20
-  ): Promise<PaginatedResponse<any>> {
-    try {
-      const response = await this.client.get('/user/transactions', {
-        params: { userId, page, limit },
-      });
-      return response.data;
-    } catch (error) {
-      logger.error('Failed to get user transactions:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  async getUserPerformance(userId: number): Promise<ApiResponse<any>> {
-    try {
-      const response = await this.client.get('/user/performance', {
-        params: { userId },
-      });
-      return response.data;
-    } catch (error) {
-      logger.error('Failed to get user performance:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  // Trading
-  async getRecentTrades(
-    poolId?: string,
-    limit: number = 50
-  ): Promise<ApiResponse<Trade[]>> {
-    try {
-      const response = await this.client.get('/trading/recent', {
-        params: { poolId, limit },
-      });
-      return response.data;
-    } catch (error) {
-      logger.error('Failed to get recent trades:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  async getTradingActivity(
-    poolId: string,
-    period: string = '24h'
-  ): Promise<ApiResponse<TradingActivity>> {
-    try {
-      const response = await this.client.get('/trading/activity', {
-        params: { poolId, period },
-      });
-      return response.data;
-    } catch (error) {
-      logger.error('Failed to get trading activity:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  // Admin Operations
-  async createPool(poolData: Partial<Pool>): Promise<ApiResponse<Pool>> {
-    try {
-      const response = await this.client.post('/admin/pools', poolData);
-      return response.data;
-    } catch (error) {
-      logger.error('Failed to create pool:', error);
-      throw this.handleError(error);
-    }
-  }
-
-  async updatePool(
-    poolId: string,
-    poolData: Partial<Pool>
-  ): Promise<ApiResponse<Pool>> {
-    try {
-      const response = await this.client.put(
-        `/admin/pools/${poolId}/configure`,
-        poolData
-      );
-      return response.data;
-    } catch (error) {
-      logger.error(`Failed to update pool ${poolId}:`, error);
-      throw this.handleError(error);
-    }
-  }
-
-  async getPoolAnalytics(poolId: string): Promise<ApiResponse<any>> {
-    try {
-      const response = await this.client.get(
-        `/admin/pools/${poolId}/analytics`
-      );
-      return response.data;
-    } catch (error) {
-      logger.error(`Failed to get pool analytics for ${poolId}:`, error);
-      throw this.handleError(error);
-    }
-  }
-
-  // System Status
-  async getSystemStatus(): Promise<ApiResponse<any>> {
-    try {
-      const response = await this.client.get('/system/status');
-      return response.data;
-    } catch (error) {
-      logger.error('Failed to get system status:', error);
       throw this.handleError(error);
     }
   }

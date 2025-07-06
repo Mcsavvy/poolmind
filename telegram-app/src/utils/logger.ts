@@ -5,15 +5,19 @@ import { config } from '../config/env';
 // Safe JSON stringify that handles circular references
 const safeStringify = (obj: any, space?: number): string => {
   const seen = new WeakSet();
-  return JSON.stringify(obj, (key, value) => {
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) {
-        return '[Circular]';
+  return JSON.stringify(
+    obj,
+    (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) {
+          return '[Circular]';
+        }
+        seen.add(value);
       }
-      seen.add(value);
-    }
-    return value;
-  }, space);
+      return value;
+    },
+    space
+  );
 };
 
 const logFormat = winston.format.combine(
@@ -21,9 +25,7 @@ const logFormat = winston.format.combine(
   winston.format.errors({ stack: true }),
   winston.format.json(),
   winston.format.printf(({ timestamp, level, message, ...meta }) => {
-    const metaStr = Object.keys(meta).length
-      ? safeStringify(meta, 2)
-      : '';
+    const metaStr = Object.keys(meta).length ? safeStringify(meta, 2) : '';
     return `${timestamp} [${level.toUpperCase()}]: ${message} ${metaStr}`;
   })
 );
@@ -35,7 +37,7 @@ export const logError = (message: string, error: any) => {
     code: error?.code,
     status: error?.response?.status,
     statusText: error?.response?.statusText,
-    stack: error?.stack?.split('\n').slice(0, 5).join('\n') // Limit stack trace
+    stack: error?.stack?.split('\n').slice(0, 5).join('\n'), // Limit stack trace
   });
 };
 

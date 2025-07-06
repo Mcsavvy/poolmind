@@ -1,6 +1,5 @@
 import { InlineKeyboardMarkup } from 'telegraf/types';
 
-
 export class KeyboardBuilder {
   static mainMenu(authenticated: boolean = true): InlineKeyboardMarkup {
     if (authenticated) {
