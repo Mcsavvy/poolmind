@@ -230,8 +230,7 @@ telegram-app/
 │   │   ├── commands/     # Bot command handlers
 │   │   ├── callbacks/    # Callback query handlers
 │   │   ├── keyboards/    # Interactive keyboards
-│   │   ├── middleware/   # Session, auth, rate limiting
-│   │   └── scenes/       # Conversation flows
+│   │   └── middleware/   # Session, auth, rate limiting
 │   ├── services/         # External service integrations
 │   ├── config/          # Bot configuration
 │   └── utils/           # Utilities and helpers
@@ -448,7 +447,7 @@ docker-compose down
 
 The Orchestrator API includes comprehensive Swagger documentation available at:
 - Development: `http://localhost:3000/api-docs`
-- Production: `https://your-domain.com/api-docs`
+- Production: `https://poolmind.futurdevs.com/api-docs`
 
 ### Key API Endpoints
 
@@ -562,24 +561,6 @@ npm run lint                    # Code quality checks
 - **Retry Logic**: Robust retry mechanisms for network issues
 - **Transaction Batching**: Efficient transaction submission and monitoring
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
-- Follow TypeScript best practices
-- Write comprehensive tests for new features
-- Update documentation for API changes
-- Follow the existing code style and conventions
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - **Stacks Foundation** for the blockchain infrastructure
@@ -589,10 +570,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Documentation**: [API Docs](http://localhost:3000/api-docs)
-- **Issues**: [GitHub Issues](https://github.com/your-org/poolmind/issues)
-- **Email**: support@poolmind.com
-- **Telegram**: @poolmind_support
+- **Documentation**: [API Docs](https://poolmind.futurdevs.com/api-docs)
+- **Issues**: [GitHub Issues](https://github.com/Mcsavvy/poolmind/issues)
+- **Email**: support@futurdevs.com
+- **Telegram**: @Mcsavvy
 
 ---
 
