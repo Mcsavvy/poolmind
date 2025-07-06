@@ -325,7 +325,7 @@ export class AuthUtils {
       });
 
       if (!authHeader) {
-        logger.debug("No Authorization header provided");
+        logger.warn("No Authorization header provided");
         return null;
       }
 
