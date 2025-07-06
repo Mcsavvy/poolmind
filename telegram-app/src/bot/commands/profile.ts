@@ -308,6 +308,12 @@ export async function handleWalletCallback(
       return;
     }
 
+    // Ensure JWT token is set in API service for authenticated requests
+    if (!authService.ensureApiToken(ctx)) {
+      await ctx.answerCbQuery('Authentication token missing. Please restart the bot.');
+      return;
+    }
+
     switch (action) {
       case 'link':
         await ctx.answerCbQuery();

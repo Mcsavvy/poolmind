@@ -175,8 +175,8 @@ class AuthService {
    * Refresh user profile from API
    */
   async refreshUserProfile(ctx: SessionContext): Promise<User | null> {
-    if (!this.isAuthenticated(ctx)) {
-      logger.error('User not authenticated, cannot refresh profile');
+    if (!this.ensureApiToken(ctx)) {
+      logger.error('Cannot refresh profile - authentication token not available');
       return null;
     }
 
@@ -239,6 +239,25 @@ class AuthService {
     } catch (error) {
       logger.error('Failed to update user profile:', error);
       return null;
+    }
+  }
+
+  /**
+   * Ensure JWT token is set in API service for authenticated requests
+   * Call this before making any authenticated API calls
+   */
+  ensureApiToken(ctx: SessionContext): boolean {
+    if (!this.isAuthenticated(ctx)) {
+      logger.error('User not authenticated, cannot set API token');
+      return false;
+    }
+
+    if (ctx.session?.jwtToken) {
+      apiService.setAuthToken(ctx.session.jwtToken);
+      return true;
+    } else {
+      logger.error('No JWT token found in session');
+      return false;
     }
   }
 }
