@@ -4,3 +4,4 @@ guide.md
 logs
 dist
 openapi.json
+.env.production
