@@ -262,25 +262,27 @@ export default function HowItWorksSection() {
           </motion.p>
         </motion.div>
 
-        {/* Steps grid */}
+        {/* Steps flex layout */}
         <div className="relative max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
             {steps.map((step, index) => (
-              <div key={index} className="relative">
-                <StepCard
-                  icon={step.icon}
-                  title={step.title}
-                  description={step.description}
-                  stepNumber={index + 1}
-                  delay={index * 0.2}
-                />
-                {/* Connector positioned absolutely */}
+              <>
+                <div key={`step-${index}`} className="flex-1">
+                  <StepCard
+                    icon={step.icon}
+                    title={step.title}
+                    description={step.description}
+                    stepNumber={index + 1}
+                    delay={index * 0.2}
+                  />
+                </div>
+                {/* Connector positioned between cards */}
                 {index < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-1/2 -right-6 transform -translate-y-1/2 z-20">
+                  <div key={`connector-${index}`} className="hidden lg:flex flex-shrink-0">
                     <StepConnector />
                   </div>
                 )}
-              </div>
+              </>
             ))}
           </div>
         </div>
