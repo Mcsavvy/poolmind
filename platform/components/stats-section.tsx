@@ -89,11 +89,11 @@ const MiniChart = ({ startAnimation }: { startAnimation: boolean }) => {
   const chartData = [45, 62, 58, 75, 82, 68, 85, 91, 78, 94, 87, 92];
 
   return (
-    <div className="h-12 flex items-end justify-center space-x-1 mt-3 bg-slate-700/30 rounded-lg p-2">
+    <div className="h-12 flex items-end justify-center space-x-1 mt-3 bg-muted/50 rounded-lg p-2">
       {chartData.map((height, index) => (
         <div
           key={index}
-          className="bg-gradient-to-t from-emerald-500 to-emerald-300 rounded-sm transition-all duration-700 ease-out"
+          className="bg-gradient-to-t from-primary to-secondary rounded-sm transition-all duration-700 ease-out"
           style={{
             width: '3px',
             height: animateChart ? `${Math.max(height * 0.6, 20)}%` : '20%',
@@ -137,18 +137,18 @@ const StatCard = ({
   };
   
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:transform hover:scale-105">
+    <div className="bg-card/95 backdrop-blur-sm rounded-2xl p-6 border border-border hover:border-primary/40 transition-all duration-300 hover:transform hover:scale-105 animate-premium-pulse">
       {/* Icon and title */}
       <div className="flex items-center space-x-3 mb-4">
-        <div className="text-emerald-400">
+        <div className="text-primary">
           {icon}
         </div>
-        <h3 className="text-slate-300 text-sm font-medium">{title}</h3>
+        <h3 className="text-foreground text-sm font-medium">{title}</h3>
       </div>
       
       {/* Animated value */}
       <div className="mb-2">
-        <span className="text-3xl font-bold text-white">
+        <span className="text-3xl font-bold text-foreground">
           {prefix}{formatValue(animatedValue)}{suffix}
         </span>
       </div>
@@ -163,8 +163,8 @@ const StatCard = ({
  * Live indicator component
  */
 const LiveIndicator = () => (
-  <div className="flex items-center space-x-2 text-emerald-400">
-    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+  <div className="flex items-center space-x-2 text-primary">
+    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
     <span className="text-sm font-medium">Live</span>
   </div>
 );
@@ -240,17 +240,17 @@ export default function StatsSection() {
   ];
   
   return (
-    <section ref={ref} className="py-20 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <section ref={ref} className="py-20 bg-muted/50 dark:bg-muted/80">
       <div className="container mx-auto px-4">
         {/* Section header */}
         <div className="text-center mb-16">
           <div className="flex justify-center mb-4">
             <LiveIndicator />
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Platform Statistics
           </h2>
-          <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Real-time insights into PoolMind's performance and user activity.
           </p>
         </div>
@@ -274,7 +274,7 @@ export default function StatsSection() {
 
         {/* Bottom info */}
         <div className="text-center mt-12">
-          <p className="text-slate-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             Last updated: {currentTime.toLocaleTimeString()} • Data refreshes every 30 seconds
           </p>
         </div>

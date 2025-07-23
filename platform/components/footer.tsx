@@ -7,18 +7,18 @@ const FooterLogo = () => (
   <div className="flex flex-col space-y-3">
     {/* PoolMind Logo */}
     <div className="flex items-center space-x-2">
-      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
-        <span className="text-white font-bold text-sm">P</span>
+      <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
+        <span className="text-primary-foreground font-bold text-sm">P</span>
       </div>
-      <span className="text-white font-bold text-xl">PoolMind</span>
+      <span className="text-foreground font-bold text-xl">PoolMind</span>
     </div>
     
     {/* Powered by Stacks */}
-    <div className="flex items-center space-x-2 text-gray-400">
+    <div className="flex items-center space-x-2 text-muted-foreground">
       <span className="text-sm">Powered by</span>
       <div className="flex items-center space-x-1">
-        <div className="w-5 h-5 bg-gradient-to-r from-purple-500 to-orange-500 rounded-full flex items-center justify-center">
-          <span className="text-white text-xs font-bold">S</span>
+        <div className="w-5 h-5 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
+          <span className="text-primary-foreground text-xs font-bold">S</span>
         </div>
         <span className="text-sm font-medium">Stacks</span>
       </div>
@@ -40,7 +40,7 @@ const NavigationLinks = () => {
 
   return (
     <div>
-      <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">
+      <h3 className="text-foreground font-semibold text-sm uppercase tracking-wider mb-4">
         Resources
       </h3>
       <ul className="space-y-3">
@@ -48,7 +48,7 @@ const NavigationLinks = () => {
           <li key={link.name}>
             <a
               href={link.href}
-              className="text-gray-400 hover:text-white transition-colors duration-200 text-sm flex items-center space-x-1"
+              className="text-muted-foreground hover:text-foreground transition-colors duration-200 text-sm flex items-center space-x-1"
               target={link.external ? '_blank' : undefined}
               rel={link.external ? 'noopener noreferrer' : undefined}
             >
@@ -102,7 +102,7 @@ const SocialIcons = () => {
 
   return (
     <div>
-      <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">
+      <h3 className="text-foreground font-semibold text-sm uppercase tracking-wider mb-4">
         Community
       </h3>
       <div className="flex space-x-4">
@@ -110,7 +110,7 @@ const SocialIcons = () => {
           <a
             key={social.name}
             href={social.href}
-            className="text-gray-400 hover:text-white transition-colors duration-200 p-2 hover:bg-gray-800 rounded-lg"
+            className="text-muted-foreground hover:text-foreground transition-colors duration-200 p-2 hover:bg-accent/50 rounded-lg"
             target="_blank"
             rel="noopener noreferrer"
             aria-label={social.name}
@@ -128,20 +128,20 @@ const SocialIcons = () => {
  */
 const ContactInfo = () => (
   <div>
-    <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">
+    <h3 className="text-foreground font-semibold text-sm uppercase tracking-wider mb-4">
       Contact
     </h3>
     <div className="space-y-3">
-      <div className="text-gray-400 text-sm">
+      <div className="text-muted-foreground text-sm">
         <p>Questions or support?</p>
         <a 
           href="mailto:hello@poolmind.io" 
-          className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
+          className="text-primary hover:text-primary-foreground transition-colors duration-200"
         >
           hello@poolmind.io
         </a>
       </div>
-      <div className="text-gray-400 text-sm">
+      <div className="text-muted-foreground text-sm">
         <p>Join our community for updates</p>
       </div>
     </div>
@@ -155,7 +155,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer className="bg-muted/80 dark:bg-muted/60 text-foreground">
       {/* Main footer content */}
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -163,7 +163,7 @@ export default function Footer() {
           {/* Logo and branding */}
           <div className="lg:col-span-1">
             <FooterLogo />
-            <p className="text-gray-400 text-sm mt-4 leading-relaxed">
+            <p className="text-muted-foreground text-sm mt-4 leading-relaxed">
               Automated crypto arbitrage platform built on Stacks blockchain. 
               Earn passive income through smart contract-secured trading.
             </p>
@@ -187,25 +187,25 @@ export default function Footer() {
       </div>
       
       {/* Bottom bar */}
-      <div className="border-t border-gray-800">
+      <div className="border-t border-border">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             
             {/* Copyright */}
-            <div className="text-gray-400 text-sm">
+            <div className="text-muted-foreground text-sm">
               © {currentYear} PoolMind. All rights reserved.
             </div>
             
             {/* Additional links */}
             <div className="flex items-center space-x-6 text-sm">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
+              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors duration-200">
                 Security
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
+              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors duration-200">
                 Status
               </a>
-              <div className="flex items-center space-x-2 text-gray-400">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <div className="flex items-center space-x-2 text-muted-foreground">
+                <div className="w-2 h-2 bg-primary rounded-full"></div>
                 <span className="text-xs">All systems operational</span>
               </div>
             </div>
