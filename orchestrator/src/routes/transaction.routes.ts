@@ -1,26 +1,34 @@
 import { Router } from "express";
 import { TransactionController } from "../controllers/transactionController";
 import { authenticateToken, requireWallet } from "../middleware/auth";
+import { flexibleAuth, ensureRawBodyForHmac } from "../middleware/flexibleAuth";
 
 const router = Router();
 
-// All transaction routes require authentication
-router.use(authenticateToken);
+// Apply raw body capture middleware for potential HMAC validation
+router.use(ensureRawBodyForHmac);
 
-// Submit transaction for monitoring
+// User-specific transaction endpoints (JWT only)
 router.post(
   "/submit",
+  authenticateToken,
   requireWallet, // Require wallet to be linked
   TransactionController.submitTransaction,
 );
 
-// Get transaction status
-router.get("/:txId/status", TransactionController.getTransactionStatus);
+router.get(
+  "/:txId/status",
+  authenticateToken,
+  TransactionController.getTransactionStatus,
+);
 
-// Get user transactions
-router.get("/", TransactionController.getUserTransactions);
+router.get(
+  "/",
+  authenticateToken,
+  TransactionController.getUserTransactions,
+);
 
-// Get queue statistics (admin only - for now accessible to all authenticated users)
-router.get("/queue/stats", TransactionController.getQueueStats);
+// Queue statistics - accessible by both users and bots
+router.get("/queue/stats", flexibleAuth, TransactionController.getQueueStats);
 
 export default router;

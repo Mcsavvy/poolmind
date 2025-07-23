@@ -1,14 +1,11 @@
 import { Router } from "express";
 import { FundRequestController } from "../controllers/fundRequestController";
-import { validateHmacSignature, captureRawBody } from "../middleware/hmacAuth";
+import { requireHmacAuth } from "../middleware/flexibleAuth";
 
 const router = Router();
 
-// Apply raw body capture middleware for HMAC validation
-router.use(captureRawBody);
-
-// All fund request routes require HMAC authentication
-router.use(validateHmacSignature);
+// All fund request routes require HMAC authentication (bot-only endpoints)
+router.use(requireHmacAuth);
 
 // Request funds from admin wallet
 router.post("/", FundRequestController.requestFunds);

@@ -1,12 +1,19 @@
 import { Router } from "express";
 import { PoolController } from "../controllers/poolController";
+import { flexibleAuth, ensureRawBodyForHmac } from "../middleware/flexibleAuth";
 
 const router = Router();
 
-router.get("/state", PoolController.getPoolState);
+// Apply raw body capture middleware for potential HMAC validation
+router.use(ensureRawBodyForHmac);
 
-router.get("/info", PoolController.getPoolInfo);
+// Pool state - accessible by both users and bots
+router.get("/state", flexibleAuth, PoolController.getPoolState);
 
-router.get("/nav", PoolController.getCurrentNav);
+// Pool info - accessible by both users and bots
+router.get("/info", flexibleAuth, PoolController.getPoolInfo);
+
+// Current NAV - accessible by both users and bots
+router.get("/nav", flexibleAuth, PoolController.getCurrentNav);
 
 export default router;
