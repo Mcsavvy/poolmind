@@ -6,10 +6,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { HelpCircle, ArrowRight, MessageCircle } from 'lucide-react';
+import { HelpCircle, ArrowRight, MessageCircle, Coins } from 'lucide-react';
 
 /**
- * Individual FAQ item with animation
+ * Individual FAQ item with premium animation
  */
 const FAQItem = ({ 
   question, 
@@ -32,17 +32,17 @@ const FAQItem = ({
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
       transition={{ delay, duration: 0.6, ease: "easeOut" }}
     >
-      <AccordionItem value={value} className="border-gray-200 bg-white/50 rounded-lg mb-2">
+      <AccordionItem value={value} className="border-border bg-card/50 rounded-lg mb-2 backdrop-blur-sm animate-premium-pulse">
         <AccordionTrigger className="text-left p-6 hover:no-underline group">
           <div className="flex items-center space-x-3 w-full">
             <motion.div
-              className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors duration-300 flex-shrink-0"
+              className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center group-hover:bg-primary/30 transition-colors duration-300 flex-shrink-0 animate-coin-shimmer"
               whileHover={{ scale: 1.1 }}
               transition={{ duration: 0.2 }}
             >
-              <HelpCircle className="w-4 h-4 text-blue-600" />
+              <HelpCircle className="w-4 h-4 text-primary" />
             </motion.div>
-            <span className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
+            <span className="font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
               {question}
             </span>
           </div>
@@ -54,7 +54,7 @@ const FAQItem = ({
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <p className="text-gray-600 leading-relaxed">{answer}</p>
+            <p className="text-muted-foreground leading-relaxed">{answer}</p>
           </motion.div>
         </AccordionContent>
       </AccordionItem>
@@ -63,7 +63,7 @@ const FAQItem = ({
 };
 
 /**
- * Support card component
+ * Support card component with premium styling
  */
 const SupportCard = ({ delay = 0 }: { delay?: number }) => {
   const ref = useRef(null);
@@ -76,18 +76,18 @@ const SupportCard = ({ delay = 0 }: { delay?: number }) => {
       animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 30, scale: 0.9 }}
       transition={{ delay, duration: 0.6, ease: "easeOut" }}
     >
-      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+      <Card className="bg-gradient-to-br from-accent/30 to-accent/50 border-primary/30 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-premium-pulse">
         <CardContent className="p-8 text-center">
           <motion.div 
-            className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-6"
+            className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-6 animate-golden-glow"
             whileHover={{ scale: 1.1, rotate: 5 }}
             transition={{ duration: 0.3 }}
           >
-            <MessageCircle className="w-8 h-8 text-white" />
+            <MessageCircle className="w-8 h-8 text-primary-foreground" />
           </motion.div>
           
           <motion.h3 
-            className="text-xl font-bold text-gray-900 mb-4"
+            className="text-xl font-bold text-foreground mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: delay + 0.2, duration: 0.5 }}
@@ -96,7 +96,7 @@ const SupportCard = ({ delay = 0 }: { delay?: number }) => {
           </motion.h3>
           
           <motion.p 
-            className="text-gray-600 mb-6 leading-relaxed"
+            className="text-muted-foreground mb-6 leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: delay + 0.4, duration: 0.5 }}
@@ -114,7 +114,7 @@ const SupportCard = ({ delay = 0 }: { delay?: number }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white">
+              <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground animate-golden-glow">
                 Join Telegram Community
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -124,7 +124,7 @@ const SupportCard = ({ delay = 0 }: { delay?: number }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Button variant="outline" className="w-full border-blue-300 text-blue-600 hover:bg-blue-50">
+              <Button variant="outline" className="w-full border-primary/30 text-foreground hover:bg-accent/30 hover:border-primary/50">
                 Contact Support
               </Button>
             </motion.div>
@@ -175,7 +175,7 @@ export default function FAQSection() {
   ];
 
   return (
-    <section ref={ref} className="py-20 bg-gradient-to-b from-white to-gray-50">
+    <section ref={ref} className="py-20 bg-gradient-to-b from-background via-accent/5 to-background">
       <div className="container mx-auto px-4">
         {/* Section header */}
         <motion.div 
@@ -190,13 +190,14 @@ export default function FAQSection() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="flex justify-center mb-6"
           >
-            <Badge variant="outline" className="bg-purple-50 text-purple-600 border-purple-200 px-4 py-2">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 px-4 py-2 animate-coin-shimmer">
+              <Coins className="w-4 h-4 mr-2" />
               FAQ
             </Badge>
           </motion.div>
 
           <motion.h2 
-            className="text-4xl md:text-5xl font-bold text-gray-900 mb-6"
+            className="text-4xl md:text-5xl font-bold mb-6 gradient-text-premium animate-stacks-gradient"
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
             transition={{ delay: 0.4, duration: 0.8 }}
@@ -205,7 +206,7 @@ export default function FAQSection() {
           </motion.h2>
           
           <motion.p 
-            className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
+            className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
             transition={{ delay: 0.6, duration: 0.8 }}

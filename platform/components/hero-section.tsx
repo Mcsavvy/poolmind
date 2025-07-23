@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Play } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { ArrowRight, Play, Coins } from 'lucide-react';
 
 /**
- * Animated crypto icon component with floating animation
+ * Animated crypto icon component with premium coin styling
  */
 const AnimatedCryptoIcon = ({ 
   symbol, 
@@ -33,14 +34,15 @@ const AnimatedCryptoIcon = ({
       ease: "easeInOut"
     }}
   >
-    <div className="bg-blue-500/20 rounded-full p-2 backdrop-blur-sm border border-blue-400/30">
-      <span className="text-blue-300 text-sm font-semibold">{symbol}</span>
+    <div className="relative bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full p-3 backdrop-blur-sm border border-primary/30 animate-golden-glow">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full animate-coin-shimmer"></div>
+      <span className="relative text-primary font-bold text-sm">{symbol}</span>
     </div>
   </motion.div>
 );
 
 /**
- * Dashboard mockup component showing connected wallet and pool stats
+ * Premium dashboard mockup with coin-inspired design
  */
 const DashboardMockup = () => {
   const [navValue, setNavValue] = useState(1247.83);
@@ -69,19 +71,27 @@ const DashboardMockup = () => {
       <AnimatedCryptoIcon symbol="STX" delay={2} className="bottom-16 left-4" />
       <AnimatedCryptoIcon symbol="USDC" delay={2.5} className="bottom-4 right-8" />
 
-      {/* Main dashboard card with glassmorphism */}
+      {/* Premium dashboard card */}
       <motion.div 
-        className="relative bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl max-w-md mx-auto"
+        className="relative bg-card/95 backdrop-blur-lg rounded-3xl p-8 border border-border shadow-2xl max-w-md mx-auto animate-premium-pulse"
         whileHover={{ scale: 1.02 }}
         transition={{ duration: 0.3 }}
+        style={{
+          background: 'linear-gradient(135deg, var(--card) 0%, var(--accent) 100%)',
+          boxShadow: '0 20px 40px rgba(255, 152, 0, 0.1), 0 0 20px rgba(255, 193, 7, 0.05)'
+        }}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-white/80 text-sm">Live Portfolio</span>
+            <motion.div 
+              className="w-3 h-3 bg-primary rounded-full animate-pulse"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <span className="text-muted-foreground text-sm">Live Portfolio</span>
           </div>
-          <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-400/30">
+          <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30 animate-coin-shimmer">
             Active
           </Badge>
         </div>
@@ -93,9 +103,9 @@ const DashboardMockup = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2, duration: 0.5 }}
         >
-          <div className="text-white/60 text-sm mb-1">Net Asset Value</div>
+          <div className="text-muted-foreground text-sm mb-1">Net Asset Value</div>
           <motion.div 
-            className="text-3xl font-bold text-white"
+            className="text-3xl font-bold gradient-text-gold"
             key={navValue}
             initial={{ opacity: 0.7 }}
             animate={{ opacity: 1 }}
@@ -103,7 +113,7 @@ const DashboardMockup = () => {
           >
             ${navValue.toFixed(2)}
           </motion.div>
-          <div className="text-green-400 text-sm">↗ +2.4% (24h)</div>
+          <div className="text-primary text-sm font-medium">↗ +2.4% (24h)</div>
         </motion.div>
 
         {/* Earnings section */}
@@ -113,9 +123,9 @@ const DashboardMockup = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 1.4, duration: 0.5 }}
         >
-          <div className="text-white/60 text-sm mb-1">Total Earnings</div>
+          <div className="text-muted-foreground text-sm mb-1">Total Earnings</div>
           <motion.div 
-            className="text-2xl font-semibold text-green-400"
+            className="text-2xl font-semibold gradient-text-stacks"
             key={earnings}
             initial={{ opacity: 0.7 }}
             animate={{ opacity: 1 }}
@@ -132,38 +142,38 @@ const DashboardMockup = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.6, duration: 0.5 }}
         >
-          <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-            <div className="text-white/60 text-xs mb-1">Pool Share</div>
-            <div className="text-white font-semibold">0.42%</div>
+          <div className="bg-accent/30 rounded-xl p-3 border border-primary/20">
+            <div className="text-muted-foreground text-xs mb-1">Pool Share</div>
+            <div className="text-foreground font-semibold">0.42%</div>
           </div>
-          <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-            <div className="text-white/60 text-xs mb-1">APY</div>
-            <div className="text-green-400 font-semibold">18.3%</div>
+          <div className="bg-accent/30 rounded-xl p-3 border border-primary/20">
+            <div className="text-muted-foreground text-xs mb-1">APY</div>
+            <div className="text-primary font-semibold">18.3%</div>
           </div>
         </motion.div>
 
         {/* Connected wallet */}
         <motion.div 
-          className="mt-6 pt-4 border-t border-white/10"
+          className="mt-6 pt-4 border-t border-border"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.8, duration: 0.5 }}
         >
           <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-            <span className="text-white/80 text-sm">Wallet Connected</span>
+            <div className="w-2 h-2 bg-primary rounded-full"></div>
+            <span className="text-muted-foreground text-sm">Wallet Connected</span>
           </div>
-          <div className="text-white/60 text-xs mt-1 font-mono">
+          <div className="text-muted-foreground text-xs mt-1 font-mono">
             ST1PQHQKV...R5J2ZX
           </div>
         </motion.div>
       </motion.div>
 
-      {/* Floating particles */}
+      {/* Floating particles with coin styling */}
       {[...Array(6)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute w-2 h-2 bg-blue-400/30 rounded-full"
+          className="absolute w-2 h-2 bg-primary/40 rounded-full animate-float"
           style={{
             top: `${Math.random() * 100}%`,
             left: `${Math.random() * 100}%`,
@@ -185,7 +195,12 @@ const DashboardMockup = () => {
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 pt-20 pb-32">
+    <section className="relative overflow-hidden bg-gradient-to-br from-background via-accent/10 to-background pt-20 pb-32">
+      {/* Theme toggle */}
+      <div className="absolute top-6 right-6 z-20">
+        <ThemeToggle />
+      </div>
+
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           
@@ -203,21 +218,22 @@ export default function HeroSection() {
               transition={{ delay: 0.2, duration: 0.6 }}
               className="flex justify-center lg:justify-start mb-6"
             >
-              <Badge variant="outline" className="bg-blue-500/10 text-blue-300 border-blue-400/30 px-4 py-2">
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 px-4 py-2 animate-coin-shimmer">
+                <Coins className="w-4 h-4 mr-2" />
                 Built on Stacks Blockchain
               </Badge>
             </motion.div>
 
             {/* Main headline */}
             <motion.h1 
-              className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-6 leading-tight"
+              className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 leading-tight"
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.8 }}
             >
-              Earn Smarter with{' '}
+              <span className="text-foreground">Earn Smarter with</span>{' '}
               <motion.span 
-                className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent"
+                className="gradient-text-premium animate-stacks-gradient"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8, duration: 0.8 }}
@@ -228,7 +244,7 @@ export default function HeroSection() {
 
             {/* Subheadline */}
             <motion.p 
-              className="text-xl md:text-2xl text-gray-300 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0"
+              className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.8 }}
@@ -250,7 +266,7 @@ export default function HeroSection() {
               >
                 <Button 
                   size="lg"
-                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold px-8 py-6 text-lg rounded-2xl shadow-lg hover:shadow-green-500/25 transition-all duration-300"
+                  className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground font-semibold px-8 py-6 text-lg rounded-2xl shadow-lg hover:shadow-primary/25 transition-all duration-300 animate-golden-glow"
                 >
                   Get Started
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -265,7 +281,7 @@ export default function HeroSection() {
                 <Button 
                   variant="outline"
                   size="lg"
-                  className="border-2 border-white/30 hover:border-white/50 text-white font-semibold px-8 py-6 text-lg rounded-2xl backdrop-blur-sm bg-white/5 hover:bg-white/10 transition-all duration-300"
+                  className="border-2 border-primary/30 hover:border-primary/50 text-foreground font-semibold px-8 py-6 text-lg rounded-2xl backdrop-blur-sm bg-card/50 hover:bg-accent/30 transition-all duration-300"
                 >
                   <Play className="mr-2 h-5 w-5" />
                   Watch Demo
@@ -275,7 +291,7 @@ export default function HeroSection() {
 
             {/* Trust indicators */}
             <motion.div 
-              className="mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-gray-400"
+              className="mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-muted-foreground"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.2, duration: 0.8 }}
@@ -285,8 +301,8 @@ export default function HeroSection() {
                 whileHover={{ scale: 1.1 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">S</span>
+                <div className="w-6 h-6 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
+                  <span className="text-primary-foreground text-xs font-bold">S</span>
                 </div>
                 <span className="text-sm">Stacks Blockchain</span>
               </motion.div>
@@ -295,7 +311,7 @@ export default function HeroSection() {
                 whileHover={{ scale: 1.1 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
                 <span className="text-sm">Secure & Transparent</span>
               </motion.div>
               <motion.div 
@@ -303,7 +319,7 @@ export default function HeroSection() {
                 whileHover={{ scale: 1.1 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
                 <span className="text-sm">Automated Trading</span>
               </motion.div>
             </motion.div>
@@ -316,9 +332,9 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Background decorative elements */}
+      {/* Background decorative elements with coin theme */}
       <motion.div 
-        className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"
+        className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-stacks-gradient"
         animate={{ 
           scale: [1, 1.2, 1],
           opacity: [0.3, 0.6, 0.3]
@@ -330,7 +346,7 @@ export default function HeroSection() {
         }}
       />
       <motion.div 
-        className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-500/10 rounded-full blur-3xl"
+        className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-stacks-gradient"
         animate={{ 
           scale: [1, 1.3, 1],
           opacity: [0.2, 0.5, 0.2]

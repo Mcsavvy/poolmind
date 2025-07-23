@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Quote, Star, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
+import { Quote, Star, ChevronLeft, ChevronRight, MessageCircle, Coins } from 'lucide-react';
 
 /**
  * Hook for auto-sliding testimonials
@@ -26,7 +26,7 @@ const useAutoSlide = (length: number, interval = 4000) => {
 };
 
 /**
- * Individual testimonial card component using shadcn/ui
+ * Individual testimonial card component using shadcn/ui with premium styling
  */
 const TestimonialCard = ({ 
   quote, 
@@ -62,21 +62,21 @@ const TestimonialCard = ({
       animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 50, scale: 0.9 }}
       transition={{ delay, duration: 0.6, ease: "easeOut" }}
     >
-      <Card className="group h-full bg-white/95 backdrop-blur-sm border-gray-200 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 hover:border-blue-300">
+      <Card className="group h-full bg-card/95 backdrop-blur-sm border-border shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 animate-premium-pulse">
         <CardContent className="p-8 flex flex-col justify-between h-full">
-          {/* Quote icon */}
+          {/* Quote icon with premium styling */}
           <motion.div 
             className="flex justify-start mb-4"
             initial={{ opacity: 0, scale: 0 }}
             animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
             transition={{ delay: delay + 0.2, duration: 0.5 }}
           >
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors duration-300">
-              <Quote className="w-4 h-4 text-blue-600" />
+            <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center group-hover:bg-primary/30 transition-colors duration-300 animate-coin-shimmer">
+              <Quote className="w-4 h-4 text-primary" />
             </div>
           </motion.div>
 
-          {/* Rating stars */}
+          {/* Rating stars with premium styling */}
           <motion.div 
             className="flex items-center space-x-1 mb-4"
             initial={{ opacity: 0 }}
@@ -91,7 +91,7 @@ const TestimonialCard = ({
                 transition={{ delay: delay + 0.4 + i * 0.1, duration: 0.3 }}
               >
                 <Star 
-                  className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                  className={`w-4 h-4 ${i < rating ? 'text-primary fill-current animate-golden-glow' : 'text-muted-foreground/40'}`}
                 />
               </motion.div>
             ))}
@@ -104,27 +104,27 @@ const TestimonialCard = ({
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: delay + 0.5, duration: 0.5 }}
           >
-            <p className="text-gray-700 text-lg leading-relaxed italic">
+            <p className="text-foreground text-lg leading-relaxed italic">
               "{quote}"
             </p>
           </motion.div>
           
-          {/* User info */}
+          {/* User info with premium styling */}
           <motion.div 
             className="flex items-center space-x-3"
             initial={{ opacity: 0, x: -20 }}
             animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
             transition={{ delay: delay + 0.7, duration: 0.5 }}
           >
-            <Avatar className="h-12 w-12 border-2 border-gray-200 group-hover:border-blue-300 transition-colors duration-300">
+            <Avatar className="h-12 w-12 border-2 border-primary/30 group-hover:border-primary/50 transition-colors duration-300 animate-coin-shimmer">
               <AvatarImage src={imageUrl} alt={name} />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-semibold">
+              <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground font-semibold">
                 {getInitials(name)}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-gray-900 text-sm">{name}</p>
-              <p className="text-gray-500 text-xs">@{username}</p>
+              <p className="font-semibold text-foreground text-sm">{name}</p>
+              <p className="text-muted-foreground text-xs">@{username}</p>
             </div>
           </motion.div>
         </CardContent>
@@ -134,7 +134,7 @@ const TestimonialCard = ({
 };
 
 /**
- * Navigation dots component
+ * Navigation dots component with premium styling
  */
 const NavigationDots = ({ 
   total, 
@@ -157,8 +157,8 @@ const NavigationDots = ({
         onClick={() => onSelect(index)}
         className={`w-3 h-3 rounded-full transition-all duration-300 ${
           index === current 
-            ? 'bg-blue-500 scale-110' 
-            : 'bg-gray-300 hover:bg-gray-400'
+            ? 'bg-primary scale-110 animate-golden-glow' 
+            : 'bg-muted-foreground/40 hover:bg-primary/60'
         }`}
         whileHover={{ scale: 1.2 }}
         whileTap={{ scale: 0.9 }}
@@ -168,7 +168,7 @@ const NavigationDots = ({
 );
 
 /**
- * Navigation arrows component
+ * Navigation arrows component with premium styling
  */
 const NavigationArrows = ({ 
   onPrev, 
@@ -187,23 +187,23 @@ const NavigationArrows = ({
       variant="outline"
       size="lg"
       onClick={onPrev}
-      className="rounded-full w-12 h-12 p-0 hover:bg-blue-50 hover:border-blue-300"
+      className="rounded-full w-12 h-12 p-0 hover:bg-accent/50 hover:border-primary/40 border-primary/20 transition-all duration-300"
     >
-      <ChevronLeft className="w-5 h-5" />
+      <ChevronLeft className="w-5 h-5 text-primary" />
     </Button>
     <Button
       variant="outline"
       size="lg"
       onClick={onNext}
-      className="rounded-full w-12 h-12 p-0 hover:bg-blue-50 hover:border-blue-300"
+      className="rounded-full w-12 h-12 p-0 hover:bg-accent/50 hover:border-primary/40 border-primary/20 transition-all duration-300"
     >
-      <ChevronRight className="w-5 h-5" />
+      <ChevronRight className="w-5 h-5 text-primary" />
     </Button>
   </motion.div>
 );
 
 /**
- * Telegram community badge component
+ * Telegram community badge component with premium styling
  */
 const TelegramBadge = () => {
   const ref = useRef(null);
@@ -216,26 +216,26 @@ const TelegramBadge = () => {
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
       transition={{ delay: 0.5, duration: 0.8 }}
     >
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 p-6">
+      <Card className="bg-gradient-to-r from-accent/30 to-accent/50 border-primary/30 p-6 animate-premium-pulse">
         <CardContent className="flex items-center justify-between p-0">
           <div className="flex items-center space-x-4">
             <motion.div 
-              className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center"
+              className="w-12 h-12 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center animate-golden-glow"
               whileHover={{ scale: 1.1, rotate: 5 }}
               transition={{ duration: 0.3 }}
             >
-              <MessageCircle className="w-6 h-6 text-white" />
+              <MessageCircle className="w-6 h-6 text-primary-foreground" />
             </motion.div>
             <div>
-              <h4 className="font-semibold text-gray-900">Join Our Community</h4>
-              <p className="text-gray-600 text-sm">Get real-time updates and connect with other investors</p>
+              <h4 className="font-semibold text-foreground">Join Our Community</h4>
+              <p className="text-muted-foreground text-sm">Get real-time updates and connect with other investors</p>
             </div>
           </div>
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+            <Button className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground animate-coin-shimmer">
               Join Telegram
             </Button>
           </motion.div>
@@ -246,7 +246,7 @@ const TelegramBadge = () => {
 };
 
 /**
- * Main Testimonials section component
+ * Main Testimonials section component with premium styling
  */
 export default function TestimonialsSection() {
   const ref = useRef(null);
@@ -318,7 +318,7 @@ export default function TestimonialsSection() {
   };
 
   return (
-    <section ref={ref} className="py-20 bg-gradient-to-b from-gray-50 to-white">
+    <section ref={ref} className="py-20 bg-gradient-to-b from-background via-accent/5 to-background">
       <div className="container mx-auto px-4">
         {/* Section header */}
         <motion.div 
@@ -333,13 +333,14 @@ export default function TestimonialsSection() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="flex justify-center mb-6"
           >
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-600 border-yellow-200 px-4 py-2">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 px-4 py-2 animate-coin-shimmer">
+              <Coins className="w-4 h-4 mr-2" />
               User Reviews
             </Badge>
           </motion.div>
 
           <motion.h2 
-            className="text-4xl md:text-5xl font-bold text-gray-900 mb-6"
+            className="text-4xl md:text-5xl font-bold mb-6 gradient-text-premium animate-stacks-gradient"
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
             transition={{ delay: 0.4, duration: 0.8 }}
@@ -348,7 +349,7 @@ export default function TestimonialsSection() {
           </motion.h2>
           
           <motion.p 
-            className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
+            className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
             transition={{ delay: 0.6, duration: 0.8 }}

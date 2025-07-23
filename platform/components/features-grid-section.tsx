@@ -13,18 +13,21 @@ import {
   Lock,
   BarChart3,
   Smartphone,
-  CheckCircle
+  CheckCircle,
+  Coins
 } from 'lucide-react';
 
 /**
- * Enhanced feature icons with custom styling
+ * Enhanced feature icons with premium coin styling
  */
 const SecurityIcon = () => (
   <motion.div
     whileHover={{ scale: 1.1, rotate: 5 }}
     transition={{ duration: 0.3 }}
+    className="relative"
   >
-    <Shield className="w-12 h-12 text-blue-600" />
+    <Shield className="w-12 h-12 text-primary" />
+    <div className="absolute inset-0 bg-primary/20 rounded-full blur-sm animate-golden-glow opacity-60"></div>
   </motion.div>
 );
 
@@ -32,8 +35,10 @@ const AutomationIcon = () => (
   <motion.div
     whileHover={{ scale: 1.1 }}
     transition={{ duration: 0.3 }}
+    className="relative"
   >
-    <Zap className="w-12 h-12 text-yellow-500" />
+    <Zap className="w-12 h-12 text-secondary" />
+    <div className="absolute inset-0 bg-secondary/20 rounded-full blur-sm animate-premium-pulse opacity-60"></div>
   </motion.div>
 );
 
@@ -41,8 +46,10 @@ const ProfitabilityIcon = () => (
   <motion.div
     whileHover={{ scale: 1.1, y: -5 }}
     transition={{ duration: 0.3 }}
+    className="relative"
   >
-    <TrendingUp className="w-12 h-12 text-green-600" />
+    <TrendingUp className="w-12 h-12 text-primary" />
+    <div className="absolute inset-0 bg-primary/20 rounded-full blur-sm animate-golden-glow opacity-60"></div>
   </motion.div>
 );
 
@@ -54,8 +61,10 @@ const RealTimeIcon = () => (
       rotate: { duration: 2, repeat: Infinity, ease: "linear" },
       scale: { duration: 0.3 }
     }}
+    className="relative"
   >
-    <Clock className="w-12 h-12 text-purple-600" />
+    <Clock className="w-12 h-12 text-accent-foreground" />
+    <div className="absolute inset-0 bg-accent-foreground/20 rounded-full blur-sm animate-coin-shimmer opacity-60"></div>
   </motion.div>
 );
 
@@ -63,8 +72,10 @@ const CommunityIcon = () => (
   <motion.div
     whileHover={{ scale: 1.1 }}
     transition={{ duration: 0.3 }}
+    className="relative"
   >
-    <Users className="w-12 h-12 text-indigo-600" />
+    <Users className="w-12 h-12 text-primary" />
+    <div className="absolute inset-0 bg-primary/20 rounded-full blur-sm animate-premium-pulse opacity-60"></div>
   </motion.div>
 );
 
@@ -72,13 +83,15 @@ const TransparencyIcon = () => (
   <motion.div
     whileHover={{ scale: 1.1, rotateY: 180 }}
     transition={{ duration: 0.6 }}
+    className="relative"
   >
-    <Lock className="w-12 h-12 text-emerald-600" />
+    <Lock className="w-12 h-12 text-secondary" />
+    <div className="absolute inset-0 bg-secondary/20 rounded-full blur-sm animate-golden-glow opacity-60"></div>
   </motion.div>
 );
 
 /**
- * Individual feature card component using shadcn/ui Card
+ * Individual feature card component using shadcn/ui Card with premium styling
  */
 const FeatureCard = ({ 
   icon, 
@@ -101,7 +114,7 @@ const FeatureCard = ({
       animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 60, scale: 0.8 }}
       transition={{ delay, duration: 0.6, ease: "easeOut" }}
     >
-      <Card className="group h-full bg-white/90 backdrop-blur-sm border-gray-200 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 hover:border-blue-300">
+      <Card className="group h-full bg-card/95 backdrop-blur-sm border-border shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 animate-premium-pulse">
         <CardContent className="p-8 text-center">
           {/* Icon */}
           <motion.div 
@@ -111,7 +124,7 @@ const FeatureCard = ({
             transition={{ delay: delay + 0.2, duration: 0.5 }}
           >
             <motion.div 
-              className="p-4 bg-gray-50 rounded-2xl group-hover:bg-blue-50 transition-all duration-300"
+              className="p-4 bg-accent/30 rounded-2xl group-hover:bg-accent/50 transition-all duration-300 border border-primary/20 animate-coin-shimmer"
               whileHover={{ scale: 1.05 }}
             >
               {icon}
@@ -120,7 +133,7 @@ const FeatureCard = ({
           
           {/* Content */}
           <motion.h3 
-            className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-300"
+            className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors duration-300"
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: delay + 0.4, duration: 0.5 }}
@@ -129,7 +142,7 @@ const FeatureCard = ({
           </motion.h3>
           
           <motion.p 
-            className="text-gray-600 leading-relaxed"
+            className="text-muted-foreground leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: delay + 0.6, duration: 0.5 }}
@@ -143,7 +156,7 @@ const FeatureCard = ({
 };
 
 /**
- * Trust indicator component with animation
+ * Trust indicator component with premium animation
  */
 const TrustIndicator = ({ 
   color, 
@@ -167,11 +180,11 @@ const TrustIndicator = ({
       whileHover={{ scale: 1.05 }}
     >
       <motion.div 
-        className={`w-3 h-3 rounded-full ${color}`}
+        className={`w-3 h-3 rounded-full ${color} animate-golden-glow`}
         animate={{ scale: [1, 1.2, 1] }}
         transition={{ duration: 2, repeat: Infinity, delay }}
       />
-      <span className="text-sm font-medium text-gray-500">{text}</span>
+      <span className="text-sm font-medium text-muted-foreground">{text}</span>
     </motion.div>
   );
 };
@@ -214,13 +227,13 @@ export default function FeaturesGridSection() {
   ];
 
   const trustIndicators = [
-    { color: "bg-green-500", text: "Blockchain Secured" },
-    { color: "bg-blue-500", text: "24/7 Automated" },
-    { color: "bg-purple-500", text: "Transparent & Audited" }
+    { color: "bg-primary", text: "Blockchain Secured" },
+    { color: "bg-secondary", text: "24/7 Automated" },
+    { color: "bg-accent-foreground", text: "Transparent & Audited" }
   ];
 
   return (
-    <section ref={ref} className="py-20 bg-white">
+    <section ref={ref} className="py-20 bg-gradient-to-b from-background via-accent/5 to-background">
       <div className="container mx-auto px-4">
         {/* Section header */}
         <motion.div 
@@ -235,13 +248,14 @@ export default function FeaturesGridSection() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="flex justify-center mb-6"
           >
-            <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 px-4 py-2">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 px-4 py-2 animate-coin-shimmer">
+              <Coins className="w-4 h-4 mr-2" />
               Advanced Features
             </Badge>
           </motion.div>
 
           <motion.h2 
-            className="text-4xl md:text-5xl font-bold text-gray-900 mb-6"
+            className="text-4xl md:text-5xl font-bold mb-6 gradient-text-premium animate-stacks-gradient"
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
             transition={{ delay: 0.4, duration: 0.8 }}
@@ -250,7 +264,7 @@ export default function FeaturesGridSection() {
           </motion.h2>
           
           <motion.p 
-            className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
+            className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
             transition={{ delay: 0.6, duration: 0.8 }}
@@ -280,7 +294,7 @@ export default function FeaturesGridSection() {
           transition={{ delay: 1.2, duration: 0.8 }}
         >
           <motion.div 
-            className="flex flex-wrap items-center justify-center gap-8 text-gray-500"
+            className="flex flex-wrap items-center justify-center gap-8"
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : { opacity: 0 }}
             transition={{ delay: 1.4, duration: 0.8 }}
@@ -295,7 +309,7 @@ export default function FeaturesGridSection() {
             ))}
           </motion.div>
 
-          {/* Additional stats */}
+          {/* Additional stats with premium styling */}
           <motion.div 
             className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 30 }}
@@ -303,51 +317,51 @@ export default function FeaturesGridSection() {
             transition={{ delay: 1.8, duration: 0.8 }}
           >
             <motion.div 
-              className="text-center"
+              className="text-center p-4 bg-card/50 rounded-xl border border-primary/20 backdrop-blur-sm animate-premium-pulse"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
             >
               <motion.div 
-                className="text-2xl font-bold text-blue-600 mb-2"
+                className="text-2xl font-bold gradient-text-gold mb-2"
                 initial={{ opacity: 0, scale: 0 }}
                 animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
                 transition={{ delay: 2, duration: 0.5 }}
               >
                 99.9%
               </motion.div>
-              <div className="text-gray-600 text-sm">Uptime</div>
+              <div className="text-muted-foreground text-sm">Uptime</div>
             </motion.div>
             
             <motion.div 
-              className="text-center"
+              className="text-center p-4 bg-card/50 rounded-xl border border-primary/20 backdrop-blur-sm animate-premium-pulse"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
             >
               <motion.div 
-                className="text-2xl font-bold text-green-600 mb-2"
+                className="text-2xl font-bold gradient-text-stacks mb-2"
                 initial={{ opacity: 0, scale: 0 }}
                 animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
                 transition={{ delay: 2.2, duration: 0.5 }}
               >
                 &lt;1s
               </motion.div>
-              <div className="text-gray-600 text-sm">Response Time</div>
+              <div className="text-muted-foreground text-sm">Response Time</div>
             </motion.div>
             
             <motion.div 
-              className="text-center"
+              className="text-center p-4 bg-card/50 rounded-xl border border-primary/20 backdrop-blur-sm animate-premium-pulse"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
             >
               <motion.div 
-                className="text-2xl font-bold text-purple-600 mb-2"
+                className="text-2xl font-bold gradient-text-premium mb-2"
                 initial={{ opacity: 0, scale: 0 }}
                 animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
                 transition={{ delay: 2.4, duration: 0.5 }}
               >
                 24/7
               </motion.div>
-              <div className="text-gray-600 text-sm">Monitoring</div>
+              <div className="text-muted-foreground text-sm">Monitoring</div>
             </motion.div>
           </motion.div>
         </motion.div>
