@@ -195,18 +195,18 @@ const DashboardMockup = () => {
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-background via-accent/10 to-background pt-20 pb-32">
+    <section className="relative overflow-hidden bg-gradient-to-br from-background via-accent/10 to-background min-h-screen flex items-center">
       {/* Theme toggle */}
       <div className="absolute top-6 right-6 z-20">
         <ThemeToggle />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <div className="container mx-auto px-4 relative z-10 py-20">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[80vh]">
           
           {/* Left content */}
           <motion.div 
-            className="text-center lg:text-left"
+            className="text-center lg:text-left flex flex-col justify-center"
             initial={{ opacity: 0, x: -100 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
@@ -254,7 +254,7 @@ export default function HeroSection() {
 
             {/* CTA buttons */}
             <motion.div 
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.8 }}
@@ -291,7 +291,7 @@ export default function HeroSection() {
 
             {/* Trust indicators */}
             <motion.div 
-              className="mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-muted-foreground"
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-6 text-muted-foreground"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.2, duration: 0.8 }}
