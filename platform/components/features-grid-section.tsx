@@ -1,138 +1,263 @@
 'use client';
 
+import { useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Shield, 
+  Zap, 
+  TrendingUp, 
+  Clock, 
+  Users, 
+  Lock,
+  BarChart3,
+  Smartphone,
+  CheckCircle
+} from 'lucide-react';
+
 /**
- * Feature icon components with circular backgrounds
+ * Enhanced feature icons with custom styling
  */
-const SmartContractIcon = () => (
-  <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg">
-    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-    </svg>
-  </div>
+const SecurityIcon = () => (
+  <motion.div
+    whileHover={{ scale: 1.1, rotate: 5 }}
+    transition={{ duration: 0.3 }}
+  >
+    <Shield className="w-12 h-12 text-blue-600" />
+  </motion.div>
 );
 
-const UsageFeesIcon = () => (
-  <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-    </svg>
-  </div>
+const AutomationIcon = () => (
+  <motion.div
+    whileHover={{ scale: 1.1 }}
+    transition={{ duration: 0.3 }}
+  >
+    <Zap className="w-12 h-12 text-yellow-500" />
+  </motion.div>
+);
+
+const ProfitabilityIcon = () => (
+  <motion.div
+    whileHover={{ scale: 1.1, y: -5 }}
+    transition={{ duration: 0.3 }}
+  >
+    <TrendingUp className="w-12 h-12 text-green-600" />
+  </motion.div>
 );
 
 const RealTimeIcon = () => (
-  <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-    </svg>
-  </div>
+  <motion.div
+    whileHover={{ scale: 1.1 }}
+    animate={{ rotate: [0, 360] }}
+    transition={{ 
+      rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+      scale: { duration: 0.3 }
+    }}
+  >
+    <Clock className="w-12 h-12 text-purple-600" />
+  </motion.div>
 );
 
-const WebTelegramIcon = () => (
-  <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center shadow-lg">
-    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-    </svg>
-  </div>
+const CommunityIcon = () => (
+  <motion.div
+    whileHover={{ scale: 1.1 }}
+    transition={{ duration: 0.3 }}
+  >
+    <Users className="w-12 h-12 text-indigo-600" />
+  </motion.div>
 );
 
-const AutomatedEngineIcon = () => (
-  <div className="w-16 h-16 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
-    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  </div>
-);
-
-const TransparentReportsIcon = () => (
-  <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
-    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-    </svg>
-  </div>
+const TransparencyIcon = () => (
+  <motion.div
+    whileHover={{ scale: 1.1, rotateY: 180 }}
+    transition={{ duration: 0.6 }}
+  >
+    <Lock className="w-12 h-12 text-emerald-600" />
+  </motion.div>
 );
 
 /**
- * Individual feature card component
+ * Individual feature card component using shadcn/ui Card
  */
 const FeatureCard = ({ 
   icon, 
   title, 
-  description 
+  description,
+  delay = 0
 }: { 
   icon: React.ReactNode; 
   title: string; 
   description: string;
-}) => (
-  <div className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
-    {/* Icon */}
-    <div className="flex justify-center mb-6">
-      <div className="transform group-hover:scale-110 transition-transform duration-300">
-        {icon}
-      </div>
-    </div>
-    
-    {/* Content */}
-    <div className="text-center">
-      <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-300">
-        {title}
-      </h3>
-      <p className="text-gray-600 leading-relaxed">
-        {description}
-      </p>
-    </div>
-  </div>
-);
+  delay?: number;
+}) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 60, scale: 0.8 }}
+      animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 60, scale: 0.8 }}
+      transition={{ delay, duration: 0.6, ease: "easeOut" }}
+    >
+      <Card className="group h-full bg-white/90 backdrop-blur-sm border-gray-200 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 hover:border-blue-300">
+        <CardContent className="p-8 text-center">
+          {/* Icon */}
+          <motion.div 
+            className="flex justify-center mb-6"
+            initial={{ opacity: 0, scale: 0 }}
+            animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
+            transition={{ delay: delay + 0.2, duration: 0.5 }}
+          >
+            <motion.div 
+              className="p-4 bg-gray-50 rounded-2xl group-hover:bg-blue-50 transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+            >
+              {icon}
+            </motion.div>
+          </motion.div>
+          
+          {/* Content */}
+          <motion.h3 
+            className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ delay: delay + 0.4, duration: 0.5 }}
+          >
+            {title}
+          </motion.h3>
+          
+          <motion.p 
+            className="text-gray-600 leading-relaxed"
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ delay: delay + 0.6, duration: 0.5 }}
+          >
+            {description}
+          </motion.p>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
 
 /**
- * Main Features Grid section component
+ * Trust indicator component with animation
  */
+const TrustIndicator = ({ 
+  color, 
+  text, 
+  delay = 0 
+}: { 
+  color: string; 
+  text: string; 
+  delay?: number;
+}) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  return (
+    <motion.div 
+      ref={ref}
+      className="flex items-center space-x-2"
+      initial={{ opacity: 0, x: -20 }}
+      animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+      transition={{ delay, duration: 0.5 }}
+      whileHover={{ scale: 1.05 }}
+    >
+      <motion.div 
+        className={`w-3 h-3 rounded-full ${color}`}
+        animate={{ scale: [1, 1.2, 1] }}
+        transition={{ duration: 2, repeat: Infinity, delay }}
+      />
+      <span className="text-sm font-medium text-gray-500">{text}</span>
+    </motion.div>
+  );
+};
+
 export default function FeaturesGridSection() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
   const features = [
     {
-      icon: <SmartContractIcon />,
-      title: "Smart Contract Secured",
-      description: "Your funds are protected by audited smart contracts on the Stacks blockchain, ensuring maximum security and transparency."
+      icon: <SecurityIcon />,
+      title: "Blockchain Security",
+      description: "Built on Stacks blockchain with smart contracts ensuring your funds are always secure and transactions are transparent."
     },
     {
-      icon: <UsageFeesIcon />,
-      title: "Usage-Based Fees Only",
-      description: "Pay only when you earn. No hidden fees, no monthly charges - just a small percentage of your actual profits."
+      icon: <AutomationIcon />,
+      title: "Fully Automated",
+      description: "Our AI-powered algorithms work 24/7 to identify and execute profitable arbitrage opportunities without any manual intervention."
+    },
+    {
+      icon: <ProfitabilityIcon />,
+      title: "Consistent Returns",
+      description: "Earn steady returns from market inefficiencies across multiple exchanges with our proven arbitrage strategies."
     },
     {
       icon: <RealTimeIcon />,
-      title: "Real-Time NAV Updates",
-      description: "Track your portfolio value with live updates. See your earnings grow in real-time with transparent reporting."
+      title: "Real-Time Monitoring",
+      description: "Track your investments and earnings in real-time through our intuitive dashboard with live updates."
     },
     {
-      icon: <WebTelegramIcon />,
-      title: "Web + Telegram Access",
-      description: "Manage your investments through our web dashboard or get instant updates via our Telegram bot integration."
+      icon: <CommunityIcon />,
+      title: "Community Driven",
+      description: "Join a thriving community of investors and stay updated with our integrated Telegram notifications."
     },
     {
-      icon: <AutomatedEngineIcon />,
-      title: "Automated Arbitrage Engine",
-      description: "Advanced algorithms continuously scan multiple exchanges to identify and execute profitable trading opportunities."
-    },
-    {
-      icon: <TransparentReportsIcon />,
-      title: "Transparent Reporting",
-      description: "Access detailed performance reports and transaction history. Every trade is recorded on-chain for full transparency."
+      icon: <TransparencyIcon />,
+      title: "Full Transparency",
+      description: "Every transaction is recorded on the blockchain, providing complete transparency and auditability of all operations."
     }
   ];
 
+  const trustIndicators = [
+    { color: "bg-green-500", text: "Blockchain Secured" },
+    { color: "bg-blue-500", text: "24/7 Automated" },
+    { color: "bg-purple-500", text: "Transparent & Audited" }
+  ];
+
   return (
-    <section className="py-20 bg-white">
+    <section ref={ref} className="py-20 bg-white">
       <div className="container mx-auto px-4">
         {/* Section header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        <motion.div 
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 50 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="flex justify-center mb-6"
+          >
+            <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 px-4 py-2">
+              Advanced Features
+            </Badge>
+          </motion.div>
+
+          <motion.h2 
+            className="text-4xl md:text-5xl font-bold text-gray-900 mb-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+          >
             Why Choose PoolMind?
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          </motion.h2>
+          
+          <motion.p 
+            className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ delay: 0.6, duration: 0.8 }}
+          >
             Built with cutting-edge technology and designed for both beginners and experienced investors.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Features grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
@@ -142,27 +267,90 @@ export default function FeaturesGridSection() {
               icon={feature.icon}
               title={feature.title}
               description={feature.description}
+              delay={index * 0.15}
             />
           ))}
         </div>
 
         {/* Bottom section with trust indicators */}
-        <div className="mt-20 text-center">
-          <div className="flex flex-wrap items-center justify-center gap-8 text-gray-500">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-sm font-medium">Blockchain Secured</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span className="text-sm font-medium">24/7 Automated</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-              <span className="text-sm font-medium">Transparent & Audited</span>
-            </div>
-          </div>
-        </div>
+        <motion.div 
+          className="mt-20 text-center"
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ delay: 1.2, duration: 0.8 }}
+        >
+          <motion.div 
+            className="flex flex-wrap items-center justify-center gap-8 text-gray-500"
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ delay: 1.4, duration: 0.8 }}
+          >
+            {trustIndicators.map((indicator, index) => (
+              <TrustIndicator
+                key={index}
+                color={indicator.color}
+                text={indicator.text}
+                delay={1.6 + index * 0.2}
+              />
+            ))}
+          </motion.div>
+
+          {/* Additional stats */}
+          <motion.div 
+            className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ delay: 1.8, duration: 0.8 }}
+          >
+            <motion.div 
+              className="text-center"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div 
+                className="text-2xl font-bold text-blue-600 mb-2"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
+                transition={{ delay: 2, duration: 0.5 }}
+              >
+                99.9%
+              </motion.div>
+              <div className="text-gray-600 text-sm">Uptime</div>
+            </motion.div>
+            
+            <motion.div 
+              className="text-center"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div 
+                className="text-2xl font-bold text-green-600 mb-2"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
+                transition={{ delay: 2.2, duration: 0.5 }}
+              >
+                &lt;1s
+              </motion.div>
+              <div className="text-gray-600 text-sm">Response Time</div>
+            </motion.div>
+            
+            <motion.div 
+              className="text-center"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div 
+                className="text-2xl font-bold text-purple-600 mb-2"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
+                transition={{ delay: 2.4, duration: 0.5 }}
+              >
+                24/7
+              </motion.div>
+              <div className="text-gray-600 text-sm">Monitoring</div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );

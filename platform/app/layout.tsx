@@ -19,8 +19,6 @@ export const metadata: Metadata = {
   description: "PoolMind uses blockchain-powered automation to let you invest in crypto arbitrage with zero trading expertise. Built on Stacks blockchain.",
   keywords: ["crypto", "arbitrage", "blockchain", "stacks", "defi", "investment", "pooled trading"],
   authors: [{ name: "PoolMind Team" }],
-  viewport: "width=device-width, initial-scale=1",
-  themeColor: "#1e40af",
 };
 
 export default function RootLayout({

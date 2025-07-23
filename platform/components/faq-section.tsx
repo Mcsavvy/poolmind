@@ -1,145 +1,247 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { HelpCircle, ArrowRight, MessageCircle } from 'lucide-react';
 
 /**
- * Individual FAQ item component
+ * Individual FAQ item with animation
  */
 const FAQItem = ({ 
   question, 
   answer, 
-  isOpen, 
-  onToggle 
-}: {
-  question: string;
-  answer: string;
-  isOpen: boolean;
-  onToggle: () => void;
-}) => (
-  <div className="border-b border-gray-200 last:border-b-0">
-    <button
-      onClick={onToggle}
-      className="w-full px-6 py-6 text-left hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:bg-gray-50"
+  value,
+  delay = 0 
+}: { 
+  question: string; 
+  answer: string; 
+  value: string;
+  delay?: number;
+}) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ delay, duration: 0.6, ease: "easeOut" }}
     >
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 pr-4">
-          {question}
-        </h3>
-        <div className={`flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
-          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </div>
-    </button>
-    
-    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-      isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-    }`}>
-      <div className="px-6 pb-6">
-        <p className="text-gray-600 leading-relaxed">
-          {answer}
-        </p>
-      </div>
-    </div>
-  </div>
-);
+      <AccordionItem value={value} className="border-gray-200 bg-white/50 rounded-lg mb-2">
+        <AccordionTrigger className="text-left p-6 hover:no-underline group">
+          <div className="flex items-center space-x-3 w-full">
+            <motion.div
+              className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors duration-300 flex-shrink-0"
+              whileHover={{ scale: 1.1 }}
+              transition={{ duration: 0.2 }}
+            >
+              <HelpCircle className="w-4 h-4 text-blue-600" />
+            </motion.div>
+            <span className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
+              {question}
+            </span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="px-6 pb-6">
+          <motion.div 
+            className="pt-2 pl-11"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <p className="text-gray-600 leading-relaxed">{answer}</p>
+          </motion.div>
+        </AccordionContent>
+      </AccordionItem>
+    </motion.div>
+  );
+};
 
 /**
- * Main FAQ section component
+ * Support card component
  */
+const SupportCard = ({ delay = 0 }: { delay?: number }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 30, scale: 0.9 }}
+      transition={{ delay, duration: 0.6, ease: "easeOut" }}
+    >
+      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+        <CardContent className="p-8 text-center">
+          <motion.div 
+            className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-6"
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            transition={{ duration: 0.3 }}
+          >
+            <MessageCircle className="w-8 h-8 text-white" />
+          </motion.div>
+          
+          <motion.h3 
+            className="text-xl font-bold text-gray-900 mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ delay: delay + 0.2, duration: 0.5 }}
+          >
+            Still Have Questions?
+          </motion.h3>
+          
+          <motion.p 
+            className="text-gray-600 mb-6 leading-relaxed"
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ delay: delay + 0.4, duration: 0.5 }}
+          >
+            Join our Telegram community or reach out to our support team for personalized assistance.
+          </motion.p>
+          
+          <motion.div 
+            className="space-y-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ delay: delay + 0.6, duration: 0.5 }}
+          >
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white">
+                Join Telegram Community
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </motion.div>
+            
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button variant="outline" className="w-full border-blue-300 text-blue-600 hover:bg-blue-50">
+                Contact Support
+              </Button>
+            </motion.div>
+          </motion.div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
+
 export default function FAQSection() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-  
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
   const faqs = [
     {
-      question: "What is crypto arbitrage?",
-      answer: "Crypto arbitrage is the practice of buying and selling the same cryptocurrency on different exchanges to profit from price differences. PoolMind's automated system continuously monitors multiple exchanges, identifies profitable opportunities, and executes trades instantly to capture these price discrepancies for our investors."
+      question: "How does PoolMind's arbitrage system work?",
+      answer: "PoolMind uses advanced algorithms to continuously scan multiple cryptocurrency exchanges for price differences. When profitable opportunities are identified, our smart contracts automatically execute trades to capture the arbitrage profit, which is then distributed proportionally to all pool participants."
     },
     {
-      question: "Is my STX locked?",
-      answer: "No, your STX is never locked. You can withdraw your funds at any time by redeeming your PLMD tokens. There are no lock-up periods, minimum holding requirements, or withdrawal restrictions. Your investment remains liquid and accessible whenever you need it."
+      question: "What is the minimum investment required?",
+      answer: "The minimum investment to join our arbitrage pool is 10 STX tokens. This low barrier to entry makes crypto arbitrage accessible to investors of all sizes while maintaining the efficiency of our pooled approach."
     },
     {
-      question: "How is NAV calculated?",
-      answer: "Net Asset Value (NAV) is calculated by dividing the total value of all assets in the pool by the number of outstanding PLMD tokens. This includes the current market value of all cryptocurrencies held, plus any pending trades and accrued profits, minus operational expenses. NAV is updated in real-time as market conditions change."
-    },
-    {
-      question: "What are PLMD tokens?",
-      answer: "PLMD tokens represent your proportional share in the PoolMind arbitrage fund. When you deposit STX, you receive PLMD tokens that track the performance of the entire pool. As the fund generates profits through arbitrage trading, the value of your PLMD tokens increases accordingly."
-    },
-    {
-      question: "Can I withdraw anytime?",
-      answer: "Yes, you can withdraw your investment at any time with no restrictions. Simply redeem your PLMD tokens through our platform, and you'll receive your proportional share of the fund's current value in STX. Withdrawals are typically processed within minutes during normal market conditions."
+      question: "How are profits distributed among investors?",
+      answer: "Profits are distributed proportionally based on your share of the total pool. For example, if you contribute 100 STX to a 10,000 STX pool, you'll receive 1% of all arbitrage profits. Distribution happens automatically through smart contracts."
     },
     {
       question: "What fees does PoolMind charge?",
-      answer: "PoolMind operates on a performance-based fee structure. We only charge a small percentage of the profits generated by successful arbitrage trades. There are no management fees, deposit fees, or withdrawal fees. You only pay when the fund is profitable, aligning our interests with yours."
+      answer: "PoolMind operates on a performance-based fee structure. We only charge a small percentage (typically 10-15%) of the actual profits generated. There are no management fees, entry fees, or hidden charges. You only pay when you earn."
     },
     {
-      question: "How secure is the platform?",
-      answer: "Security is our top priority. All funds are secured by audited smart contracts on the Stacks blockchain. We use multi-signature wallets, implement strict security protocols, and undergo regular security audits. Your private keys remain under your control, and all transactions are transparent and verifiable on-chain."
+      question: "How secure are my funds in the pool?",
+      answer: "Your funds are secured by audited smart contracts on the Stacks blockchain. The contracts are designed to be non-custodial, meaning PoolMind never has direct access to your funds. All transactions are transparent and verifiable on the blockchain."
     },
     {
-      question: "What returns can I expect?",
-      answer: "While past performance doesn't guarantee future results, our arbitrage engine has historically generated consistent returns by capitalizing on market inefficiencies. Returns vary based on market conditions and available arbitrage opportunities. You can track real-time performance through our dashboard and Telegram updates."
+      question: "Can I withdraw my investment anytime?",
+      answer: "Yes, you can withdraw your investment at any time. The withdrawal process typically takes 1-3 business days to complete, depending on network conditions. There are no lock-up periods or withdrawal penalties."
+    },
+    {
+      question: "What returns can I expect from arbitrage trading?",
+      answer: "Returns vary based on market conditions and arbitrage opportunities available. Historically, our pool has generated annualized returns between 12-25%. However, past performance doesn't guarantee future results, and all investments carry risk."
+    },
+    {
+      question: "How do I track my investment performance?",
+      answer: "You can monitor your investment in real-time through our web dashboard, which shows your current balance, profits earned, and detailed transaction history. We also provide optional Telegram notifications for major updates."
     }
   ];
-  
-  const handleToggle = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
-  
+
   return (
-    <section className="py-20 bg-white">
+    <section ref={ref} className="py-20 bg-gradient-to-b from-white to-gray-50">
       <div className="container mx-auto px-4">
         {/* Section header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        <motion.div 
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 50 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="flex justify-center mb-6"
+          >
+            <Badge variant="outline" className="bg-purple-50 text-purple-600 border-purple-200 px-4 py-2">
+              FAQ
+            </Badge>
+          </motion.div>
+
+          <motion.h2 
+            className="text-4xl md:text-5xl font-bold text-gray-900 mb-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+          >
             Frequently Asked Questions
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Get answers to common questions about PoolMind's arbitrage platform and how it works.
-          </p>
-        </div>
+          </motion.h2>
+          
+          <motion.p 
+            className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ delay: 0.6, duration: 0.8 }}
+          >
+            Everything you need to know about PoolMind's automated arbitrage platform.
+          </motion.p>
+        </motion.div>
 
-        {/* FAQ accordion */}
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            {faqs.map((faq, index) => (
-              <FAQItem
-                key={index}
-                question={faq.question}
-                answer={faq.answer}
-                isOpen={openIndex === index}
-                onToggle={() => handleToggle(index)}
-              />
-            ))}
-          </div>
-        </div>
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* FAQ Accordion */}
+            <div className="lg:col-span-2">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
+                transition={{ delay: 0.8, duration: 0.8 }}
+              >
+                <Accordion type="single" collapsible className="space-y-2">
+                  {faqs.map((faq, index) => (
+                    <FAQItem
+                      key={index}
+                      question={faq.question}
+                      answer={faq.answer}
+                      value={`item-${index}`}
+                      delay={0.8 + index * 0.1}
+                    />
+                  ))}
+                </Accordion>
+              </motion.div>
+            </div>
 
-        {/* Bottom CTA */}
-        <div className="text-center mt-16">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 max-w-2xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              Still have questions?
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Join our Telegram community or reach out to our support team for personalized assistance.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors duration-200">
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                </svg>
-                Join Telegram
-              </button>
-              <button className="inline-flex items-center px-6 py-3 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 font-semibold rounded-xl transition-colors duration-200">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Contact Support
-              </button>
+            {/* Support card */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-8">
+                <SupportCard delay={1.5} />
+              </div>
             </div>
           </div>
         </div>
