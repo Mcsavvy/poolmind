@@ -11,9 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { WalletAvatar } from '@/components/ui/wallet-avatar';
 import { 
   User, 
   Settings, 
@@ -73,15 +73,14 @@ export default function UserProfileDropdown() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage 
-              src={user.profilePicture} 
-              alt={user.displayName || user.username || 'User'} 
-            />
-            <AvatarFallback>
-              {getInitials(user.displayName || user.username, user.walletAddress)}
-            </AvatarFallback>
-          </Avatar>
+          <WalletAvatar
+            walletAddress={user.walletAddress}
+            profilePicture={user.profilePicture}
+            displayName={user.displayName}
+            username={user.username}
+            size="md"
+            className="h-8 w-8"
+          />
         </Button>
       </DropdownMenuTrigger>
       
