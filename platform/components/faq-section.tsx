@@ -79,7 +79,7 @@ const SupportCard = ({ delay = 0 }: { delay?: number }) => {
       <Card className="bg-gradient-to-br from-accent/30 to-accent/50 border-primary/30 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-premium-pulse">
         <CardContent className="p-8 text-center">
           <motion.div 
-            className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-6 animate-golden-glow"
+            className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-6 animate-golden-glow shrink-0"
             whileHover={{ scale: 1.1, rotate: 5 }}
             transition={{ duration: 0.3 }}
           >
@@ -114,8 +114,8 @@ const SupportCard = ({ delay = 0 }: { delay?: number }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground animate-golden-glow">
-                Join Telegram Community
+              <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground animate-golden-glow px-6 py-4 text-base font-semibold">
+                Join Telegram
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </motion.div>

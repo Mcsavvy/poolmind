@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 import { 
   Shield, 
   Zap, 
@@ -161,10 +162,12 @@ const FeatureCard = ({
 const TrustIndicator = ({ 
   color, 
   text, 
+  showStacks = false,
   delay = 0 
 }: { 
   color: string; 
   text: string; 
+  showStacks?: boolean;
   delay?: number;
 }) => {
   const ref = useRef(null);
@@ -185,6 +188,15 @@ const TrustIndicator = ({
         transition={{ duration: 2, repeat: Infinity, delay }}
       />
       <span className="text-sm font-medium text-muted-foreground">{text}</span>
+      {showStacks && (
+        <Image
+          src="/stx.png"
+          alt="Stacks Logo"
+          width={16}
+          height={16}
+          className="w-4 h-4"
+        />
+      )}
     </motion.div>
   );
 };
@@ -195,7 +207,18 @@ export default function FeaturesGridSection() {
 
   const features = [
     {
-      icon: <SecurityIcon />,
+      icon: (
+        <div className="relative">
+          <SecurityIcon />
+          <Image
+            src="/stx.png"
+            alt="Stacks Logo"
+            width={20}
+            height={20}
+            className="w-5 h-5 absolute inset-0 m-auto"
+          />
+        </div>
+      ),
       title: "Blockchain Security",
       description: "Built on Stacks blockchain with smart contracts ensuring your funds are always secure and transactions are transparent."
     },
@@ -227,9 +250,9 @@ export default function FeaturesGridSection() {
   ];
 
   const trustIndicators = [
-    { color: "bg-primary", text: "Blockchain Secured" },
-    { color: "bg-secondary", text: "24/7 Automated" },
-    { color: "bg-accent-foreground", text: "Transparent & Audited" }
+    { color: "bg-primary", text: "Blockchain Secured", showStacks: true },
+    { color: "bg-secondary", text: "24/7 Automated", showStacks: false },
+    { color: "bg-accent-foreground", text: "Transparent & Audited", showStacks: false }
   ];
 
   return (
@@ -304,6 +327,7 @@ export default function FeaturesGridSection() {
                 key={index}
                 color={indicator.color}
                 text={indicator.text}
+                showStacks={indicator.showStacks}
                 delay={1.6 + index * 0.2}
               />
             ))}

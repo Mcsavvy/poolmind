@@ -1,6 +1,7 @@
 'use client';
 
 import { Easing, motion } from 'framer-motion';
+import Navbar from '@/components/navbar';
 import HeroSection from '@/components/hero-section';
 import HowItWorksSection from '@/components/how-it-works-section';
 import FeaturesGridSection from '@/components/features-grid-section';
@@ -41,23 +42,25 @@ export default function Home() {
       initial="hidden"
       animate="visible"
     >
+      <Navbar />
+      
       <motion.div variants={sectionVariants}>
         <HeroSection />
       </motion.div>
       
-      <motion.div variants={sectionVariants}>
+      <motion.div variants={sectionVariants} id="how-it-works">
         <HowItWorksSection />
       </motion.div>
       
-      <motion.div variants={sectionVariants}>
+      <motion.div variants={sectionVariants} id="features">
         <FeaturesGridSection />
       </motion.div>
       
-      <motion.div variants={sectionVariants}>
+      <motion.div variants={sectionVariants} id="stats">
         <StatsSection />
       </motion.div>
       
-      <motion.div variants={sectionVariants}>
+      <motion.div variants={sectionVariants} id="testimonials">
         <TestimonialsSection />
       </motion.div>
       
@@ -65,7 +68,7 @@ export default function Home() {
         <TelegramCTASection />
       </motion.div>
       
-      <motion.div variants={sectionVariants}>
+      <motion.div variants={sectionVariants} id="faq">
         <FAQSection />
       </motion.div>
     </motion.div>

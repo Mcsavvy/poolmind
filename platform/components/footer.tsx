@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 /**
  * Logo component with Stacks branding
  */
@@ -7,9 +9,13 @@ const FooterLogo = () => (
   <div className="flex flex-col space-y-3">
     {/* PoolMind Logo */}
     <div className="flex items-center space-x-2">
-      <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
-        <span className="text-primary-foreground font-bold text-sm">P</span>
-      </div>
+      <Image
+        src="/logo.png"
+        alt="PoolMind Logo"
+        width={32}
+        height={32}
+        className="w-8 h-8"
+      />
       <span className="text-foreground font-bold text-xl">PoolMind</span>
     </div>
     
@@ -17,9 +23,13 @@ const FooterLogo = () => (
     <div className="flex items-center space-x-2 text-muted-foreground">
       <span className="text-sm">Powered by</span>
       <div className="flex items-center space-x-1">
-        <div className="w-5 h-5 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
-          <span className="text-primary-foreground text-xs font-bold">S</span>
-        </div>
+        <Image
+          src="/stx.png"
+          alt="Stacks Logo"
+          width={20}
+          height={20}
+          className="w-5 h-5"
+        />
         <span className="text-sm font-medium">Stacks</span>
       </div>
     </div>

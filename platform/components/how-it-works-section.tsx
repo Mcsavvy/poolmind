@@ -1,10 +1,11 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, Fragment } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 import { Wallet, ArrowRight, RefreshCcw, TrendingUp } from 'lucide-react';
 
 /**
@@ -206,7 +207,18 @@ export default function HowItWorksSection() {
 
   const steps = [
     {
-      icon: <WalletTokenIcon />,
+      icon: (
+        <div className="flex items-center space-x-2">
+          <WalletTokenIcon />
+          <Image
+            src="/stx.png"
+            alt="Stacks Logo"
+            width={20}
+            height={20}
+            className="w-5 h-5"
+          />
+        </div>
+      ),
       title: "Connect Your Wallet",
       description: "Connect your Stacks wallet and deposit STX tokens to join our automated arbitrage pool. Minimum investment starts at just 10 STX."
     },
@@ -266,7 +278,7 @@ export default function HowItWorksSection() {
         <div className="relative max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
             {steps.map((step, index) => (
-              <>
+              <Fragment key={`step-${index}`}>
                 <div key={`step-${index}`} className="flex-1">
                   <StepCard
                     icon={step.icon}
@@ -282,7 +294,7 @@ export default function HowItWorksSection() {
                     <StepConnector />
                   </div>
                 )}
-              </>
+              </Fragment>
             ))}
           </div>
         </div>

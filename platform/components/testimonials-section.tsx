@@ -6,24 +6,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Quote, Star, ChevronLeft, ChevronRight, MessageCircle, Coins } from 'lucide-react';
+import { Quote, Star, MessageCircle, Coins } from 'lucide-react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
-/**
- * Hook for auto-sliding testimonials
- */
-const useAutoSlide = (length: number, interval = 4000) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % length);
-    }, interval);
-
-    return () => clearInterval(timer);
-  }, [length, interval]);
-
-  return { currentIndex, setCurrentIndex };
-};
 
 /**
  * Individual testimonial card component using shadcn/ui with premium styling
@@ -63,7 +55,7 @@ const TestimonialCard = ({
       transition={{ delay, duration: 0.6, ease: "easeOut" }}
     >
       <Card className="group h-full bg-card/95 backdrop-blur-sm border-border shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 animate-premium-pulse">
-        <CardContent className="p-8 flex flex-col justify-between h-full">
+        <CardContent className="p-8 flex flex-col justify-between h-full min-h-[300px]">
           {/* Quote icon with premium styling */}
           <motion.div 
             className="flex justify-start mb-4"
@@ -133,74 +125,7 @@ const TestimonialCard = ({
   );
 };
 
-/**
- * Navigation dots component with premium styling
- */
-const NavigationDots = ({ 
-  total, 
-  current, 
-  onSelect 
-}: { 
-  total: number; 
-  current: number; 
-  onSelect: (index: number) => void;
-}) => (
-  <motion.div 
-    className="flex justify-center space-x-2"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ delay: 1, duration: 0.5 }}
-  >
-    {[...Array(total)].map((_, index) => (
-      <motion.button
-        key={index}
-        onClick={() => onSelect(index)}
-        className={`w-3 h-3 rounded-full transition-all duration-300 ${
-          index === current 
-            ? 'bg-primary scale-110 animate-golden-glow' 
-            : 'bg-muted-foreground/40 hover:bg-primary/60'
-        }`}
-        whileHover={{ scale: 1.2 }}
-        whileTap={{ scale: 0.9 }}
-      />
-    ))}
-  </motion.div>
-);
 
-/**
- * Navigation arrows component with premium styling
- */
-const NavigationArrows = ({ 
-  onPrev, 
-  onNext 
-}: { 
-  onPrev: () => void; 
-  onNext: () => void;
-}) => (
-  <motion.div 
-    className="flex justify-center space-x-4 mt-8"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 1.2, duration: 0.5 }}
-  >
-    <Button
-      variant="outline"
-      size="lg"
-      onClick={onPrev}
-      className="rounded-full w-12 h-12 p-0 hover:bg-accent/50 hover:border-primary/40 border-primary/20 transition-all duration-300"
-    >
-      <ChevronLeft className="w-5 h-5 text-primary" />
-    </Button>
-    <Button
-      variant="outline"
-      size="lg"
-      onClick={onNext}
-      className="rounded-full w-12 h-12 p-0 hover:bg-accent/50 hover:border-primary/40 border-primary/20 transition-all duration-300"
-    >
-      <ChevronRight className="w-5 h-5 text-primary" />
-    </Button>
-  </motion.div>
-);
 
 /**
  * Telegram community badge component with premium styling
@@ -217,10 +142,10 @@ const TelegramBadge = () => {
       transition={{ delay: 0.5, duration: 0.8 }}
     >
       <Card className="bg-gradient-to-r from-accent/30 to-accent/50 border-primary/30 p-6 animate-premium-pulse">
-        <CardContent className="flex items-center justify-between p-0">
-          <div className="flex items-center space-x-4">
+        <CardContent className="flex flex-col lg:flex-row items-center justify-between p-0 space-y-4 lg:space-y-0">
+          <div className="flex items-center space-x-4 text-center lg:text-left">
             <motion.div 
-              className="w-12 h-12 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center animate-golden-glow"
+              className="w-12 h-12 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center animate-golden-glow flex-shrink-0"
               whileHover={{ scale: 1.1, rotate: 5 }}
               transition={{ duration: 0.3 }}
             >
@@ -234,8 +159,9 @@ const TelegramBadge = () => {
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            className="w-full lg:w-auto"
           >
-            <Button className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground animate-coin-shimmer">
+            <Button className="w-full lg:w-auto bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground animate-coin-shimmer px-6 py-2">
               Join Telegram
             </Button>
           </motion.div>
@@ -297,25 +223,7 @@ export default function TestimonialsSection() {
     }
   ];
 
-  const { currentIndex, setCurrentIndex } = useAutoSlide(testimonials.length);
-  
-  // Calculate visible testimonials (3 at a time on desktop, 1 on mobile)
-  const getVisibleTestimonials = () => {
-    const visible = [];
-    for (let i = 0; i < 3; i++) {
-      const index = (currentIndex + i) % testimonials.length;
-      visible.push(testimonials[index]);
-    }
-    return visible;
-  };
 
-  const handlePrev = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + testimonials.length) % testimonials.length);
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
-  };
 
   return (
     <section ref={ref} className="py-20 bg-gradient-to-b from-background via-accent/5 to-background">
@@ -360,41 +268,32 @@ export default function TestimonialsSection() {
 
         {/* Testimonials carousel */}
         <div className="max-w-6xl mx-auto mb-12">
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={currentIndex}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-            >
-              {getVisibleTestimonials().map((testimonial, index) => (
-                <TestimonialCard
-                  key={`${currentIndex}-${index}`}
-                  quote={testimonial.quote}
-                  name={testimonial.name}
-                  username={testimonial.username}
-                  imageUrl={testimonial.imageUrl}
-                  rating={testimonial.rating}
-                  delay={index * 0.1}
-                />
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {testimonials.map((testimonial, index) => (
+                <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                  <div className="h-full">
+                    <TestimonialCard
+                      quote={testimonial.quote}
+                      name={testimonial.name}
+                      username={testimonial.username}
+                      imageUrl={testimonial.imageUrl}
+                      rating={testimonial.rating}
+                      delay={index * 0.1}
+                    />
+                  </div>
+                </CarouselItem>
               ))}
-            </motion.div>
-          </AnimatePresence>
-          
-          {/* Navigation */}
-          <div className="mt-8 space-y-6">
-            <NavigationDots
-              total={testimonials.length}
-              current={currentIndex}
-              onSelect={setCurrentIndex}
-            />
-            <NavigationArrows
-              onPrev={handlePrev}
-              onNext={handleNext}
-            />
-          </div>
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
         </div>
 
         {/* Telegram community badge */}

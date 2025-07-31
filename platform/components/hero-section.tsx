@@ -5,7 +5,8 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { ArrowRight, Play, Coins } from 'lucide-react';
+import { ArrowRight, Play, Coins, ShieldCheck, ChartLine } from 'lucide-react';
+import Image from 'next/image';
 
 /**
  * Animated crypto icon component with premium coin styling
@@ -196,10 +197,6 @@ const DashboardMockup = () => {
 export default function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-background via-accent/10 to-background min-h-screen flex items-center">
-      {/* Theme toggle */}
-      <div className="absolute top-6 right-6 z-20">
-        <ThemeToggle />
-      </div>
 
       <div className="container mx-auto px-4 relative z-10 py-20">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[80vh]">
@@ -211,6 +208,34 @@ export default function HeroSection() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
           >
+            {/* Logo at the top */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.6 }}
+              className="flex justify-center lg:justify-start mb-8"
+            >
+              <div className="flex items-center space-x-3">
+                <Image
+                  src="/logo.png"
+                  alt="PoolMind Logo"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6"
+                />
+                <div className="flex items-center space-x-2">
+                  <Image
+                    src="/stx.png"
+                    alt="Stacks Logo"
+                    width={24}
+                    height={24}
+                    className="w-6 h-6"
+                  />
+                  <span className="text-sm text-muted-foreground">Powered by Stacks</span>
+                </div>
+              </div>
+            </motion.div>
+
             {/* Platform badge */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -301,9 +326,13 @@ export default function HeroSection() {
                 whileHover={{ scale: 1.1 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="w-6 h-6 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
-                  <span className="text-primary-foreground text-xs font-bold">S</span>
-                </div>
+                <Image
+                  src="/stx.png"
+                  alt="Stacks Logo"
+                  width={20}
+                  height={20}
+                  className="w-5 h-5"
+                />
                 <span className="text-sm">Stacks Blockchain</span>
               </motion.div>
               <motion.div 
@@ -311,7 +340,7 @@ export default function HeroSection() {
                 whileHover={{ scale: 1.1 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                <ShieldCheck className="w-5 h-5 text-primary" />
                 <span className="text-sm">Secure & Transparent</span>
               </motion.div>
               <motion.div 
@@ -319,7 +348,7 @@ export default function HeroSection() {
                 whileHover={{ scale: 1.1 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
+                <ChartLine className="w-5 h-5 text-primary" />
                 <span className="text-sm">Automated Trading</span>
               </motion.div>
             </motion.div>
@@ -334,28 +363,28 @@ export default function HeroSection() {
 
       {/* Background decorative elements with coin theme */}
       <motion.div 
-        className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-stacks-gradient"
+        className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-stacks-gradient"
         animate={{ 
-          scale: [1, 1.2, 1],
-          opacity: [0.3, 0.6, 0.3]
+          scale: [1, 1.1, 1],
+          opacity: [0.2, 0.4, 0.2]
         }}
         transition={{ 
-          duration: 8, 
+          duration: 12, 
           repeat: Infinity,
           ease: "easeInOut"
         }}
       />
       <motion.div 
-        className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-stacks-gradient"
+        className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-secondary/10 rounded-full blur-3xl animate-stacks-gradient"
         animate={{ 
-          scale: [1, 1.3, 1],
-          opacity: [0.2, 0.5, 0.2]
+          scale: [1, 1.15, 1],
+          opacity: [0.15, 0.3, 0.15]
         }}
         transition={{ 
-          duration: 10, 
+          duration: 15, 
           repeat: Infinity,
           ease: "easeInOut",
-          delay: 2
+          delay: 3
         }}
       />
     </section>
