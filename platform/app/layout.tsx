@@ -4,6 +4,7 @@ import "./globals.css";
 import Footer from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import AuthSessionProvider from "@/components/auth/session-provider";
+import { Toaster } from "@/components/ui/sonner"
 
 const inter = Inter({
   variable: "--font-inter",
@@ -41,6 +42,7 @@ export default function RootLayout({
         >
           <AuthSessionProvider>
             {children}
+            <Toaster position="bottom-right" expand richColors />
             <Footer />
           </AuthSessionProvider>
         </ThemeProvider>
