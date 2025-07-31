@@ -1,4 +1,4 @@
-import mongoose, { Schema, Model } from 'mongoose';
+import mongoose, { Schema, Model, IndexDefinition, IndexOptions } from 'mongoose';
 import { createBaseSchema, IBaseDocument, IBaseModel } from './base';
 
 // Schema registry to keep track of registered schemas
@@ -134,6 +134,7 @@ export function createModel<T extends IBaseDocument>(
       pre?: Array<{ hook: string; fn: Function }>;
       post?: Array<{ hook: string; fn: Function }>;
     };
+    indexes?: Array<[IndexDefinition, IndexOptions]>;
   }
 ): Model<T> {
   // Check if model already exists (for Next.js hot reloading)
@@ -156,6 +157,13 @@ export function createModel<T extends IBaseDocument>(
 
   // Create the model
   const model = mongoose.model<T>(name, schema);
+
+  // Add indexes if provided
+  if (options?.indexes) {
+    options.indexes.forEach(([indexDefinition, indexOptions]) => {
+      model.schema.index(indexDefinition, indexOptions);
+    });
+  }
 
   // Register the model unless explicitly skipped
   if (!options?.skipRegistration) {
