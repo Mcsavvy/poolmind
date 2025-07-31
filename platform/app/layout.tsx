@@ -3,6 +3,7 @@ import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Footer from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
+import AuthSessionProvider from "@/components/auth/session-provider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -34,12 +35,14 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange={false}
         >
-          {children}
-          <Footer />
+          <AuthSessionProvider>
+            {children}
+            <Footer />
+          </AuthSessionProvider>
         </ThemeProvider>
       </body>
     </html>
