@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Menu, X } from 'lucide-react';
 import Image from 'next/image';
+import { useSession } from 'next-auth/react';
+import WalletConnectButton from '@/components/auth/wallet-connect-button';
+import UserProfileDropdown from '@/components/auth/user-profile-dropdown';
 
 const navItems = [
   { name: 'How It Works', href: '#how-it-works' },
@@ -82,8 +85,13 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Right side - Theme toggle and mobile menu */}
+          {/* Right side - Auth, Theme toggle and mobile menu */}
           <div className="flex items-center space-x-4">
+            {/* Desktop Authentication */}
+            <div className="hidden lg:flex items-center space-x-3">
+              <AuthSection />
+            </div>
+            
             <ThemeToggle />
             
             {/* Mobile menu button */}
@@ -109,6 +117,7 @@ export default function Navbar() {
           }`}
         >
           <div className="py-4 space-y-4 border-t border-border/50 bg-background/95 backdrop-blur-md">
+            {/* Mobile Navigation Items */}
             {navItems.map((item) => (
               <motion.button
                 key={item.name}
@@ -120,9 +129,43 @@ export default function Navbar() {
                 {item.name}
               </motion.button>
             ))}
+            
+            {/* Mobile Authentication */}
+            <div className="px-4 pt-4 border-t border-border/30">
+              <AuthSection />
+            </div>
           </div>
         </motion.div>
       </div>
     </motion.nav>
+  );
+}
+
+// Authentication section component
+function AuthSection() {
+  const { data: session, status } = useSession();
+
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center space-x-2">
+        <div className="w-8 h-8 bg-muted animate-pulse rounded-full" />
+      </div>
+    );
+  }
+
+  if (session?.user) {
+    return (
+      <div className="flex items-center space-x-3">
+        <UserProfileDropdown />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center space-x-3">
+      <WalletConnectButton variant="outline" size="sm">
+        Connect Wallet
+      </WalletConnectButton>
+    </div>
   );
 } 
