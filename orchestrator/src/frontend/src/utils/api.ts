@@ -292,9 +292,18 @@ export const getWalletConnectUrl = async (
 // Get pool state
 export const getPoolState = async (): Promise<ApiResponse<PoolState>> => {
   try {
+    const token = getAuthToken();
+
+    if (!token) {
+      return {
+        success: false,
+        error: "No authentication token found",
+      };
+    }
     const response = await fetch(config.getApiUrl("pool/state"), {
       method: "GET",
       headers: {
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });
