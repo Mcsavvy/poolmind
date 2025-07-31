@@ -9,6 +9,7 @@ import StatsSection from '@/components/stats-section';
 import TestimonialsSection from '@/components/testimonials-section';
 import TelegramCTASection from '@/components/telegram-cta-section';
 import FAQSection from '@/components/faq-section';
+import Footer from '@/components/footer';
 
 // Animation variants for section entrance
 const sectionVariants = {
@@ -36,6 +37,7 @@ const containerVariants = {
 
 export default function Home() {
   return (
+    <div className="flex flex-col min-h-screen">
     <motion.div 
       className="min-h-screen"
       variants={containerVariants}
@@ -72,5 +74,7 @@ export default function Home() {
         <FAQSection />
       </motion.div>
     </motion.div>
+    <Footer />
+    </div>
   );
 }
