@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { serverConfig } from './config';
 
 type ConnectionObject = {
   isConnected?: number;
@@ -13,17 +14,9 @@ async function connectDB(): Promise<void> {
     return;
   }
 
-  const MONGODB_URI = process.env.MONGODB_URI;
-
-  if (!MONGODB_URI) {
-    throw new Error(
-      'Please define the MONGODB_URI environment variable inside .env.local'
-    );
-  }
-
   try {
     // Connect to MongoDB
-    const db = await mongoose.connect(MONGODB_URI, {
+    const db = await mongoose.connect(serverConfig.mongoUri, {
       bufferCommands: false,
     });
 

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import connectDB from './database';
+import { serverConfig } from './config';
 
 // Connection utility specifically for Next.js API routes and server components
 interface CachedConnection {
@@ -76,7 +77,7 @@ export function withDatabase(handler: any) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return res.status(500).json({ 
         error: 'Database connection failed',
-        message: process.env.NODE_ENV === 'development' ? errorMessage : 'Internal server error'
+        message: serverConfig.nodeEnv === 'development' ? errorMessage : 'Internal server error'
       });
     }
   };
