@@ -23,12 +23,16 @@
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/mongoose": "^11.0.3",
     "@nestjs/platform-express": "^11.0.1",
+    "@poolmind/shared-types": "workspace:*",
+    "@poolmind/shared-utils": "workspace:*",
+    "mongoose": "^8.17.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "@poolmind/shared-types": "workspace:*",
-    "@poolmind/shared-utils": "workspace:*"
+    "zod": "^4.0.14"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
