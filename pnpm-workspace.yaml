@@ -4,6 +4,7 @@ packages:
 
 onlyBuiltDependencies:
   - '@nestjs/core'
+  - '@scarf/scarf'
   - '@tailwindcss/oxide'
   - sharp
   - unrs-resolver

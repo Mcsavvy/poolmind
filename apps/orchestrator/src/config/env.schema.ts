@@ -8,6 +8,7 @@ const appConfigSchema = z.object({
     .default('development'),
   DATABASE_URI: z.string().min(1, 'Database URI is required'),
   DATABASE_NAME: z.string().min(1, 'Database name is required'),
+  CORS_ORIGINS: z.string().optional(),
 });
 
 export type AppConfig = {
@@ -15,6 +16,7 @@ export type AppConfig = {
   nodeEnv: 'development' | 'production' | 'test';
   'database.uri': string;
   'database.name': string;
+  corsOrigins?: string;
 };
 
 export function validateConfig(env: Record<string, string>): AppConfig {
@@ -33,6 +35,7 @@ export function validateConfig(env: Record<string, string>): AppConfig {
     nodeEnv: parsedEnv.data.NODE_ENV,
     'database.uri': parsedEnv.data.DATABASE_URI,
     'database.name': parsedEnv.data.DATABASE_NAME,
+    corsOrigins: parsedEnv.data.CORS_ORIGINS,
   };
 
   return config;
