@@ -1,6 +1,6 @@
-// Generate a unique avatar based on wallet address
+// Generate a unique avatar using Dicebear Lorelei collection with themed gradients
 export function generateWalletAvatar(walletAddress: string): string {
-  // Create a hash from the wallet address
+  // Create a hash from the wallet address for deterministic results
   let hash = 0;
   for (let i = 0; i < walletAddress.length; i++) {
     const char = walletAddress.charCodeAt(i);
@@ -8,47 +8,45 @@ export function generateWalletAvatar(walletAddress: string): string {
     hash = hash & hash; // Convert to 32-bit integer
   }
 
-  // Generate colors based on the hash
-  const hue1 = Math.abs(hash) % 360;
-  const hue2 = (hue1 + 180) % 360; // Complementary color
-  const saturation = 60 + (Math.abs(hash) % 40); // 60-100%
-  const lightness = 45 + (Math.abs(hash) % 20); // 45-65%
+  // App theme colors (orange/amber palette)
+  const themeGradients = [
+    // Primary orange gradients
+    ['ff9800', 'ffc107'], // Orange to Amber
+    ['f57c00', 'ff9800'], // Dark Orange to Orange
+    ['ff8f00', 'ffb300'], // Amber variants
+    
+    // Secondary warm gradients
+    ['f4511e', 'ff6f00'], // Deep Orange variants
+    ['e65100', 'f57c00'], // Dark Orange spectrum
+    ['ffb300', 'ffd54f'], // Light Amber range
+    
+    // Complementary warm gradients
+    ['ff9800', 'e8a100'], // Orange with darker tone
+    ['ffc107', 'fff176'], // Amber to light yellow
+  ];
 
-  // Create SVG with unique pattern
-  const pattern = hash % 4; // 4 different patterns
-  const size = 100;
+  // Select gradient based on hash
+  const gradientIndex = Math.abs(hash) % themeGradients.length;
+  const [color1, color2] = themeGradients[gradientIndex];
   
-  let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">`;
+  // Generate rotation angle (0-360 degrees)
+  const rotation = Math.abs(hash) % 360;
   
-  // Background
-  svg += `<rect width="${size}" height="${size}" fill="hsl(${hue1}, ${saturation}%, ${lightness}%)"/>`;
+  // Use wallet address as seed for consistent avatars
+  const seed = walletAddress;
   
-  switch (pattern) {
-    case 0: // Circles
-      svg += `<circle cx="30" cy="30" r="15" fill="hsl(${hue2}, ${saturation}%, ${lightness}%)"/>`;
-      svg += `<circle cx="70" cy="70" r="12" fill="hsl(${hue2}, ${saturation}%, ${lightness}%)"/>`;
-      svg += `<circle cx="70" cy="30" r="8" fill="hsl(${hue2}, ${saturation}%, ${lightness}%)"/>`;
-      break;
-    case 1: // Triangles
-      svg += `<polygon points="50,20 30,60 70,60" fill="hsl(${hue2}, ${saturation}%, ${lightness}%)"/>`;
-      svg += `<polygon points="50,80 35,50 65,50" fill="hsl(${hue2}, ${saturation}%, ${lightness}%)"/>`;
-      break;
-    case 2: // Squares
-      svg += `<rect x="20" y="20" width="25" height="25" fill="hsl(${hue2}, ${saturation}%, ${lightness}%)"/>`;
-      svg += `<rect x="55" y="55" width="20" height="20" fill="hsl(${hue2}, ${saturation}%, ${lightness}%)"/>`;
-      svg += `<rect x="60" y="25" width="15" height="15" fill="hsl(${hue2}, ${saturation}%, ${lightness}%)"/>`;
-      break;
-    case 3: // Lines
-      svg += `<line x1="20" y1="30" x2="80" y2="30" stroke="hsl(${hue2}, ${saturation}%, ${lightness}%)" stroke-width="8"/>`;
-      svg += `<line x1="20" y1="60" x2="80" y2="60" stroke="hsl(${hue2}, ${saturation}%, ${lightness}%)" stroke-width="8"/>`;
-      svg += `<line x1="20" y1="45" x2="80" y2="45" stroke="hsl(${hue2}, ${saturation}%, ${lightness}%)" stroke-width="4"/>`;
-      break;
-  }
+  // Build Dicebear Lorelei API URL with gradient background
+  const params = new URLSearchParams({
+    seed: seed,
+    backgroundColor: `${color1},${color2}`,
+    backgroundType: 'gradientLinear',
+    backgroundRotation: `${rotation}`,
+    size: '100',
+    // Add some variety to the avatar features
+    flip: (Math.abs(hash) % 2 === 0).toString(),
+  });
   
-  svg += '</svg>';
-  
-  // Convert to data URL
-  return `data:image/svg+xml;base64,${btoa(svg)}`;
+  return `https://api.dicebear.com/9.x/lorelei/svg?${params.toString()}`;
 }
 
 // Generate initials for wallet address (fallback)
@@ -59,7 +57,7 @@ export function getWalletInitials(walletAddress: string): string {
   return walletAddress.slice(0, 2).toUpperCase();
 }
 
-// Get a consistent color for the wallet address
+// Get a consistent color for the wallet address that matches app theme
 export function getWalletColor(walletAddress: string): string {
   let hash = 0;
   for (let i = 0; i < walletAddress.length; i++) {
@@ -68,9 +66,18 @@ export function getWalletColor(walletAddress: string): string {
     hash = hash & hash;
   }
   
-  const hue = Math.abs(hash) % 360;
-  const saturation = 60 + (Math.abs(hash) % 40);
-  const lightness = 45 + (Math.abs(hash) % 20);
+  // App theme colors - matches the gradient colors used in avatars
+  const themeColors = [
+    '#ff9800', // Primary orange
+    '#ffc107', // Primary amber
+    '#f57c00', // Dark orange
+    '#ff8f00', // Amber variant
+    '#f4511e', // Deep orange
+    '#ffb300', // Light amber
+    '#e65100', // Dark orange
+    '#ff6f00', // Orange variant
+  ];
   
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  const colorIndex = Math.abs(hash) % themeColors.length;
+  return themeColors[colorIndex];
 } 

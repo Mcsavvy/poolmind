@@ -78,8 +78,8 @@ export default function UserProfileDropdown() {
             profilePicture={user.profilePicture}
             displayName={user.displayName}
             username={user.username}
-            size="md"
-            className="h-8 w-8"
+            size="lg"
+            className="h-12 w-12"
           />
         </Button>
       </DropdownMenuTrigger>
