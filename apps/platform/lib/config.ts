@@ -4,7 +4,6 @@ import ms from "ms";
 // Server-side environment schema (only used on server)
 const serverEnvSchema = z.object({
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-    MONGO_URI: z.string().min(1, "MONGO_URI is required"),
     NEXTAUTH_SECRET: z.string().min(32, 'NEXTAUTH_SECRET must be at least 32 characters long'),
 });
 
@@ -52,7 +51,6 @@ export const serverConfig = (() => {
         // We're on the client side, return a safe fallback
         return {
           nodeEnv: "development",
-          mongoUri: "...",
           nextAuthSecret: "...",
         };
     }
@@ -70,7 +68,6 @@ export const serverConfig = (() => {
         }
         return {
           nodeEnv: "development",
-          mongoUri: "...",
           nextAuthSecret: "...",
         };
     }
@@ -79,7 +76,6 @@ export const serverConfig = (() => {
     
     return {
         nodeEnv: env.NODE_ENV,
-        mongoUri: env.MONGO_URI,
         nextAuthSecret: env.NEXTAUTH_SECRET,
     };
 })();
