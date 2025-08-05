@@ -89,6 +89,11 @@ export function createModel<T extends IBaseDocument>(
       schema.index(indexDef, indexOptions);
     });
   }
-
-  return mongoose.model<T>(name, schema) as IBaseModel<T>;
+  console.log('Creating model:', name);
+  const model = mongoose.model<T>(name, schema) as IBaseModel<T>;
+  Object.defineProperty(model, 'name', {
+    value: name,
+    configurable: true,
+  });
+  return model;
 }

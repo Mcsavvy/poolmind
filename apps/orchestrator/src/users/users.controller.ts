@@ -17,9 +17,10 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { CurrentUser, Roles } from '../auth/decorators';
 import { type IUser } from '../lib/models/user';
-import User from '../lib/models/user';
 import {
   UpdateUserProfileDto,
   UpdateNotificationPreferencesDto,
@@ -31,6 +32,9 @@ import {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class UsersController {
+  constructor(
+    @InjectModel('User') private readonly userModel: Model<IUser>,
+  ) {}
   @Get('profile')
   @ApiOperation({
     summary: 'Get user profile',
@@ -123,7 +127,7 @@ export class UsersController {
       updateProfileDto.username &&
       updateProfileDto.username !== user.username
     ) {
-      const existingUser = await User.findByUsername(updateProfileDto.username);
+      const existingUser = await this.userModel.findOne({ username: updateProfileDto.username });
       if (existingUser && existingUser._id.toString() !== user._id.toString()) {
         throw new ForbiddenException('Username is already taken');
       }
@@ -131,7 +135,7 @@ export class UsersController {
 
     // Check for email uniqueness if email is being updated
     if (updateProfileDto.email && updateProfileDto.email !== user.email) {
-      const existingUser = await User.findByEmail(updateProfileDto.email);
+      const existingUser = await this.userModel.findOne({ email: updateProfileDto.email });
       if (existingUser && existingUser._id.toString() !== user._id.toString()) {
         throw new ForbiddenException('Email is already registered');
       }
@@ -281,10 +285,34 @@ export class UsersController {
     description: 'Forbidden - Admin or moderator role required',
   })
   async getUserStats() {
-    const stats = await User.getStats();
+    const stats = await this.userModel.aggregate([
+      { $match: { isActive: true } },
+      {
+        $group: {
+          _id: null,
+          totalUsers: { $sum: 1 },
+          usersWithEmail: {
+            $sum: { $cond: [{ $ne: ['$email', null] }, 1, 0] },
+          },
+          usersWithUsername: {
+            $sum: { $cond: [{ $ne: ['$username', null] }, 1, 0] },
+          },
+          adminUsers: {
+            $sum: { $cond: [{ $eq: ['$role', 'admin'] }, 1, 0] },
+          },
+        },
+      },
+    ]);
+
+    const result = stats[0] || {
+      totalUsers: 0,
+      usersWithEmail: 0,
+      usersWithUsername: 0,
+      adminUsers: 0,
+    };
 
     return {
-      stats,
+      stats: result,
       success: true,
     };
   }

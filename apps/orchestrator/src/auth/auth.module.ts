@@ -12,7 +12,7 @@ import User from '../lib/models/user';
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    MongooseModule.forFeature([{ name: 'User', schema: User.schema }]),
+    MongooseModule.forFeature([{ name: User.name, schema: User.schema }]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService<AppConfig>) => ({

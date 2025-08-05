@@ -1,10 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { verifyMessageSignatureRsv } from '@stacks/encryption';
 import * as jwt from 'jsonwebtoken';
 import { AppConfig } from '../config/env.schema';
-import User, { IUser } from '../lib/models/user';
+import { IUser, IUserModel } from '../lib/models/user';
 
 export interface WalletCredentials {
   walletAddress: string;
@@ -35,6 +37,7 @@ export class AuthService {
   constructor(
     private readonly configService: ConfigService<AppConfig>,
     private readonly jwtService: JwtService,
+    @InjectModel('User') private readonly userModel: Model<IUser>,
   ) {}
 
   /**
@@ -147,11 +150,11 @@ export class AuthService {
     }
 
     // Find or create user
-    let user = await User.findByWalletAddress(walletAddress);
+    let user = await this.userModel.findOne({ walletAddress });
 
     if (!user) {
       // Create new user
-      user = new User({
+      user = new this.userModel({
         walletAddress,
         publicKey,
         connectionHistory: [
@@ -208,7 +211,7 @@ export class AuthService {
       const secret = this.configService.get<string>('auth.jwtSecret')!;
       const payload = jwt.verify(token, secret) as JwtPayload;
 
-      const user = await User.findById(payload.sub);
+      const user = await this.userModel.findById(payload.sub);
       if (!user || !user.isActive) {
         return null;
       }
@@ -235,7 +238,7 @@ export class AuthService {
    */
   async getUserById(userId: string): Promise<IUser | null> {
     try {
-      const user = await User.findById(userId);
+      const user = await this.userModel.findById(userId);
       return user?.isActive ? user : null;
     } catch (error) {
       console.error('Error getting user by ID:', error);
