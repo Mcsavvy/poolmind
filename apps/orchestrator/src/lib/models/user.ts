@@ -1,56 +1,22 @@
 import {
   createModel,
   IBaseDocument,
+  IBaseModel,
   commonFields,
   validators,
 } from '../schemas';
 
-// Notification preferences interface
-export interface INotificationPreferences {
-  email: boolean;
-  push: boolean;
-  sms: boolean;
-  marketing: boolean;
-  security: boolean;
-}
-
-// User interface extending base document
-export interface IUser extends IBaseDocument {
-  // Wallet authentication (primary)
-  walletAddress: string; // Stacks wallet address
-  publicKey?: string; // Public key for additional verification
-
-  // Profile information (optional)
-  username?: string;
-  email?: string;
-  displayName?: string;
-  profilePicture?: string;
-  bio?: string;
-
-  // Authentication metadata
-  lastLoginAt?: Date;
-  loginCount: number;
-  isEmailVerified: boolean;
-
-  // Notification preferences
-  notificationPreferences: INotificationPreferences;
-
-  // Social links (optional)
-  socialLinks?: {
-    twitter?: string;
-    discord?: string;
-    telegram?: string;
-    website?: string;
-  };
-
-  // User role and permissions
-  role: 'user' | 'admin' | 'moderator';
-
-  // Wallet connection history
-  connectionHistory: Array<{
-    connectedAt: Date;
-    walletType: string;
-    ipAddress?: string;
+// User model interface with custom statics
+export interface IUserModel extends IBaseModel<IUser> {
+  findByWalletAddress(walletAddress: string): Promise<IUser | null>;
+  findByUsername(username: string): Promise<IUser | null>;
+  findByEmail(email: string): Promise<IUser | null>;
+  findWithEmailNotifications(): Promise<IUser[]>;
+  getStats(): Promise<{
+    totalUsers: number;
+    usersWithEmail: number;
+    usersWithUsername: number;
+    adminUsers: number;
   }>;
 }
 
@@ -320,4 +286,63 @@ const User = createModel<IUser>(
   },
 );
 
-export default User;
+// Notification preferences interface
+export interface INotificationPreferences {
+  email: boolean;
+  push: boolean;
+  sms: boolean;
+  marketing: boolean;
+  security: boolean;
+}
+
+// User interface extending base document
+export interface IUser extends IBaseDocument {
+  // Wallet authentication (primary)
+  walletAddress: string; // Stacks wallet address
+  publicKey?: string; // Public key for additional verification
+
+  // Profile information (optional)
+  username?: string;
+  email?: string;
+  displayName?: string;
+  profilePicture?: string;
+  bio?: string;
+
+  // Authentication metadata
+  lastLoginAt?: Date;
+  loginCount: number;
+  isEmailVerified: boolean;
+
+  // Notification preferences
+  notificationPreferences: INotificationPreferences;
+
+  // Social links (optional)
+  socialLinks?: {
+    twitter?: string;
+    discord?: string;
+    telegram?: string;
+    website?: string;
+  };
+
+  // User role and permissions
+  role: 'user' | 'admin' | 'moderator';
+
+  // Wallet connection history
+  connectionHistory: Array<{
+    connectedAt: Date;
+    walletType: string;
+    ipAddress?: string;
+  }>;
+
+  // Instance methods
+  getDisplayName(): string;
+  updateLoginInfo(): Promise<IUser>;
+  addConnection(walletType: string, ipAddress?: string): Promise<IUser>;
+  updateNotificationPreferences(
+    preferences: Partial<INotificationPreferences>,
+  ): Promise<IUser>;
+  isAdmin(): boolean;
+  isModerator(): boolean;
+}
+
+export default User as IUserModel;

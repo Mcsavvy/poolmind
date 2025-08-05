@@ -9,6 +9,13 @@ const appConfigSchema = z.object({
   DATABASE_URI: z.string().min(1, 'Database URI is required'),
   DATABASE_NAME: z.string().min(1, 'Database name is required'),
   CORS_ORIGINS: z.string().optional(),
+
+  // Authentication configuration
+  JWT_SECRET: z
+    .string()
+    .min(32, 'JWT secret must be at least 32 characters long'),
+  JWT_EXPIRES_IN: z.string().default('7d'),
+  STACKS_NETWORK: z.enum(['mainnet', 'testnet', 'devnet']).default('testnet'),
 });
 
 export type AppConfig = {
@@ -17,6 +24,11 @@ export type AppConfig = {
   'database.uri': string;
   'database.name': string;
   corsOrigins?: string;
+
+  // Authentication
+  'auth.jwtSecret': string;
+  'auth.jwtExpiresIn': string;
+  'auth.stacksNetwork': 'mainnet' | 'testnet' | 'devnet';
 };
 
 export function validateConfig(env: Record<string, string>): AppConfig {
@@ -36,6 +48,11 @@ export function validateConfig(env: Record<string, string>): AppConfig {
     'database.uri': parsedEnv.data.DATABASE_URI,
     'database.name': parsedEnv.data.DATABASE_NAME,
     corsOrigins: parsedEnv.data.CORS_ORIGINS,
+
+    // Authentication
+    'auth.jwtSecret': parsedEnv.data.JWT_SECRET,
+    'auth.jwtExpiresIn': parsedEnv.data.JWT_EXPIRES_IN,
+    'auth.stacksNetwork': parsedEnv.data.STACKS_NETWORK,
   };
 
   return config;

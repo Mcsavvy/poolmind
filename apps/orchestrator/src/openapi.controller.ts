@@ -6,9 +6,11 @@ import {
   ApiExcludeEndpoint,
 } from '@nestjs/swagger';
 import { type Response } from 'express';
+import { Public } from './auth/decorators/public.decorator';
 
 @ApiTags('OpenAPI')
 @Controller('api')
+@Public()
 export class OpenApiController {
   @Get('openapi.json')
   @ApiExcludeEndpoint()
