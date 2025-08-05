@@ -6,6 +6,7 @@ import { connect, isConnected, getLocalStorage, request, disconnect } from '@sta
 import { Button } from '@/components/ui/button';
 import { Wallet, Loader2 } from 'lucide-react';
 import { clientConfig } from '@/lib/config';
+import { generateAuthMessage } from '@/lib/auth';
 import { toast } from 'sonner';
 
 interface WalletConnectButtonProps {
@@ -62,17 +63,7 @@ export default function WalletConnectButton({
       }
 
       // Get authentication message from server
-      const nonceResponse = await fetch('/api/auth/nonce', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: stxAddress })
-      });
-
-      if (!nonceResponse.ok) {
-        throw new Error('Failed to get authentication message');
-      }
-
-      const { message } = await nonceResponse.json();
+      const message = await generateAuthMessage(stxAddress);
 
       // Sign the message with the user's wallet
       const signatureResponse = await request('stx_signMessage', {

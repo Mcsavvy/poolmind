@@ -2,9 +2,12 @@ import { NextAuthOptions } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { verifyMessageSignatureRsv } from '@stacks/encryption';
-import connectDB from './database';
-import User, { IUser } from '@/lib/models/user';
+import apiClient from './api-client';
 import { clientConfig } from './config';
+import type { UserProfileResponse } from '@poolmind/shared-types';
+
+// Type for the user object returned from API responses
+type ApiUser = UserProfileResponse['user'];
 
 // Extend NextAuth types
 declare module 'next-auth' {
@@ -120,45 +123,25 @@ export const authOptions: NextAuthOptions = {
             throw new Error('Signature expired');
           }
 
-          // Connect to database
-          await connectDB();
+          // Authenticate with NestJS API
+          const loginResponse = await apiClient.login({
+            walletAddress: credentials.walletAddress,
+            publicKey: credentials.publicKey,
+            signature: credentials.signature,
+            message: credentials.message,
+            walletType: credentials.walletType,
+            network: credentials.network as 'mainnet' | 'testnet'
+          });
 
-          // Find or create user
-          let user = await User.findOne({ walletAddress: credentials.walletAddress.toUpperCase() });
-          
-          if (!user) {
-            // Create new user
-            user = new User({
-              walletAddress: credentials.walletAddress,
-              publicKey: credentials.publicKey,
-              connectionHistory: [{
-                connectedAt: new Date(),
-                walletType: credentials.walletType || 'unknown',
-                ipAddress: req.headers?.['x-forwarded-for'] as string || 'unknown'
-              }]
-            });
-            await user.save();
-          } else {
-            // Update existing user
-            user.lastLoginAt = new Date();
-            user.loginCount += 1;
-            user.connectionHistory.unshift({
-              connectedAt: new Date(),
-              walletType: credentials.walletType || 'unknown',
-              ipAddress: req.headers?.['x-forwarded-for'] as string || 'unknown'
-            });
-            
-            // Keep only last 10 connections
-            if (user.connectionHistory.length > 10) {
-              user.connectionHistory = user.connectionHistory.slice(0, 10);
-            }
-            
-            await user.save();
+          if (!loginResponse.success) {
+            throw new Error('Authentication failed');
           }
+
+          const { user } = loginResponse;
 
           // Return user data for NextAuth
           return {
-            id: user._id.toString(),
+            id: user.id,
             walletAddress: user.walletAddress,
             username: user.username,
             displayName: user.displayName,
@@ -242,19 +225,23 @@ export const authOptions: NextAuthOptions = {
 };
 
 // Utility functions for authentication
-export async function getCurrentUser(token: JWT | null): Promise<IUser | null> {
+export async function getCurrentUser(token: JWT | null): Promise<ApiUser | null> {
   if (!token?.walletAddress) return null;
   
   try {
-    await connectDB();
-    return await User.findOne({ walletAddress: token.walletAddress.toUpperCase() });
+    // Use the token to get current user from API
+    if (apiClient.getToken()) {
+      const response = await apiClient.getCurrentUser();
+      return response.user;
+    }
+    return null;
   } catch (error) {
     console.error('Error fetching current user:', error);
     return null;
   }
 }
 
-export async function requireAuth(token: JWT | null): Promise<IUser> {
+export async function requireAuth(token: JWT | null): Promise<ApiUser> {
   const user = await getCurrentUser(token);
   if (!user) {
     throw new Error('Authentication required');
@@ -262,7 +249,7 @@ export async function requireAuth(token: JWT | null): Promise<IUser> {
   return user;
 }
 
-export async function requireAdmin(token: JWT | null): Promise<IUser> {
+export async function requireAdmin(token: JWT | null): Promise<ApiUser> {
   const user = await requireAuth(token);
   if (user.role !== 'admin') {
     throw new Error('Admin access required');
@@ -270,7 +257,7 @@ export async function requireAdmin(token: JWT | null): Promise<IUser> {
   return user;
 }
 
-export async function requireModerator(token: JWT | null): Promise<IUser> {
+export async function requireModerator(token: JWT | null): Promise<ApiUser> {
   const user = await requireAuth(token);
   if (!['admin', 'moderator'].includes(user.role)) {
     throw new Error('Moderator access required');
@@ -279,16 +266,23 @@ export async function requireModerator(token: JWT | null): Promise<IUser> {
 }
 
 // Generate authentication message for wallet signing
-export function generateAuthMessage(walletAddress: string, nonce?: string): string {
-  const timestamp = new Date().toISOString();
-  const randomNonce = nonce || Math.random().toString(36).substring(2);
-  let message = "Sign this message to authenticate with PoolMind\n"
-  message += `\nDomain: ${clientConfig.nextAuthUrl}`
-  message += `\nWallet Address: ${walletAddress}`
-  message += `\nTimestamp: ${timestamp}`
-  message += `\nNonce: ${randomNonce}`
-  message += `\n\nBy signing this message, you confirm that you are the owner of this wallet address and agree to authenticate with PoolMind.`
-  return message;
+export async function generateAuthMessage(walletAddress: string): Promise<string> {
+  try {
+    const response = await apiClient.generateNonce({ walletAddress });
+    return response.message;
+  } catch (error) {
+    console.error('Error generating auth message:', error);
+    // Fallback to local generation if API fails
+    const timestamp = new Date().toISOString();
+    const randomNonce = Math.random().toString(36).substring(2);
+    let message = "Sign this message to authenticate with PoolMind\n"
+    message += `\nDomain: ${clientConfig.nextAuthUrl}`
+    message += `\nWallet Address: ${walletAddress}`
+    message += `\nTimestamp: ${timestamp}`
+    message += `\nNonce: ${randomNonce}`
+    message += `\n\nBy signing this message, you confirm that you are the owner of this wallet address and agree to authenticate with PoolMind.`
+    return message;
+  }
 }
 
 // Helper function to parse plain text auth message

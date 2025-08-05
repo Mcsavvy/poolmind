@@ -19,6 +19,10 @@ const clientEnvSchema = z.object({
     .string()
     .min(1, "NEXTAUTH_URL is required")
     .default("http://localhost:3000"),
+  NEXT_PUBLIC_API_URL: z
+    .string()
+    .min(1, "API_URL is required")
+    .default("http://localhost:3001"),
   NEXT_PUBLIC_SESSION_MAX_AGE: z
     .preprocess(
       (value) => (typeof value === "string" ? ms(value as any) : value),
@@ -99,9 +103,10 @@ export const clientConfig = (() => {
     return {
         nodeEnv: env.NODE_ENV,
         nextAuthUrl: env.NEXT_PUBLIC_NEXTAUTH_URL,
-      stacksNetwork: env.NEXT_PUBLIC_STACKS_NETWORK,
-      sessionMaxAge: env.NEXT_PUBLIC_SESSION_MAX_AGE,
-      sessionUpdateAge: env.NEXT_PUBLIC_SESSION_UPDATE_AGE
+        apiUrl: env.NEXT_PUBLIC_API_URL,
+        stacksNetwork: env.NEXT_PUBLIC_STACKS_NETWORK,
+        sessionMaxAge: env.NEXT_PUBLIC_SESSION_MAX_AGE,
+        sessionUpdateAge: env.NEXT_PUBLIC_SESSION_UPDATE_AGE
     };
 })();
 
