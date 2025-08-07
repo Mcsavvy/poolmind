@@ -1,0 +1,51 @@
+---
+description: Project overview, structure, development guidelines, and important notes.
+globs:
+alwaysApply: true
+---
+
+## Project Overview
+PoolMind is a full-stack platform built on the Stacks blockchain for a pooled crypto arbitrage fund. The system prioritizes security, modularity, and user experience, and comprises three primary components: a Clarity smart contract, an Orchestrator API, and a Next.js frontend.
+
+## Project Structure
+```
+poolmind/
+├── apps/
+│   ├── platform/          # Next.js 15 + Tailwind v4 + Shadcn UI + Framer Motion + NextAuth.js + Stacks.js + Axios
+│   └── orchestrator/      # NestJS + MongoDB + Mongoose + JWT + Passport + Swagger + class-validator + class-transformer + Stacks.js
+├── packages/
+│   └── shared/
+│       ├── types/         # Shared TypeScript types and Zod schemas @poolmind/shared-types
+│       └── utils/         # Shared utility functions @poolmind/shared-utils
+├── contracts/             # Clarity smart contracts for Stacks blockchain (clarity)
+└── turbo.json            # Turborepo configuration
+```
+
+## Development Guidelines
+
+### Package Manager
+- Use **pnpm** as the package manager
+- Workspace dependencies are managed via `workspace:*` syntax
+
+## Development Workflow
+
+### Adding New Features
+1. Update shared types if needed (`packages/shared/types`)
+2. Implement backend API endpoints (`apps/orchestrator`)
+3. Create frontend components and pages (`apps/platform`)
+4. Update smart contracts if blockchain interaction needed (`contracts/`)
+
+
+## Important Notes
+
+
+## Database Schema
+- MongoDB collections defined in NestJS with Mongoose
+- Shared types define the data structures
+- Validation at both API and database levels
+
+## API Design
+- RESTful endpoints in NestJS controllers
+- OpenAPI/Swagger documentation
+- Consistent error handling and response formats
+- JWT authentication for protected routes
