@@ -5,7 +5,7 @@ import { signIn, useSession } from 'next-auth/react';
 import { connect, isConnected, getLocalStorage, request, disconnect } from '@stacks/connect';
 import { Button } from '@/components/ui/button';
 import { Wallet, Loader2 } from 'lucide-react';
-import { clientConfig } from '@/lib/config';
+import { config } from '@/lib/config';
 import { generateAuthMessage } from '@/lib/auth';
 import { toast } from 'sonner';
 
@@ -77,7 +77,7 @@ export default function WalletConnectButton({
         signature: signatureResponse.signature,
         message: message,
         walletType: 'stacks-wallet',
-        network: clientConfig.stacksNetwork,
+        network: config.stacksNetwork,
         redirect: false
       });
 

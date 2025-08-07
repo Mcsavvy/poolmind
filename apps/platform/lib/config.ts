@@ -1,14 +1,7 @@
 import z from "zod";
 import ms from "ms";
 
-// Server-side environment schema (only used on server)
-const serverEnvSchema = z.object({
-    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-    NEXTAUTH_SECRET: z.string().min(32, 'NEXTAUTH_SECRET must be at least 32 characters long'),
-});
-
-// Client-side environment schema (safe for frontend)
-const clientEnvSchema = z.object({
+const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
@@ -49,44 +42,9 @@ const clientEnvSchema = z.object({
     .default(ms("30m")),
 });
 
-// Server-side config (only used in API routes and server components)
-export const serverConfig = (() => {
-    if (typeof window !== 'undefined') {
-        // We're on the client side, return a safe fallback
-        return {
-          nodeEnv: "development",
-          nextAuthSecret: "...",
-        };
-    }
 
-    const parseResult = serverEnvSchema.safeParse(process.env);
-    
-    if (!parseResult.success) {
-        console.error("❌ Invalid server environment configuration:");
-        parseResult.error.issues.forEach((issue) => {
-            console.error(`  - ${issue.path.join(".")}: ${issue.message}`);
-        });
-        // Don't exit process on client side
-        if (typeof process !== 'undefined' && process.exit) {
-            process.exit(1);
-        }
-        return {
-          nodeEnv: "development",
-          nextAuthSecret: "...",
-        };
-    }
-    
-    const env = parseResult.data;
-    
-    return {
-        nodeEnv: env.NODE_ENV,
-        nextAuthSecret: env.NEXTAUTH_SECRET,
-    };
-})();
-
-// Client-side config (safe for frontend)
-export const clientConfig = (() => {
-    const parseResult = clientEnvSchema.safeParse(process.env);
+export const config = (() => {
+    const parseResult = envSchema.safeParse(process.env);
     
     if (!parseResult.success) {
         console.error("❌ Invalid client environment configuration:");
@@ -110,5 +68,4 @@ export const clientConfig = (() => {
     };
 })();
 
-// Default export for backward compatibility (client-safe)
-export default clientConfig;
+export default config;

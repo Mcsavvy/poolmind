@@ -3,7 +3,7 @@ import { JWT } from 'next-auth/jwt';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { verifyMessageSignatureRsv } from '@stacks/encryption';
 import apiClient from './api-client';
-import { clientConfig } from './config';
+import { config } from './config';
 import type { UserProfileResponse } from '@poolmind/shared-types';
 
 // Type for the user object returned from API responses
@@ -165,7 +165,7 @@ export const authOptions: NextAuthOptions = {
   },
   
   jwt: {
-    maxAge: clientConfig.sessionMaxAge
+    maxAge: config.sessionMaxAge
   },
   
   callbacks: {
@@ -221,7 +221,7 @@ export const authOptions: NextAuthOptions = {
     }
   },
   
-  debug: clientConfig.nodeEnv === 'development',
+  debug: config.nodeEnv === 'development',
 };
 
 // Utility functions for authentication
@@ -276,7 +276,7 @@ export async function generateAuthMessage(walletAddress: string): Promise<string
     const timestamp = new Date().toISOString();
     const randomNonce = Math.random().toString(36).substring(2);
     let message = "Sign this message to authenticate with PoolMind\n"
-    message += `\nDomain: ${clientConfig.nextAuthUrl}`
+    message += `\nDomain: ${config.nextAuthUrl}`
     message += `\nWallet Address: ${walletAddress}`
     message += `\nTimestamp: ${timestamp}`
     message += `\nNonce: ${randomNonce}`
