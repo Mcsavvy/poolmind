@@ -1,79 +1,71 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, ReactNode } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useEffect, ReactNode, useState } from 'react';
+import FullPageLoader from '@/components/ui/full-page-loader';
+import { useAuthSession } from '@/components/auth/session-provider';
 
 interface ProtectedRouteProps {
   children: ReactNode;
   requiredRole?: 'user' | 'moderator' | 'admin';
   fallbackUrl?: string;
+  loadingFallback?: ReactNode;
+  unauthorizedFallback?: ReactNode;
+  signingInFallback?: ReactNode;
 }
 
-export default function ProtectedRoute({ 
-  children, 
+export default function ProtectedRoute({
+  children,
   requiredRole = 'user',
-  fallbackUrl = '/auth/signin'
+  fallbackUrl = '/auth/signin',
+  loadingFallback,
+  unauthorizedFallback,
+  signingInFallback,
 }: ProtectedRouteProps) {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const { session, loading } = useAuthSession();
 
   useEffect(() => {
-    if (status === 'loading') return; // Still loading
-
+    if (loading) return;
     if (!session) {
       router.push(fallbackUrl);
       return;
     }
-
-    // Check role-based access
-    const userRole = session.user?.role;
-    const roleHierarchy = { user: 0, moderator: 1, admin: 2 };
-    
-    const userLevel = roleHierarchy[userRole as keyof typeof roleHierarchy] ?? -1;
+    const roleHierarchy = { user: 0, moderator: 1, admin: 2 } as const;
+    const userLevel = roleHierarchy[session.user.role];
     const requiredLevel = roleHierarchy[requiredRole];
-
     if (userLevel < requiredLevel) {
       router.push('/auth/unauthorized');
       return;
     }
-  }, [session, status, router, requiredRole, fallbackUrl]);
+  }, [router, requiredRole, fallbackUrl, session, loading]);
 
-  if (status === 'loading') {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
+      loadingFallback ?? (
+        <FullPageLoader text="Securing your session..." />
+      )
     );
   }
 
   if (!session) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-sm text-muted-foreground">Redirecting to sign in...</p>
-        </div>
-      </div>
+      signingInFallback ?? (
+        <FullPageLoader text="Redirecting to sign in..." />
+      )
     );
   }
 
   // Check role access again to prevent flash of content
-  const userRole = session.user?.role;
-  const roleHierarchy = { user: 0, moderator: 1, admin: 2 };
-  const userLevel = roleHierarchy[userRole as keyof typeof roleHierarchy] ?? -1;
+  const roleHierarchy = { user: 0, moderator: 1, admin: 2 } as const;
+  const userLevel = roleHierarchy[session.user.role] ?? -1;
   const requiredLevel = roleHierarchy[requiredRole];
 
   if (userLevel < requiredLevel) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-sm text-muted-foreground">Access denied. Redirecting...</p>
-        </div>
-      </div>
+      unauthorizedFallback ?? (
+        <FullPageLoader text="Access denied. Redirecting..." />
+      )
     );
   }
 
