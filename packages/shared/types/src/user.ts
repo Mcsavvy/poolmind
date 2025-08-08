@@ -9,6 +9,17 @@ export const NotificationPreferencesSchema = z.object({
   security: z.boolean(),
 });
 
+// Telegram authentication schema
+export const TelegramAuthSchema = z.object({
+  telegramId: z.number(),
+  firstName: z.string(),
+  lastName: z.string().optional(),
+  username: z.string().optional(),
+  photoUrl: z.string().url().optional(),
+  authDate: z.number(),
+  linkedAt: z.date(),
+});
+
 // Social links schema
 export const SocialLinksSchema = z.object({
   twitter: z.string().optional(),
@@ -41,6 +52,9 @@ export const UserSchema = z.object({
   lastLoginAt: z.date().optional(),
   loginCount: z.number(),
   isEmailVerified: z.boolean(),
+  
+  // Telegram authentication (optional)
+  telegramAuth: TelegramAuthSchema.optional(),
   
   // Preferences and settings
   notificationPreferences: NotificationPreferencesSchema,
@@ -82,11 +96,30 @@ export const UpdateSocialLinksSchema = z.object({
   website: z.url().optional(),
 });
 
+// Telegram login data schema (from Telegram widget)
+export const TelegramLoginDataSchema = z.object({
+  id: z.number(),
+  first_name: z.string(),
+  last_name: z.string().optional(),
+  username: z.string().optional(),
+  photo_url: z.string().url().optional(),
+  auth_date: z.number(),
+  hash: z.string(),
+});
+
+// Link Telegram account schema
+export const LinkTelegramSchema = z.object({
+  telegramData: TelegramLoginDataSchema,
+});
+
 // Type exports
 export type User = z.infer<typeof UserSchema>;
 export type NotificationPreferences = z.infer<typeof NotificationPreferencesSchema>;
+export type TelegramAuth = z.infer<typeof TelegramAuthSchema>;
 export type SocialLinks = z.infer<typeof SocialLinksSchema>;
 export type ConnectionHistory = z.infer<typeof ConnectionHistorySchema>;
 export type UpdateUserProfile = z.infer<typeof UpdateUserProfileSchema>;
 export type UpdateNotificationPreferences = z.infer<typeof UpdateNotificationPreferencesSchema>;
 export type UpdateSocialLinks = z.infer<typeof UpdateSocialLinksSchema>;
+export type TelegramLoginData = z.infer<typeof TelegramLoginDataSchema>;
+export type LinkTelegram = z.infer<typeof LinkTelegramSchema>;

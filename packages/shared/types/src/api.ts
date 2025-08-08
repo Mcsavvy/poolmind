@@ -26,6 +26,21 @@ export const RefreshTokenRequestSchema = z.object({
   token: z.string(),
 });
 
+// Telegram authentication schemas
+export const TelegramLoginRequestSchema = z.object({
+  id: z.number(),
+  first_name: z.string(),
+  last_name: z.string().optional(),
+  username: z.string().optional(),
+  photo_url: z.string().optional(),
+  auth_date: z.number(),
+  hash: z.string(),
+});
+
+export const LinkTelegramRequestSchema = z.object({
+  telegramData: TelegramLoginRequestSchema,
+});
+
 // Authentication response schemas
 export const NonceResponseSchema = z.object({
   message: z.string(),
@@ -43,6 +58,15 @@ export const LoginResponseSchema = z.object({
     profilePicture: z.string().optional(),
     role: z.enum(['user', 'admin', 'moderator']),
     isEmailVerified: z.boolean(),
+    telegramAuth: z.object({
+      telegramId: z.number(),
+      firstName: z.string(),
+      lastName: z.string().optional(),
+      username: z.string().optional(),
+      photoUrl: z.string().optional(),
+      authDate: z.number(),
+      linkedAt: z.string(),
+    }).optional(),
   }),
   success: z.boolean(),
 });
@@ -64,6 +88,15 @@ export const UserProfileResponseSchema = z.object({
     bio: z.string().optional(),
     role: z.enum(['user', 'admin', 'moderator']),
     isEmailVerified: z.boolean(),
+    telegramAuth: z.object({
+      telegramId: z.number(),
+      firstName: z.string(),
+      lastName: z.string().optional(),
+      username: z.string().optional(),
+      photoUrl: z.string().optional(),
+      authDate: z.number(),
+      linkedAt: z.string(),
+    }).optional(),
     notificationPreferences: z.object({
       email: z.boolean(),
       push: z.boolean(),
@@ -134,6 +167,8 @@ export type ApiResponse<T = any> = {
 export type NonceRequest = z.infer<typeof NonceRequestSchema>;
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
 export type RefreshTokenRequest = z.infer<typeof RefreshTokenRequestSchema>;
+export type TelegramLoginRequest = z.infer<typeof TelegramLoginRequestSchema>;
+export type LinkTelegramRequest = z.infer<typeof LinkTelegramRequestSchema>;
 
 export type NonceResponse = z.infer<typeof NonceResponseSchema>;
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
