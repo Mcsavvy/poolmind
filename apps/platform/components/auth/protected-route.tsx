@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, ReactNode, useState } from 'react';
 import FullPageLoader from '@/components/ui/full-page-loader';
 import { useAuthSession } from '@/components/auth/session-provider';
@@ -23,12 +23,13 @@ export default function ProtectedRoute({
   signingInFallback,
 }: ProtectedRouteProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { session, loading } = useAuthSession();
 
   useEffect(() => {
     if (loading) return;
     if (!session) {
-      router.push(fallbackUrl);
+      router.push(`${fallbackUrl}?next=${pathname}`);
       return;
     }
     const roleHierarchy = { user: 0, moderator: 1, admin: 2 } as const;
