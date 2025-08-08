@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Menu, X } from 'lucide-react';
+import { Loader2, Menu, X } from 'lucide-react';
 import Image from 'next/image';
-import { useSession } from 'next-auth/react';
+import { useAuthSession } from '@/components/auth/session-provider';
 import WalletConnectButton from '@/components/auth/wallet-connect-button';
 import UserProfileDropdown from '@/components/auth/user-profile-dropdown';
 
@@ -143,12 +143,12 @@ export default function Navbar() {
 
 // Authentication section component
 function AuthSection() {
-  const { data: session, status } = useSession();
+  const { session, loading } = useAuthSession();
 
-  if (status === 'loading') {
+  if (loading) {
     return (
       <div className="flex items-center space-x-2">
-        <div className="w-8 h-8 bg-muted animate-pulse rounded-full" />
+        <Loader2 className="h-4 w-4 animate-spin" />
       </div>
     );
   }

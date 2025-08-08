@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import AuthSessionProvider from "@/components/auth/session-provider";
+import { AuthSessionProvider } from "@/components/auth/session-provider";
 import { Toaster } from "@/components/ui/sonner"
 
 const inter = Inter({

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signOut, useSession } from 'next-auth/react';
+import { useAuthSession } from '@/components/auth/session-provider';
 import { disconnect } from '@stacks/connect';
 import { 
   DropdownMenu,
@@ -23,12 +23,15 @@ import {
   Bell,
   Loader2
 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function UserProfileDropdown() {
-  const { data: session, status } = useSession();
+  const { session, clearSession, loading } = useAuthSession();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const router = useRouter();
 
-  if (status === 'loading') {
+  if (loading) {
     return (
       <Button variant="ghost" size="sm" disabled>
         <Loader2 className="h-4 w-4 text-primary-foreground animate-spin" />
@@ -47,8 +50,9 @@ export default function UserProfileDropdown() {
     try {
       // Disconnect the wallet first
       disconnect();
-      // Then sign out from NextAuth
-      await signOut({ callbackUrl: '/' });
+      // Then clear client session
+      clearSession();
+      router.push('/');
     } catch (error) {
       console.error('Sign out error:', error);
       setIsSigningOut(false);
@@ -75,7 +79,7 @@ export default function UserProfileDropdown() {
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <WalletAvatar
             walletAddress={user.walletAddress}
-            profilePicture={user.profilePicture}
+            profilePicture={user.profilePicture || user.telegramAuth?.photoUrl}
             displayName={user.displayName}
             username={user.username}
             size="lg"
@@ -113,19 +117,25 @@ export default function UserProfileDropdown() {
         
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem>
-          <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
+        <DropdownMenuItem asChild>
+          <Link href="/profile">
+            <User className="mr-2 h-4 w-4" />
+            <span>Profile</span>
+          </Link>
         </DropdownMenuItem>
         
-        <DropdownMenuItem>
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
+        <DropdownMenuItem asChild>
+          <Link href="/settings">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </Link>
         </DropdownMenuItem>
         
-        <DropdownMenuItem>
-          <Bell className="mr-2 h-4 w-4" />
-          <span>Notifications</span>
+        <DropdownMenuItem asChild>
+          <Link href="/notifications">
+            <Bell className="mr-2 h-4 w-4" />
+            <span>Notifications</span>
+          </Link>
         </DropdownMenuItem>
         
         <DropdownMenuItem>

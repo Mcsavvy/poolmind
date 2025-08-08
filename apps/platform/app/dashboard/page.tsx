@@ -1,33 +1,20 @@
-import { Metadata } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { redirect } from 'next/navigation';
-import ProtectedRoute from '@/components/auth/protected-route';
+'use client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useAuthSession } from '@/components/auth/session-provider';
 
-export const metadata: Metadata = {
-  title: 'Dashboard - PoolMind',
-  description: 'Your PoolMind dashboard',
-};
 
-export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    redirect('/auth/signin');
-  }
-
-  const user = session.user;
+export default function DashboardPage() {
+  const { session } = useAuthSession();
+  const user = session?.user;
 
   return (
-    <ProtectedRoute>
       <div className="container mx-auto py-8">
         <div className="flex flex-col space-y-8">
           {/* Welcome Header */}
           <div className="flex flex-col space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">
-              Welcome back, {user.displayName || user.username || 'User'}!
+              Welcome back, {user?.displayName || user?.username || 'User'}!
             </h1>
             <p className="text-muted-foreground">
               Here&apos;s an overview of your PoolMind account
@@ -49,7 +36,7 @@ export default async function DashboardPage() {
                     Wallet Address
                   </label>
                   <p className="text-sm font-mono break-all">
-                    {user.walletAddress}
+                    {user?.walletAddress}
                   </p>
                 </div>
                 
@@ -58,20 +45,20 @@ export default async function DashboardPage() {
                     Role
                   </label>
                   <div className="mt-1">
-                    <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                      {user.role}
+                    <Badge variant={user?.role === 'admin' ? 'default' : 'secondary'}>
+                      {user?.role}
                     </Badge>
                   </div>
                 </div>
 
-                {user.email && (
+                {user?.email && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
                       Email
                     </label>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm">{user.email}</p>
-                      {user.isEmailVerified && (
+                      <p className="text-sm">{user?.email}</p>
+                      {user?.isEmailVerified && (
                         <Badge variant="outline" className="text-xs">
                           Verified
                         </Badge>
@@ -80,12 +67,12 @@ export default async function DashboardPage() {
                   </div>
                 )}
 
-                {user.username && (
+                {user?.username && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
                       Username
                     </label>
-                    <p className="text-sm">@{user.username}</p>
+                    <p className="text-sm">@{user?.username}</p>
                   </div>
                 )}
               </div>
@@ -138,6 +125,5 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
-    </ProtectedRoute>
   );
 }

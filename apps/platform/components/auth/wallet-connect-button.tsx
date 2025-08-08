@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { signIn, useSession } from 'next-auth/react';
 import { connect, isConnected, getLocalStorage, request, disconnect } from '@stacks/connect';
 import { Button } from '@/components/ui/button';
 import { Wallet, Loader2 } from 'lucide-react';
 import { config } from '@/lib/config';
-import { generateAuthMessage } from '@/lib/auth';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import useAuth from '@/hooks/auth';
+
 
 interface WalletConnectButtonProps {
   className?: string;
@@ -22,8 +23,9 @@ export default function WalletConnectButton({
   size = 'default',
   children
 }: WalletConnectButtonProps) {
-  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { loginWithWallet, generateAuthMessage } = useAuth();
 
   const connectWallet = useCallback(async () => {
     setIsLoading(true);
@@ -32,9 +34,7 @@ export default function WalletConnectButton({
     try {
       // Check if already connected
       if (isConnected()) {
-        toast.error('Already authenticated');
-        setIsLoading(false);
-        return;
+        disconnect();
       }
 
       // Connect to wallet using the new API
@@ -70,23 +70,18 @@ export default function WalletConnectButton({
         message
       });
 
-      // Authenticate with NextAuth
-      const result = await signIn('stacks-wallet', {
+      // Authenticate directly with orchestrator and store session locally
+      await loginWithWallet({
         walletAddress: stxAddress,
         publicKey: account.publicKey,
         signature: signatureResponse.signature,
-        message: message,
+        message,
         walletType: 'stacks-wallet',
-        network: config.stacksNetwork,
-        redirect: false
+        network: config.stacksNetwork as 'mainnet' | 'testnet',
       });
 
-      if (result?.error) {
-        throw new Error(result.error);
-      }
-
       // Redirect to dashboard or refresh page
-      window.location.href = '/dashboard';
+      router.push('/dashboard');
     } catch (error) {
       toast.error('Wallet connection error: ' + (error as Error).message);
       if (connected) {
@@ -97,16 +92,13 @@ export default function WalletConnectButton({
     }
   }, []);
 
-  // Don't show button if already authenticated
-  if (status === 'authenticated') {
-    return null;
-  }
+  // Button always shown; guard can be handled by caller if needed
 
   return (
     <div className="flex flex-col items-center gap-2">
       <Button
         onClick={connectWallet}
-        disabled={isLoading || status === 'loading'}
+        disabled={isLoading}
         variant={variant}
         size={size}
         className={className}
