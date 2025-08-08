@@ -11,6 +11,7 @@ export interface IUserModel extends IBaseModel<IUser> {
   findByWalletAddress(walletAddress: string): Promise<IUser | null>;
   findByUsername(username: string): Promise<IUser | null>;
   findByEmail(email: string): Promise<IUser | null>;
+  findByTelegramId(telegramId: number): Promise<IUser | null>;
   findWithEmailNotifications(): Promise<IUser[]>;
   getStats(): Promise<{
     totalUsers: number;
@@ -111,6 +112,26 @@ const User = createModel<IUser>(
       security: {
         type: Boolean,
         default: true,
+      },
+    },
+
+    // Telegram authentication (optional)
+    telegramAuth: {
+      telegramId: {
+        type: Number,
+        sparse: true, // Allows null but unique when present
+      },
+      firstName: String,
+      lastName: String,
+      username: String,
+      photoUrl: {
+        type: String,
+        validate: validators.url,
+      },
+      authDate: Number,
+      linkedAt: {
+        type: Date,
+        default: Date.now,
       },
     },
 
@@ -215,6 +236,11 @@ const User = createModel<IUser>(
         return this.findOne({ email: email.toLowerCase() });
       },
 
+      // Find user by Telegram ID
+      findByTelegramId(telegramId: number): Promise<IUser | null> {
+        return this.findOne({ 'telegramAuth.telegramId': telegramId });
+      },
+
       // Find users with email notifications enabled
       findWithEmailNotifications(): Promise<IUser[]> {
         return this.find({
@@ -315,6 +341,17 @@ export interface IUser extends IBaseDocument {
 
   // Notification preferences
   notificationPreferences: INotificationPreferences;
+
+  // Telegram authentication (optional)
+  telegramAuth?: {
+    telegramId: number;
+    firstName: string;
+    lastName?: string;
+    username?: string;
+    photoUrl?: string;
+    authDate: number;
+    linkedAt: Date;
+  };
 
   // Social links (optional)
   socialLinks?: {

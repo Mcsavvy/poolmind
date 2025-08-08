@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, IsUrl } from 'class-validator';
 
 export class GenerateNonceDto {
   @ApiProperty({
@@ -72,4 +72,74 @@ export class RefreshTokenDto {
   @IsString()
   @IsNotEmpty()
   token: string;
+}
+
+export class TelegramLoginDto {
+  @ApiProperty({
+    description: 'Telegram user ID',
+    example: 123456789,
+  })
+  @IsNumber()
+  @IsNotEmpty()
+  id: number;
+
+  @ApiProperty({
+    description: 'Telegram user first name',
+    example: 'John',
+  })
+  @IsString()
+  @IsNotEmpty()
+  first_name: string;
+
+  @ApiProperty({
+    description: 'Telegram user last name',
+    example: 'Doe',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  last_name?: string;
+
+  @ApiProperty({
+    description: 'Telegram username',
+    example: 'johndoe',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  username?: string;
+
+  @ApiProperty({
+    description: 'Telegram user photo URL',
+    example: 'https://t.me/i/userpic/320/johndoe.jpg',
+    required: false,
+  })
+  @IsUrl()
+  @IsOptional()
+  photo_url?: string;
+
+  @ApiProperty({
+    description: 'Unix timestamp of authentication',
+    example: 1677654321,
+  })
+  @IsNumber()
+  @IsNotEmpty()
+  auth_date: number;
+
+  @ApiProperty({
+    description: 'Telegram authentication hash',
+    example: 'abcdef1234567890...',
+  })
+  @IsString()
+  @IsNotEmpty()
+  hash: string;
+}
+
+export class LinkTelegramDto {
+  @ApiProperty({
+    description: 'Telegram authentication data from widget',
+    type: TelegramLoginDto,
+  })
+  @IsNotEmpty()
+  telegramData: TelegramLoginDto;
 }

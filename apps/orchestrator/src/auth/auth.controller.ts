@@ -21,6 +21,8 @@ import {
   GenerateNonceDto,
   WalletLoginDto,
   RefreshTokenDto,
+  TelegramLoginDto,
+  LinkTelegramDto,
 } from './dto/auth.dto';
 import { Public, CurrentUser } from './decorators';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -237,9 +239,193 @@ export class AuthController {
       isEmailVerified: user.isEmailVerified,
       notificationPreferences: user.notificationPreferences,
       socialLinks: user.socialLinks,
+      telegramAuth: user.telegramAuth,
       createdAt: user.createdAt,
       lastLoginAt: user.lastLoginAt,
       loginCount: user.loginCount,
+    };
+
+    return {
+      user: userResponse,
+      success: true,
+    };
+  }
+
+  @Public()
+  @Post('telegram/login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Authenticate with Telegram',
+    description: 'Authenticate user using Telegram login data and get JWT token',
+  })
+  @ApiBody({ type: TelegramLoginDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Authentication successful',
+    schema: {
+      type: 'object',
+      properties: {
+        token: {
+          type: 'string',
+          description: 'JWT authentication token',
+        },
+        user: {
+          type: 'object',
+          description: 'User information',
+        },
+        success: {
+          type: 'boolean',
+          example: true,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid Telegram data or account not linked',
+  })
+  async telegramLogin(@Body() telegramLoginDto: TelegramLoginDto, @Req() req: Request) {
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip;
+
+    const { user, token } = await this.authService.authenticateTelegram(
+      telegramLoginDto,
+      ipAddress,
+    );
+
+    // Return user data without sensitive information
+    const userResponse = {
+      id: user._id.toString(),
+      walletAddress: user.walletAddress,
+      username: user.username,
+      displayName: user.displayName,
+      email: user.email,
+      profilePicture: user.profilePicture,
+      role: user.role,
+      isEmailVerified: user.isEmailVerified,
+      telegramAuth: user.telegramAuth,
+    };
+
+    return {
+      token,
+      user: userResponse,
+      success: true,
+    };
+  }
+
+  @Post('telegram/link')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Link Telegram account',
+    description: 'Link Telegram account to existing user profile',
+  })
+  @ApiBody({ type: LinkTelegramDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Telegram account linked successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        user: {
+          type: 'object',
+          description: 'Updated user information',
+        },
+        success: {
+          type: 'boolean',
+          example: true,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Telegram account already linked to another user',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid Telegram data or unauthorized',
+  })
+  async linkTelegram(@Body() linkTelegramDto: LinkTelegramDto, @CurrentUser() user: IUser) {
+    const updatedUser = await this.authService.linkTelegramAccount(
+      user._id.toString(),
+      linkTelegramDto.telegramData,
+    );
+
+    // Return user data without sensitive information
+    const userResponse = {
+      id: updatedUser._id.toString(),
+      walletAddress: updatedUser.walletAddress,
+      username: updatedUser.username,
+      displayName: updatedUser.displayName,
+      email: updatedUser.email,
+      profilePicture: updatedUser.profilePicture,
+      bio: updatedUser.bio,
+      role: updatedUser.role,
+      isEmailVerified: updatedUser.isEmailVerified,
+      notificationPreferences: updatedUser.notificationPreferences,
+      socialLinks: updatedUser.socialLinks,
+      telegramAuth: updatedUser.telegramAuth,
+      createdAt: updatedUser.createdAt,
+      lastLoginAt: updatedUser.lastLoginAt,
+      loginCount: updatedUser.loginCount,
+    };
+
+    return {
+      user: userResponse,
+      success: true,
+    };
+  }
+
+  @Post('telegram/unlink')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Unlink Telegram account',
+    description: 'Remove Telegram authentication from user profile',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Telegram account unlinked successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        user: {
+          type: 'object',
+          description: 'Updated user information',
+        },
+        success: {
+          type: 'boolean',
+          example: true,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  async unlinkTelegram(@CurrentUser() user: IUser) {
+    const updatedUser = await this.authService.unlinkTelegramAccount(user._id.toString());
+
+    // Return user data without sensitive information
+    const userResponse = {
+      id: updatedUser._id.toString(),
+      walletAddress: updatedUser.walletAddress,
+      username: updatedUser.username,
+      displayName: updatedUser.displayName,
+      email: updatedUser.email,
+      profilePicture: updatedUser.profilePicture,
+      bio: updatedUser.bio,
+      role: updatedUser.role,
+      isEmailVerified: updatedUser.isEmailVerified,
+      notificationPreferences: updatedUser.notificationPreferences,
+      socialLinks: updatedUser.socialLinks,
+      telegramAuth: updatedUser.telegramAuth,
+      createdAt: updatedUser.createdAt,
+      lastLoginAt: updatedUser.lastLoginAt,
+      loginCount: updatedUser.loginCount,
     };
 
     return {

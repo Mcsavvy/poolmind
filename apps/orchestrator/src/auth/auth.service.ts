@@ -1,12 +1,16 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { verifyMessageSignatureRsv } from '@stacks/encryption';
 import * as jwt from 'jsonwebtoken';
+import * as crypto from 'crypto';
 import { AppConfig } from '../config/env.schema';
-import { IUser, IUserModel } from '../lib/models/user';
+import { IUser, type IUserModel } from '../lib/models/user';
 
 export interface WalletCredentials {
   walletAddress: string;
@@ -24,9 +28,20 @@ export interface AuthMessage {
   domain?: string;
 }
 
+export interface TelegramCredentials {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+  auth_date: number;
+  hash: string;
+}
+
 export interface JwtPayload {
   sub: string; // User ID
-  walletAddress: string;
+  walletAddress?: string;
+  telegramId?: number;
   role: 'user' | 'admin' | 'moderator';
   iat?: number;
   exp?: number;
@@ -37,7 +52,7 @@ export class AuthService {
   constructor(
     private readonly configService: ConfigService<AppConfig>,
     private readonly jwtService: JwtService,
-    @InjectModel('User') private readonly userModel: Model<IUser>,
+    @InjectModel('User') private readonly userModel: IUserModel,
   ) {}
 
   /**
@@ -191,12 +206,148 @@ export class AuthService {
   }
 
   /**
+   * Verify Telegram auth data
+   */
+  verifyTelegramAuth(data: TelegramCredentials): boolean {
+    const botToken = this.configService.get<string>('telegram.botToken');
+    if (!botToken) {
+      throw new Error('Telegram bot token not configured');
+    }
+
+    const { hash, ...authData } = data;
+
+    // Create data check string
+    const dataCheckString = Object.keys(authData)
+      .sort()
+      .map((key) => `${key}=${authData[key as keyof typeof authData]}`)
+      .join('\n');
+
+    // Create secret key from bot token
+    const secretKey = crypto.createHash('sha256').update(botToken).digest();
+
+    // Create HMAC
+    const hmac = crypto.createHmac('sha256', secretKey);
+    hmac.update(dataCheckString);
+    const calculatedHash = hmac.digest('hex');
+
+    // Check if hash matches
+    if (hash !== calculatedHash) {
+      return false;
+    }
+
+    // Check if auth_date is recent (within 5 minutes)
+    const authDate = new Date(data.auth_date * 1000);
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+
+    return authDate >= fiveMinutesAgo;
+  }
+
+  /**
+   * Link Telegram account to existing user
+   */
+  async linkTelegramAccount(
+    userId: string,
+    telegramData: TelegramCredentials,
+  ): Promise<IUser> {
+    // Verify Telegram data
+    if (!this.verifyTelegramAuth(telegramData)) {
+      throw new UnauthorizedException('Invalid Telegram authentication data');
+    }
+
+    // Check if Telegram ID is already linked to another account
+    const existingUser = await this.userModel.findByTelegramId(telegramData.id);
+    if (existingUser && existingUser._id.toString() !== userId) {
+      throw new BadRequestException(
+        'Telegram account is already linked to another user',
+      );
+    }
+
+    // Find the user to link to
+    const user = await this.userModel.findById(userId);
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Link Telegram account
+    user.telegramAuth = {
+      telegramId: telegramData.id,
+      firstName: telegramData.first_name,
+      lastName: telegramData.last_name,
+      username: telegramData.username,
+      photoUrl: telegramData.photo_url,
+      authDate: telegramData.auth_date,
+      linkedAt: new Date(),
+    };
+
+    await user.save();
+    return user;
+  }
+
+  /**
+   * Unlink Telegram account from user
+   */
+  async unlinkTelegramAccount(userId: string): Promise<IUser> {
+    const user = await this.userModel.findById(userId);
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    user.telegramAuth = undefined;
+    await user.save();
+    return user;
+  }
+
+  /**
+   * Authenticate user with Telegram credentials
+   */
+  async authenticateTelegram(
+    credentials: TelegramCredentials,
+    ipAddress?: string,
+  ): Promise<{ user: IUser; token: string }> {
+    // Verify Telegram auth data
+    if (!this.verifyTelegramAuth(credentials)) {
+      throw new UnauthorizedException('Invalid Telegram authentication data');
+    }
+
+    // Find user by Telegram ID
+    const user = await this.userModel.findByTelegramId(credentials.id);
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException(
+        'Telegram account not linked to any user',
+      );
+    }
+
+    // Update login info
+    user.lastLoginAt = new Date();
+    user.loginCount += 1;
+    user.connectionHistory.unshift({
+      connectedAt: new Date(),
+      walletType: 'telegram',
+      ipAddress,
+    });
+
+    // Keep only last 10 connections
+    if (user.connectionHistory.length > 10) {
+      user.connectionHistory = user.connectionHistory.slice(0, 10);
+    }
+
+    await user.save();
+
+    // Generate JWT token
+    const token = await this.generateToken(user);
+
+    return { user, token };
+  }
+
+  /**
    * Generate JWT token for user
    */
   async generateToken(user: IUser): Promise<string> {
     const payload: JwtPayload = {
       sub: user._id.toString(),
       walletAddress: user.walletAddress,
+      telegramId: user.telegramAuth?.telegramId,
       role: user.role,
     };
 

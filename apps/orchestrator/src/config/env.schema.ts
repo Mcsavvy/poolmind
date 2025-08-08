@@ -16,6 +16,8 @@ const appConfigSchema = z.object({
     .min(32, 'JWT secret must be at least 32 characters long'),
   JWT_EXPIRES_IN: z.string().default('7d'),
   STACKS_NETWORK: z.enum(['mainnet', 'testnet', 'devnet']).default('testnet'),
+  TELEGRAM_BOT_TOKEN: z.string().min(1, 'Telegram bot token is required'),
+  TELEGRAM_BOT_USERNAME: z.string().min(1, 'Telegram bot username is required'),
 });
 
 export type AppConfig = {
@@ -29,6 +31,9 @@ export type AppConfig = {
   'auth.jwtSecret': string;
   'auth.jwtExpiresIn': string;
   'auth.stacksNetwork': 'mainnet' | 'testnet' | 'devnet';
+  // Telegram
+  'telegram.botToken': string;
+  'telegram.botUsername': string;
 };
 
 export function validateConfig(env: Record<string, string>): AppConfig {
@@ -53,6 +58,10 @@ export function validateConfig(env: Record<string, string>): AppConfig {
     'auth.jwtSecret': parsedEnv.data.JWT_SECRET,
     'auth.jwtExpiresIn': parsedEnv.data.JWT_EXPIRES_IN,
     'auth.stacksNetwork': parsedEnv.data.STACKS_NETWORK,
+
+    // Telegram
+    'telegram.botToken': parsedEnv.data.TELEGRAM_BOT_TOKEN,
+    'telegram.botUsername': parsedEnv.data.TELEGRAM_BOT_USERNAME,
   };
 
   return config;
