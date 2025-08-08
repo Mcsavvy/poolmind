@@ -12,7 +12,6 @@ import {
   UpdateUserProfile,
   UpdateNotificationPreferences,
   UpdateSocialLinks,
-  ErrorResponse,
 } from "@poolmind/shared-types";
 import { useClient } from "@/hooks/api";
 import { AxiosInstance } from "axios";
@@ -103,15 +102,16 @@ async function _generateAuthMessage(client: AxiosInstance, walletAddress: string
 
 function useAuth() {
   const client = useClient();
-  const { setSession } = useAuthSession();
+  const { setSession, session } = useAuthSession();
+
 
   const loginWithWallet = useCallback(async (data: LoginRequest) => {
-    const response = await _login(client, data, (response) => setSession({ user: response.user, token: response.token }));
+    const response = await _login(client, data, (response) => setSession({ user: response.user, token: response.token, expiresAt: response.expiresAt }));
     return response;
   }, [client, setSession]);
 
   const loginWithTelegram = useCallback(async (data: TelegramLoginRequest) => {
-    const response = await _telegramLogin(client, data, (response) => setSession({ user: response.user, token: response.token }));
+    const response = await _telegramLogin(client, data, (response) => setSession({ user: response.user, token: response.token, expiresAt: response.expiresAt }));
     return response;
   }, [client, setSession]);
 
@@ -125,42 +125,66 @@ function useAuth() {
     return response;
   }, [client]);
 
-  const refreshToken = useCallback(async (data: RefreshTokenRequest) => {
-    const response = await _refreshToken(client, data);
-    return response;
-  }, [client]);
+  const refreshToken = useCallback(async () => {
+    if (!session) {
+      throw new Error("No session found");
+    }
+    const response = await _refreshToken(client, { token: session.token });
+    setSession({ ...session, token: response.token, expiresAt: response.expiresAt });
+  }, [client, session, setSession]);
 
-  const getCurrentUser = useCallback(async () => {
+  const refreshCurrentUser = useCallback(async () => {
+    if (!session) {
+      throw new Error("No session found");
+    }
     const response = await _getCurrentUser(client);
-    return response;
+    setSession({ ...session, user: response.user, token: session.token, expiresAt: session.expiresAt });
   }, [client]);
 
   const getUserProfile = useCallback(async () => {
+    if (!session) {
+      throw new Error("No session found");
+    }
     const response = await _getUserProfile(client);
     return response;
   }, [client]); 
 
   const updateUserProfile = useCallback(async (data: UpdateUserProfile) => {
+    if (!session) {
+      throw new Error("No session found");
+    }
     const response = await _updateUserProfile(client, data);
     return response;
   }, [client]);
 
   const updateNotificationPreferences = useCallback(async (data: UpdateNotificationPreferences) => {
+    if (!session) {
+      throw new Error("No session found");
+    }
     const response = await _updateNotificationPreferences(client, data);
     return response;
   }, [client]);
 
   const updateSocialLinks = useCallback(async (data: UpdateSocialLinks) => {
+    if (!session) {
+      throw new Error("No session found");
+    }
     const response = await _updateSocialLinks(client, data);
     return response;
   }, [client]);
 
   const linkTelegram = useCallback(async (data: LinkTelegramRequest) => {
+    if (!session) {
+      throw new Error("No session found");
+    }
     const response = await _linkTelegram(client, data);
     return response;
   }, [client]);
 
   const unlinkTelegram = useCallback(async () => {
+    if (!session) {
+      throw new Error("No session found");
+    }
     const response = await _unlinkTelegram(client);
     return response;
   }, [client]);
@@ -171,7 +195,7 @@ function useAuth() {
     generateNonce,
     generateAuthMessage,
     refreshToken,
-    getCurrentUser,
+    refreshCurrentUser,
     getUserProfile,
     updateUserProfile,
     updateNotificationPreferences,

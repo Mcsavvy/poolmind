@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, IsUrl } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  IsNumber,
+  IsUrl,
+} from 'class-validator';
 
 export class GenerateNonceDto {
   @ApiProperty({

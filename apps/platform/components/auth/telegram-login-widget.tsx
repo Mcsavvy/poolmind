@@ -52,18 +52,3 @@ export function TelegramLoginWidget({
     </div>
   );
 }
-
-// Hook for easier integration with NextAuth
-export function useTelegramLogin() {
-  const loginWithTelegram = async (telegramData: TelegramUser) => {
-    try {
-      // This function is kept for compatibility but not used in plain API auth flow
-      return { ok: true } as any;
-    } catch (error) {
-      console.error('Telegram login error:', error);
-      throw error;
-    }
-  };
-
-  return { loginWithTelegram };
-}

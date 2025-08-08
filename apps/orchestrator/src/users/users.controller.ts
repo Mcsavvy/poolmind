@@ -32,9 +32,7 @@ import {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class UsersController {
-  constructor(
-    @InjectModel('User') private readonly userModel: Model<IUser>,
-  ) {}
+  constructor(@InjectModel('User') private readonly userModel: Model<IUser>) {}
   @Get('profile')
   @ApiOperation({
     summary: 'Get user profile',
@@ -127,7 +125,9 @@ export class UsersController {
       updateProfileDto.username &&
       updateProfileDto.username !== user.username
     ) {
-      const existingUser = await this.userModel.findOne({ username: updateProfileDto.username });
+      const existingUser = await this.userModel.findOne({
+        username: updateProfileDto.username,
+      });
       if (existingUser && existingUser._id.toString() !== user._id.toString()) {
         throw new ForbiddenException('Username is already taken');
       }
@@ -135,7 +135,9 @@ export class UsersController {
 
     // Check for email uniqueness if email is being updated
     if (updateProfileDto.email && updateProfileDto.email !== user.email) {
-      const existingUser = await this.userModel.findOne({ email: updateProfileDto.email });
+      const existingUser = await this.userModel.findOne({
+        email: updateProfileDto.email,
+      });
       if (existingUser && existingUser._id.toString() !== user._id.toString()) {
         throw new ForbiddenException('Email is already registered');
       }

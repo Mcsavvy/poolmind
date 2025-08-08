@@ -5,20 +5,28 @@ import WalletConnectButton from '@/components/auth/wallet-connect-button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { TelegramLoginWidget, useTelegramLogin, type TelegramUser } from '@/components/auth/telegram-login-widget';
+import { TelegramLoginWidget, type TelegramUser } from '@/components/auth/telegram-login-widget';
 import { Wallet, MessageCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
+import useAuth from '@/hooks/auth';
 import Image from 'next/image';
 const TELEGRAM_BOT_NAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'poolmind_login_bot';
 
 export default function SignInPage() {
   const [showTelegramLogin, setShowTelegramLogin] = useState(false);
-  const { loginWithTelegram } = useTelegramLogin();
+  const { loginWithTelegram } = useAuth();
 
   const handleTelegramAuth = async (user: TelegramUser) => {
     try {
-      // In plain API mode, Telegram login is not used for sign-in (only link). Inform user.
-      toast.error('Use Stacks Wallet to sign in first, then link Telegram in Profile.');
+      await loginWithTelegram({
+          id: user.id,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          username: user.username,
+          photo_url: user.photo_url,
+          auth_date: user.auth_date,
+          hash: user.hash,
+      });
     } catch (error) {
       toast.error('Authentication error occurred');
       console.error('Auth error:', error);

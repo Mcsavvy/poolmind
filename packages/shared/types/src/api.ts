@@ -49,6 +49,7 @@ export const NonceResponseSchema = z.object({
 
 export const LoginResponseSchema = z.object({
   token: z.string(),
+  expiresAt: z.number(),
   user: z.object({
     id: z.string(),
     walletAddress: z.string(),
@@ -73,6 +74,7 @@ export const LoginResponseSchema = z.object({
 
 export const RefreshTokenResponseSchema = z.object({
   token: z.string(),
+  expiresAt: z.number(),
   success: z.boolean(),
 });
 

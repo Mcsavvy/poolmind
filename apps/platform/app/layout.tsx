@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthSessionProvider } from "@/components/auth/session-provider";
 import { Toaster } from "@/components/ui/sonner"
+import { AuthRefresher } from "@/components/auth/auth-refresher";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -40,6 +41,7 @@ export default function RootLayout({
           disableTransitionOnChange={false}
         >
           <AuthSessionProvider>
+            <AuthRefresher />
             {children}
             <Toaster position="bottom-right" expand richColors />
           </AuthSessionProvider>

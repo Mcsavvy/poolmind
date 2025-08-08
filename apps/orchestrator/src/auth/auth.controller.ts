@@ -91,6 +91,10 @@ export class AuthController {
           type: 'string',
           description: 'JWT authentication token',
         },
+        expiresAt: {
+          type: 'number',
+          description: 'Expiration timestamp',
+        },
         user: {
           type: 'object',
           description: 'User information',
@@ -118,10 +122,8 @@ export class AuthController {
   async login(@Body() walletLoginDto: WalletLoginDto, @Req() req: Request) {
     const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip;
 
-    const { user, token } = await this.authService.authenticateWallet(
-      walletLoginDto,
-      ipAddress,
-    );
+    const { user, token, expiresAt } =
+      await this.authService.authenticateWallet(walletLoginDto, ipAddress);
 
     // Return user data without sensitive information
     const userResponse = {
@@ -137,6 +139,7 @@ export class AuthController {
 
     return {
       token,
+      expiresAt,
       user: userResponse,
       success: true,
     };
@@ -160,6 +163,10 @@ export class AuthController {
           type: 'string',
           description: 'New JWT authentication token',
         },
+        expiresAt: {
+          type: 'number',
+          description: 'Expiration timestamp',
+        },
         success: {
           type: 'boolean',
           example: true,
@@ -180,7 +187,8 @@ export class AuthController {
     }
 
     return {
-      token: newToken,
+      token: newToken.token,
+      expiresAt: newToken.expiresAt,
       success: true,
     };
   }
@@ -256,7 +264,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Authenticate with Telegram',
-    description: 'Authenticate user using Telegram login data and get JWT token',
+    description:
+      'Authenticate user using Telegram login data and get JWT token',
   })
   @ApiBody({ type: TelegramLoginDto })
   @ApiResponse({
@@ -268,6 +277,10 @@ export class AuthController {
         token: {
           type: 'string',
           description: 'JWT authentication token',
+        },
+        expiresAt: {
+          type: 'number',
+          description: 'Expiration timestamp',
         },
         user: {
           type: 'object',
@@ -284,13 +297,14 @@ export class AuthController {
     status: 401,
     description: 'Invalid Telegram data or account not linked',
   })
-  async telegramLogin(@Body() telegramLoginDto: TelegramLoginDto, @Req() req: Request) {
+  async telegramLogin(
+    @Body() telegramLoginDto: TelegramLoginDto,
+    @Req() req: Request,
+  ) {
     const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip;
 
-    const { user, token } = await this.authService.authenticateTelegram(
-      telegramLoginDto,
-      ipAddress,
-    );
+    const { user, token, expiresAt } =
+      await this.authService.authenticateTelegram(telegramLoginDto, ipAddress);
 
     // Return user data without sensitive information
     const userResponse = {
@@ -307,6 +321,7 @@ export class AuthController {
 
     return {
       token,
+      expiresAt,
       user: userResponse,
       success: true,
     };
@@ -346,7 +361,10 @@ export class AuthController {
     status: 401,
     description: 'Invalid Telegram data or unauthorized',
   })
-  async linkTelegram(@Body() linkTelegramDto: LinkTelegramDto, @CurrentUser() user: IUser) {
+  async linkTelegram(
+    @Body() linkTelegramDto: LinkTelegramDto,
+    @CurrentUser() user: IUser,
+  ) {
     const updatedUser = await this.authService.linkTelegramAccount(
       user._id.toString(),
       linkTelegramDto.telegramData,
@@ -407,7 +425,9 @@ export class AuthController {
     description: 'Unauthorized',
   })
   async unlinkTelegram(@CurrentUser() user: IUser) {
-    const updatedUser = await this.authService.unlinkTelegramAccount(user._id.toString());
+    const updatedUser = await this.authService.unlinkTelegramAccount(
+      user._id.toString(),
+    );
 
     // Return user data without sensitive information
     const userResponse = {

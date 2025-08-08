@@ -2,6 +2,7 @@
 
 import { ReactNode, useState, useEffect, createContext, useCallback, useContext } from 'react';
 import { z } from 'zod';
+import { isConnected } from '@stacks/connect';
 
 export type Role = 'user' | 'moderator' | 'admin';
 
@@ -28,6 +29,7 @@ const clientSessionUserSchema = z.object({
 const clientSessionSchema = z.object({
   user: clientSessionUserSchema,
   token: z.string(),
+  expiresAt: z.number(),
 });
 
 export type ClientSessionUser = z.infer<typeof clientSessionUserSchema>;
@@ -43,11 +45,13 @@ interface AuthSessionProviderProps {
 interface AuthSessionProviderState {
   session: ClientSession | null;
   loading: boolean;
-  setSession: (session: ClientSession | null) => void;
+  walletActive: boolean;
+  setSession: (session: ClientSession) => void;
   clearSession: () => void;
 }
 
 const AuthSessionContext = createContext<AuthSessionProviderState | undefined>(undefined);
+
 
 export function loadSession(): ClientSession | null {
   try {
@@ -67,6 +71,11 @@ export function loadSession(): ClientSession | null {
 export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
   const [session, setSession] = useState<ClientSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [walletActive, setWalletActive] = useState(false);
+
+  useEffect(() => {
+    setWalletActive(isConnected());
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -77,11 +86,14 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
       }
     }
   }, [session, loading]);
-
   
 
   const handleClearSession = useCallback(() => {
     setSession(null);
+  }, [setSession]);
+
+  const handleSetSession = useCallback((s: ClientSession) => {
+    setSession(s);
   }, [setSession]);
 
   useEffect(() => {
@@ -93,7 +105,7 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
   }, [handleClearSession, loading]);
 
   return (
-    <AuthSessionContext.Provider value={{ session, loading, setSession, clearSession: handleClearSession }}>
+    <AuthSessionContext.Provider value={{ session, loading, walletActive, setSession: handleSetSession, clearSession: handleClearSession }}>
       {children}
     </AuthSessionContext.Provider>
   );

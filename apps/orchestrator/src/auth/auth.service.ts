@@ -123,7 +123,7 @@ export class AuthService {
   async authenticateWallet(
     credentials: WalletCredentials,
     ipAddress?: string,
-  ): Promise<{ user: IUser; token: string }> {
+  ): Promise<{ user: IUser; token: string; expiresAt: number }> {
     const {
       walletAddress,
       publicKey,
@@ -200,9 +200,9 @@ export class AuthService {
     }
 
     // Generate JWT token
-    const token = await this.generateToken(user);
+    const { token, expiresAt } = await this.generateToken(user);
 
-    return { user, token };
+    return { user, token, expiresAt };
   }
 
   /**
@@ -304,7 +304,7 @@ export class AuthService {
   async authenticateTelegram(
     credentials: TelegramCredentials,
     ipAddress?: string,
-  ): Promise<{ user: IUser; token: string }> {
+  ): Promise<{ user: IUser; token: string; expiresAt: number }> {
     // Verify Telegram auth data
     if (!this.verifyTelegramAuth(credentials)) {
       throw new UnauthorizedException('Invalid Telegram authentication data');
@@ -335,15 +335,17 @@ export class AuthService {
     await user.save();
 
     // Generate JWT token
-    const token = await this.generateToken(user);
+    const { token, expiresAt } = await this.generateToken(user);
 
-    return { user, token };
+    return { user, token, expiresAt };
   }
 
   /**
    * Generate JWT token for user
    */
-  async generateToken(user: IUser): Promise<string> {
+  async generateToken(
+    user: IUser,
+  ): Promise<{ token: string; expiresAt: number }> {
     const payload: JwtPayload = {
       sub: user._id.toString(),
       walletAddress: user.walletAddress,
@@ -351,7 +353,10 @@ export class AuthService {
       role: user.role,
     };
 
-    return this.jwtService.sign(payload);
+    const token = this.jwtService.sign(payload);
+    const jwtPayload = this.jwtService.decode(token);
+    const expiresAt = jwtPayload.exp;
+    return { token, expiresAt };
   }
 
   /**
@@ -400,10 +405,13 @@ export class AuthService {
   /**
    * Refresh token
    */
-  async refreshToken(oldToken: string): Promise<string | null> {
+  async refreshToken(
+    oldToken: string,
+  ): Promise<{ token: string; expiresAt: number } | null> {
     const user = await this.verifyToken(oldToken);
     if (!user) return null;
 
-    return this.generateToken(user);
+    const { token, expiresAt } = await this.generateToken(user);
+    return { token, expiresAt };
   }
 }

@@ -35,8 +35,7 @@ export function TelegramLinkButton({
   const [isLinking, setIsLinking] = useState(false);
   const [isUnlinking, setIsUnlinking] = useState(false);
   const [showWidget, setShowWidget] = useState(false);
-  const { session, setSession } = useAuthSession();
-  const { linkTelegram, unlinkTelegram, getCurrentUser } = useAuth();
+  const { linkTelegram, unlinkTelegram, refreshCurrentUser } = useAuth();
 
   const handleTelegramAuth = async (telegramData: TelegramUser) => {
     setIsLinking(true);
@@ -56,10 +55,7 @@ export function TelegramLinkButton({
       toast.success('Telegram account linked successfully!');
       setShowWidget(false);
       // Update local session cache
-      if (session) {
-        const refreshed = await getCurrentUser();
-        setSession({ user: refreshed.user, token: session.token });
-      }
+      refreshCurrentUser();
       onUpdate();
     } catch (error) {
       console.error('Error linking Telegram account:', error);
@@ -78,10 +74,7 @@ export function TelegramLinkButton({
     try {
       await unlinkTelegram();
       toast.success('Telegram account unlinked successfully');
-      if (session) {
-        const refreshed = await getCurrentUser();
-        setSession({ user: refreshed.user, token: session.token });
-      }
+      refreshCurrentUser();
       onUpdate();
     } catch (error) {
       console.error('Error unlinking Telegram account:', error);
