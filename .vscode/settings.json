@@ -1,0 +1,11 @@
+{
+    "files.exclude": {
+        "agent": true,
+        "orchestrator": true,
+        "telegram-app": true
+    },
+    "diffEditor.hideUnchangedRegions.enabled": true,
+    "files.associations": {
+        "*.css": "tailwindcss"
+    }
+}
