@@ -303,6 +303,14 @@ export class AuthService {
     if (!user || !user.isActive) {
       throw new UnauthorizedException('User not found');
     }
+
+    // Queue goodbye notification before unlinking (non-blocking)
+    try {
+      await this.queueTelegramGoodbyeMessage(user);
+    } catch (error) {
+      // Log error but don't fail the unlinking process
+      console.error('Failed to queue Telegram goodbye message:', error);
+    }
     
     user.telegramAuth = undefined;
     await user.save();
@@ -468,6 +476,35 @@ export class AuthService {
       },
     }, {
       priority: 2, // High priority for welcome messages
+    });
+  }
+
+  /**
+   * Queue goodbye message when user unlinks Telegram (non-blocking)
+   */
+  private async queueTelegramGoodbyeMessage(user: IUser): Promise<void> {
+    const displayName = user.getDisplayName();
+    
+    let body = `Goodbye, ${displayName}! 👋\n\n`;
+    body += `Your Telegram account has been unlinked from PoolMind.\n\n`;
+    body += `📱 You will no longer receive:\n`;
+    body += `• Trading notifications\n`;
+    body += `• Arbitrage alerts\n`;
+    body += `• System updates\n\n`;
+    body += `🔄 You can always link your Telegram account again through your profile settings.\n\n`;
+    body += `Thank you for being part of PoolMind! 💙`;
+
+    await this.notificationsService.queueToTelegramUser(user.telegramAuth!.telegramId, {
+      type: NotificationType.SYSTEM,
+      title: '🔗 Telegram Disconnected',
+      body,
+      options: {
+        parseMode: 'Markdown',
+        silent: false,
+        includeIcon: false
+      },
+    }, {
+      priority: 2, // High priority for goodbye messages
     });
   }
 }
