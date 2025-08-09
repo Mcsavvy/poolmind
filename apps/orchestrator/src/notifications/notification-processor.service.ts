@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import Queue from 'bull';
-import { NotificationsService } from './notifications.service';
+import { NotificationsService, type NotificationResult } from './notifications.service';
 import { 
   NotificationQueueService, 
   NotificationJobData, 
@@ -39,7 +39,7 @@ export class NotificationProcessorService implements OnModuleInit {
     try {
       this.logger.debug(`Processing ${data.type} notification job ${job.id}: ${data.message.title}`);
 
-      let result;
+      let result: NotificationResult;
 
       switch (data.type) {
         case 'user':
