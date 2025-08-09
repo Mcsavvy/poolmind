@@ -237,6 +237,9 @@ importers:
       react-dom:
         specifier: 19.1.0
         version: 19.1.0(react@19.1.0)
+      react-wavify:
+        specifier: ^1.11.1
+        version: 1.11.1(react@19.1.0)
       recharts:
         specifier: 2.15.4
         version: 2.15.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -4450,6 +4453,11 @@ packages:
     peerDependencies:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
+
+  react-wavify@1.11.1:
+    resolution: {integrity: sha512-9MWGSwdVBri2XsegpysGyxWAeqIKdikwj+6Dg2Ssi3xFoY5HUVDiPbEZ62ZP30DefKE5IzWKNdFjyIEJfVikhw==}
+    peerDependencies:
+      react: ^0.13.0 || ^0.14.0 || >=15
 
   react@19.1.0:
     resolution: {integrity: sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==}
@@ -9959,6 +9967,10 @@ snapshots:
       prop-types: 15.8.1
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+
+  react-wavify@1.11.1(react@19.1.0):
+    dependencies:
+      react: 19.1.0
 
   react@19.1.0: {}
 

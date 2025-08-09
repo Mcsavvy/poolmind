@@ -96,7 +96,9 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
     if (s) {
       setSession(s);
     }
-    setLoading(false);
+    setTimeout(() => {
+      setLoading(false);
+    }, 2000);
   }, [handleClearSession, loading]);
 
   return (
