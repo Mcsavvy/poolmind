@@ -104,7 +104,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Configure email, push, and SMS notifications
+                  Configure email and telegram notifications
                 </p>
               </CardContent>
             </Card>

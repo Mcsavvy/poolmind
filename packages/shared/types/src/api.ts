@@ -101,10 +101,7 @@ export const UserProfileResponseSchema = z.object({
     }).optional(),
     notificationPreferences: z.object({
       email: z.boolean(),
-      push: z.boolean(),
-      sms: z.boolean(),
-      marketing: z.boolean(),
-      security: z.boolean(),
+      telegram: z.boolean(),
     }),
     socialLinks: z.object({
       twitter: z.string().optional(),
@@ -133,10 +130,7 @@ export const UpdateProfileResponseSchema = z.object({
     isEmailVerified: z.boolean(),
     notificationPreferences: z.object({
       email: z.boolean(),
-      push: z.boolean(),
-      sms: z.boolean(),
-      marketing: z.boolean(),
-      security: z.boolean(),
+      telegram: z.boolean(),
     }),
     socialLinks: z.object({
       twitter: z.string().optional(),

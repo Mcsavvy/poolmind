@@ -3,10 +3,7 @@ import { z } from 'zod';
 // Notification preferences schema
 export const NotificationPreferencesSchema = z.object({
   email: z.boolean(),
-  push: z.boolean(),
-  sms: z.boolean(),
-  marketing: z.boolean(),
-  security: z.boolean(),
+  telegram: z.boolean(),
 });
 
 // Telegram authentication schema
@@ -83,10 +80,7 @@ export const UpdateUserProfileSchema = z.object({
 
 export const UpdateNotificationPreferencesSchema = z.object({
   email: z.boolean().optional(),
-  push: z.boolean().optional(),
-  sms: z.boolean().optional(),
-  marketing: z.boolean().optional(),
-  security: z.boolean().optional(),
+  telegram: z.boolean().optional(),
 });
 
 export const UpdateSocialLinksSchema = z.object({
