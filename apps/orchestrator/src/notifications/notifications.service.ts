@@ -111,12 +111,7 @@ export class NotificationsService {
         // maybe user's telegram account is unlinked
         const formattedMessage = this.formatMessage(message);
         const telegramOptions = this.buildTelegramOptions(message.options);
-        await this.bot.telegram.sendMessage(
-          telegramId,
-          formattedMessage,
-          telegramOptions,
-        );
-        this.logger.debug(`Formatte message preview: ${formattedMessage.substring(0, 100)}...`);
+        this.logger.debug(`Formatted message preview: ${formattedMessage.substring(0, 100)}...`);
         this.bot.telegram.sendMessage(
           telegramId,
           formattedMessage,
