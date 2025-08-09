@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TelegramLoginWidget, type TelegramUser } from './telegram-login-widget';
-import { useAuthSession } from '@/components/auth/session-provider';
-import useAuth from '@/hooks/auth';
-import { Loader2, MessageCircle, Unlink2 } from 'lucide-react';
+import { useTelegram } from '@/hooks/auth';
+import { Loader2, Unlink2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 
@@ -35,7 +34,7 @@ export function TelegramLinkButton({
   const [isLinking, setIsLinking] = useState(false);
   const [isUnlinking, setIsUnlinking] = useState(false);
   const [showWidget, setShowWidget] = useState(false);
-  const { linkTelegram, unlinkTelegram, refreshCurrentUser } = useAuth();
+  const { linkTelegram, unlinkTelegram } = useTelegram();
 
   const handleTelegramAuth = async (telegramData: TelegramUser) => {
     setIsLinking(true);
@@ -54,8 +53,6 @@ export function TelegramLinkButton({
 
       toast.success('Telegram account linked successfully!');
       setShowWidget(false);
-      // Update local session cache
-      refreshCurrentUser();
       onUpdate();
     } catch (error) {
       console.error('Error linking Telegram account:', error);
@@ -74,7 +71,6 @@ export function TelegramLinkButton({
     try {
       await unlinkTelegram();
       toast.success('Telegram account unlinked successfully');
-      refreshCurrentUser();
       onUpdate();
     } catch (error) {
       console.error('Error unlinking Telegram account:', error);

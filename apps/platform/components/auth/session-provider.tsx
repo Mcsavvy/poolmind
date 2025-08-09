@@ -2,7 +2,6 @@
 
 import { ReactNode, useState, useEffect, createContext, useCallback, useContext } from 'react';
 import { z } from 'zod';
-import { isConnected } from '@stacks/connect';
 
 export type Role = 'user' | 'moderator' | 'admin';
 
@@ -30,6 +29,7 @@ const clientSessionSchema = z.object({
   user: clientSessionUserSchema,
   token: z.string(),
   expiresAt: z.number(),
+  authMethod: z.enum(["telegram", "wallet"])
 });
 
 export type ClientSessionUser = z.infer<typeof clientSessionUserSchema>;
@@ -45,7 +45,6 @@ interface AuthSessionProviderProps {
 interface AuthSessionProviderState {
   session: ClientSession | null;
   loading: boolean;
-  walletActive: boolean;
   setSession: (session: ClientSession) => void;
   clearSession: () => void;
 }
@@ -72,10 +71,6 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
   const [session, setSession] = useState<ClientSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [walletActive, setWalletActive] = useState(false);
-
-  useEffect(() => {
-    setWalletActive(isConnected());
-  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -105,7 +100,7 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
   }, [handleClearSession, loading]);
 
   return (
-    <AuthSessionContext.Provider value={{ session, loading, walletActive, setSession: handleSetSession, clearSession: handleClearSession }}>
+    <AuthSessionContext.Provider value={{ session, loading, setSession: handleSetSession, clearSession: handleClearSession }}>
       {children}
     </AuthSessionContext.Provider>
   );

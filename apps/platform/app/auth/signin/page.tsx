@@ -4,20 +4,18 @@ import { useEffect, useState } from 'react';
 import WalletConnectButton from '@/components/auth/wallet-connect-button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { TelegramLoginWidget, type TelegramUser } from '@/components/auth/telegram-login-widget';
-import { Wallet, MessageCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
-import useAuth from '@/hooks/auth';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { config } from '@/lib/config';
 import { useAuthSession } from '@/components/auth/session-provider';
 import { WalletAvatar } from '@/components/ui/wallet-avatar';
+import { useTelegram } from '@/hooks/auth';
 
 export default function SignInPage() {
   const [showTelegramLogin, setShowTelegramLogin] = useState(false);
-  const { loginWithTelegram } = useAuth();
+  const { loginWithTelegram } = useTelegram();
   const { session } = useAuthSession();
   const searchParams = useSearchParams();
   const router = useRouter();

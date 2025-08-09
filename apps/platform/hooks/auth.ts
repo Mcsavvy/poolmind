@@ -8,22 +8,17 @@ import {
   TelegramLoginRequest,
   LinkTelegramRequest,
   UserProfileResponse,
-  UpdateProfileResponse,
-  UpdateUserProfile,
-  UpdateNotificationPreferences,
-  UpdateSocialLinks,
 } from "@poolmind/shared-types";
 import { useClient } from "@/hooks/api";
 import { AxiosInstance } from "axios";
 import { useAuthSession } from "@/components/auth/session-provider";
 import { useCallback } from "react";
 import { config } from "@/lib/config";
+import { useState, useEffect } from "react";
+import { isConnected, getLocalStorage, disconnect, connect, request } from "@stacks/connect";
 
 
-async function _generateNonce(client: AxiosInstance, data: NonceRequest): Promise<NonceResponse> {
-  const response = await client.post<NonceResponse>("/auth/nonce", data);
-  return response.data;
-}
+
 
 async function _login(client: AxiosInstance, data: LoginRequest, onSuccess?: (response: LoginResponse) => void): Promise<LoginResponse> {
   const response = await client.post<LoginResponse>("/auth/login", data);
@@ -40,16 +35,6 @@ async function _refreshToken(client: AxiosInstance, data: RefreshTokenRequest): 
 
 async function _getCurrentUser(client: AxiosInstance): Promise<UserProfileResponse> {
   const response = await client.get<UserProfileResponse>("/auth/me");
-  return response.data;
-}
-
-async function _getUserProfile(client: AxiosInstance): Promise<UserProfileResponse> {
-  const response = await client.get<UserProfileResponse>("/users/profile");
-  return response.data;
-}
-
-async function _updateUserProfile(client: AxiosInstance, data: UpdateUserProfile): Promise<UpdateProfileResponse> {
-  const response = await client.put<UpdateProfileResponse>("/users/profile", data);
   return response.data;
 }
 
@@ -71,13 +56,38 @@ async function _unlinkTelegram(client: AxiosInstance): Promise<UserProfileRespon
   return response.data;
 }
 
-async function _updateNotificationPreferences(client: AxiosInstance, data: UpdateNotificationPreferences): Promise<UpdateProfileResponse> {
-  const response = await client.put<UpdateProfileResponse>("/users/notifications", data);
-  return response.data;
+async function _connectWallet (connected: boolean) {
+  if (!connected) {
+    const response = await connect();
+    const account = response.addresses.find(
+      (address) => address.symbol === "STX"
+    );
+    if (!account) {
+      throw new Error("Could not find STX address");
+    }
+    return [account.address, account.publicKey];
+  } else {
+    const userData = getLocalStorage();
+    if (!userData?.addresses) {
+      throw new Error("No wallet addresses found");
+    }
+    const stxAddress = userData.addresses.stx[0].address;
+    const accounts = await request("getAddresses");
+    const account = accounts.addresses.find(
+      (address) => address.address === stxAddress
+    );
+    if (!account) {
+      throw new Error("Could not find wallet address");
+    }
+    if (!account.publicKey) {
+      throw new Error("Could not retrieve public key from wallet");
+    }
+    return [account.address, account.publicKey];
+  }
 }
 
-async function _updateSocialLinks(client: AxiosInstance, data: UpdateSocialLinks): Promise<UpdateProfileResponse> {
-  const response = await client.put<UpdateProfileResponse>("/users/social-links", data);
+async function _generateNonce(client: AxiosInstance, data: NonceRequest): Promise<NonceResponse> {
+  const response = await client.post<NonceResponse>("/auth/nonce", data);
   return response.data;
 }
 
@@ -100,30 +110,9 @@ async function _generateAuthMessage(client: AxiosInstance, walletAddress: string
   }
 }
 
-function useAuth() {
+export function useAuth() {
   const client = useClient();
-  const { setSession, session } = useAuthSession();
-
-
-  const loginWithWallet = useCallback(async (data: LoginRequest) => {
-    const response = await _login(client, data, (response) => setSession({ user: response.user, token: response.token, expiresAt: response.expiresAt }));
-    return response;
-  }, [client, setSession]);
-
-  const loginWithTelegram = useCallback(async (data: TelegramLoginRequest) => {
-    const response = await _telegramLogin(client, data, (response) => setSession({ user: response.user, token: response.token, expiresAt: response.expiresAt }));
-    return response;
-  }, [client, setSession]);
-
-  const generateNonce = useCallback(async (data: NonceRequest) => {
-    const response = await _generateNonce(client, data);
-    return response;
-  }, [client]);
-
-  const generateAuthMessage = useCallback(async (walletAddress: string) => {
-    const response = await _generateAuthMessage(client, walletAddress);
-    return response;
-  }, [client]);
+  const { setSession, session } = useAuthSession();  
 
   const refreshToken = useCallback(async () => {
     if (!session) {
@@ -141,68 +130,192 @@ function useAuth() {
     setSession({ ...session, user: response.user, token: session.token, expiresAt: session.expiresAt });
   }, [client]);
 
-  const getUserProfile = useCallback(async () => {
-    if (!session) {
-      throw new Error("No session found");
-    }
-    const response = await _getUserProfile(client);
-    return response;
-  }, [client]); 
 
-  const updateUserProfile = useCallback(async (data: UpdateUserProfile) => {
-    if (!session) {
-      throw new Error("No session found");
-    }
-    const response = await _updateUserProfile(client, data);
-    return response;
-  }, [client]);
+  return {
+    refreshToken,
+    refreshCurrentUser,
+  }
+}
 
-  const updateNotificationPreferences = useCallback(async (data: UpdateNotificationPreferences) => {
-    if (!session) {
-      throw new Error("No session found");
-    }
-    const response = await _updateNotificationPreferences(client, data);
-    return response;
-  }, [client]);
+export function useWallet() {
+  const client = useClient();
+  const { session, clearSession, setSession } = useAuthSession();
+  const [connected, setConnected] = useState(false);
+  const [data, setData] = useState<{
+    address: string;
+    publicKey: string;
+  } | null>(null);
 
-  const updateSocialLinks = useCallback(async (data: UpdateSocialLinks) => {
-    if (!session) {
-      throw new Error("No session found");
-    }
-    const response = await _updateSocialLinks(client, data);
-    return response;
-  }, [client]);
+  const loginWithWallet = useCallback(
+    async (data: LoginRequest) => {
+      const response = await _login(client, data, (response) =>
+        setSession({
+          user: response.user,
+          token: response.token,
+          expiresAt: response.expiresAt,
+          authMethod: "wallet",
+        })
+      );
+      return response;
+    },
+    [client, setSession]
+  );
 
-  const linkTelegram = useCallback(async (data: LinkTelegramRequest) => {
-    if (!session) {
-      throw new Error("No session found");
-    }
-    const response = await _linkTelegram(client, data);
-    return response;
-  }, [client]);
+  const loginWithTelegram = useCallback(
+    async (data: TelegramLoginRequest) => {
+      const response = await _telegramLogin(client, data, (response) =>
+        setSession({
+          user: response.user,
+          token: response.token,
+          expiresAt: response.expiresAt,
+          authMethod: "telegram",
+        })
+      );
+      return response;
+    },
+    [client, setSession]
+  );
+
+  const generateNonce = useCallback(
+    async (data: NonceRequest) => {
+      const response = await _generateNonce(client, data);
+      return response;
+    },
+    [client]
+  );
+
+  const generateAuthMessage = useCallback(
+    async (walletAddress: string) => {
+      const response = await _generateAuthMessage(client, walletAddress);
+      return response;
+    },
+    [client]
+  );
+
+  const connectWallet = useCallback(async () => {
+    const [address, publicKey] = await _connectWallet(connected);
+    setData({ address, publicKey });
+    return [address, publicKey];
+  }, [connected, setData]);
+
+  useEffect(() => {
+    const checkConnection = () => {
+      const connected = isConnected();
+
+      if (connected) {
+        const userData = getLocalStorage();
+        const stxAddress = userData?.addresses?.stx?.[0]?.address;
+        if (!stxAddress) {
+          console.log("No STX address found");
+          disconnect();
+          setConnected(false);
+          setData(null);
+          if (session && session.authMethod === "wallet") {
+            console.log("Logging out");
+            clearSession();
+          }
+          return;
+        }
+        if (session && session.user.walletAddress !== stxAddress) {
+          console.log("STX address mismatch");
+          disconnect();
+          setConnected(false);
+          setData(null);
+          if (session.authMethod === "wallet") {
+            console.log("Logging out");
+            clearSession();
+          }
+          return;
+        }
+        setConnected(true);
+      } else {
+        if (session && session.authMethod === "wallet") {
+          console.log("Wallet disconnected");
+          setConnected(false);
+          setData(null);
+          clearSession();
+        }
+        setConnected(false);
+      }
+    };
+
+    checkConnection();
+    const handleStorageChange = () => {
+      checkConnection();
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
+  const disconnectWallet = () => {
+    disconnect();
+  };
+
+  return {
+    data,
+    isConnected: connected,
+    connect: connectWallet,
+    disconnect: disconnectWallet,
+    loginWithWallet,
+    loginWithTelegram,
+    generateNonce,
+    generateAuthMessage,
+  };
+}
+
+export function useTelegram() {
+  const client = useClient();
+  const { refreshCurrentUser } = useAuth();
+  const { session, clearSession, setSession } = useAuthSession();
+
+  const loginWithTelegram = useCallback(
+    async (data: TelegramLoginRequest) => {
+      const response = await _telegramLogin(client, data, (response) =>
+        setSession({
+          user: response.user,
+          token: response.token,
+          expiresAt: response.expiresAt,
+          authMethod: "telegram",
+        })
+      );
+      return response;
+    },
+    [client, setSession]
+  );
+
+  const linkTelegram = useCallback(
+    async (data: LinkTelegramRequest) => {
+      if (!session) {
+        throw new Error("No session found");
+      }
+      const response = await _linkTelegram(client, data);
+      refreshCurrentUser();
+      return response;
+    },
+    [client]
+  );
 
   const unlinkTelegram = useCallback(async () => {
     if (!session) {
       throw new Error("No session found");
     }
     const response = await _unlinkTelegram(client);
+    if (session && session.authMethod === "telegram") {
+      console.log("Logging out");
+      clearSession();
+    } else {
+      setSession({...session, user: response.user})
+    }
     return response;
   }, [client]);
 
   return {
-    loginWithWallet,
-    loginWithTelegram,
-    generateNonce,
-    generateAuthMessage,
-    refreshToken,
-    refreshCurrentUser,
-    getUserProfile,
-    updateUserProfile,
-    updateNotificationPreferences,
-    updateSocialLinks,
     linkTelegram,
     unlinkTelegram,
-  }
+    loginWithTelegram,
+  };
 }
-
 export default useAuth;

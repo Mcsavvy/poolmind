@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { connect, isConnected, getLocalStorage, request, disconnect } from '@stacks/connect';
 import { Button } from '@/components/ui/button';
 import { Wallet, Loader2 } from 'lucide-react';
 import { config } from '@/lib/config';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import useAuth from '@/hooks/auth';
+import { useWallet } from '@/hooks/auth';
+import { request } from '@stacks/connect';
 
 
 interface WalletConnectButtonProps {
@@ -25,42 +25,13 @@ export default function WalletConnectButton({
 }: WalletConnectButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { loginWithWallet, generateAuthMessage } = useAuth();
+  const { loginWithWallet, generateAuthMessage, connect } = useWallet();
 
   const connectWallet = useCallback(async () => {
     setIsLoading(true);
-    let connected = false;
 
     try {
-      // Check if already connected
-      if (isConnected()) {
-        disconnect();
-      }
-
-      // Connect to wallet using the new API
-      const response = await connect();
-      connected = true;
-      toast.success('Connected to wallet');
-
-      // Get stored addresses from local storage
-      const userData = getLocalStorage();
-      if (!userData?.addresses) {
-        throw new Error('No wallet addresses found');
-      }
-
-      const stxAddress = userData.addresses.stx[0].address;
-      
-      // Get detailed account information including public keys
-      const accounts = await request('getAddresses');
-      const account = accounts.addresses.find(address => address.address === stxAddress);
-
-      if (!account) {
-        throw new Error('Could not find wallet address');
-      }
-
-      if (!account.publicKey) {
-        throw new Error('Could not retrieve public key from wallet');
-      }
+      const [stxAddress, publicKey] = await connect();
 
       // Get authentication message from server
       const message = await generateAuthMessage(stxAddress);
@@ -73,7 +44,7 @@ export default function WalletConnectButton({
       // Authenticate directly with orchestrator and store session locally
       await loginWithWallet({
         walletAddress: stxAddress,
-        publicKey: account.publicKey,
+        publicKey: publicKey,
         signature: signatureResponse.signature,
         message,
         walletType: 'stacks-wallet',
@@ -84,13 +55,10 @@ export default function WalletConnectButton({
       router.push('/dashboard');
     } catch (error) {
       toast.error('Wallet connection error: ' + (error as Error).message);
-      if (connected) {
-        disconnect();
-      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [loginWithWallet, generateAuthMessage, connect, router]);
 
   // Button always shown; guard can be handled by caller if needed
 
