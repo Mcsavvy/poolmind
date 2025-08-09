@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -32,6 +33,8 @@ import {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class UsersController {
+  private readonly logger = new Logger(UsersController.name);
+
   constructor(@InjectModel('User') private readonly userModel: Model<IUser>) {}
   @Get('profile')
   @ApiOperation({
@@ -60,6 +63,8 @@ export class UsersController {
     description: 'Unauthorized',
   })
   getProfile(@CurrentUser() user: IUser) {
+    this.logger.debug(`👤 Get profile request from user ${user._id}`);
+
     const userResponse = {
       id: user._id.toString(),
       walletAddress: user.walletAddress,
@@ -120,50 +125,63 @@ export class UsersController {
     @CurrentUser() user: IUser,
     @Body() updateProfileDto: UpdateUserProfileDto,
   ) {
-    // Check for username uniqueness if username is being updated
-    if (
-      updateProfileDto.username &&
-      updateProfileDto.username !== user.username
-    ) {
-      const existingUser = await this.userModel.findOne({
-        username: updateProfileDto.username,
-      });
-      if (existingUser && existingUser._id.toString() !== user._id.toString()) {
-        throw new ForbiddenException('Username is already taken');
+    this.logger.log(`📝 Profile update request from user ${user._id} with fields: ${Object.keys(updateProfileDto).join(', ')}`);
+
+    try {
+      // Check for username uniqueness if username is being updated
+      if (
+        updateProfileDto.username &&
+        updateProfileDto.username !== user.username
+      ) {
+        this.logger.debug(`Checking username uniqueness: ${updateProfileDto.username}`);
+        const existingUser = await this.userModel.findOne({
+          username: updateProfileDto.username,
+        });
+        if (existingUser && existingUser._id.toString() !== user._id.toString()) {
+          this.logger.warn(`✗ Username ${updateProfileDto.username} already taken by user ${existingUser._id}`);
+          throw new ForbiddenException('Username is already taken');
+        }
       }
-    }
 
-    // Check for email uniqueness if email is being updated
-    if (updateProfileDto.email && updateProfileDto.email !== user.email) {
-      const existingUser = await this.userModel.findOne({
-        email: updateProfileDto.email,
-      });
-      if (existingUser && existingUser._id.toString() !== user._id.toString()) {
-        throw new ForbiddenException('Email is already registered');
+      // Check for email uniqueness if email is being updated
+      if (updateProfileDto.email && updateProfileDto.email !== user.email) {
+        this.logger.debug(`Checking email uniqueness: ${updateProfileDto.email}`);
+        const existingUser = await this.userModel.findOne({
+          email: updateProfileDto.email,
+        });
+        if (existingUser && existingUser._id.toString() !== user._id.toString()) {
+          this.logger.warn(`✗ Email ${updateProfileDto.email} already registered to user ${existingUser._id}`);
+          throw new ForbiddenException('Email is already registered');
+        }
       }
+
+      // Update user profile
+      Object.assign(user, updateProfileDto);
+      await user.save();
+
+      this.logger.log(`✓ Profile updated successfully for user ${user._id}`);
+
+      const userResponse = {
+        id: user._id.toString(),
+        walletAddress: user.walletAddress,
+        username: user.username,
+        displayName: user.displayName,
+        email: user.email,
+        profilePicture: user.profilePicture,
+        bio: user.bio,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified,
+        updatedAt: user.updatedAt,
+      };
+
+      return {
+        user: userResponse,
+        success: true,
+      };
+    } catch (error) {
+      this.logger.error(`✗ Profile update failed for user ${user._id}: ${error.message}`);
+      throw error;
     }
-
-    // Update user profile
-    Object.assign(user, updateProfileDto);
-    await user.save();
-
-    const userResponse = {
-      id: user._id.toString(),
-      walletAddress: user.walletAddress,
-      username: user.username,
-      displayName: user.displayName,
-      email: user.email,
-      profilePicture: user.profilePicture,
-      bio: user.bio,
-      role: user.role,
-      isEmailVerified: user.isEmailVerified,
-      updatedAt: user.updatedAt,
-    };
-
-    return {
-      user: userResponse,
-      success: true,
-    };
   }
 
   @Patch('notifications')
@@ -198,12 +216,21 @@ export class UsersController {
     @CurrentUser() user: IUser,
     @Body() notificationPreferencesDto: UpdateNotificationPreferencesDto,
   ) {
-    await user.updateNotificationPreferences(notificationPreferencesDto);
+    this.logger.log(`🔔 Notification preferences update from user ${user._id}`);
 
-    return {
-      notificationPreferences: user.notificationPreferences,
-      success: true,
-    };
+    try {
+      await user.updateNotificationPreferences(notificationPreferencesDto);
+
+      this.logger.log(`✓ Notification preferences updated successfully for user ${user._id}`);
+
+      return {
+        notificationPreferences: user.notificationPreferences,
+        success: true,
+      };
+    } catch (error) {
+      this.logger.error(`✗ Notification preferences update failed for user ${user._id}: ${error.message}`);
+      throw error;
+    }
   }
 
   @Patch('social-links')
@@ -238,16 +265,25 @@ export class UsersController {
     @CurrentUser() user: IUser,
     @Body() socialLinksDto: UpdateSocialLinksDto,
   ) {
-    user.socialLinks = {
-      ...user.socialLinks,
-      ...socialLinksDto,
-    };
-    await user.save();
+    this.logger.log(`🔗 Social links update from user ${user._id} with fields: ${Object.keys(socialLinksDto).join(', ')}`);
 
-    return {
-      socialLinks: user.socialLinks,
-      success: true,
-    };
+    try {
+      user.socialLinks = {
+        ...user.socialLinks,
+        ...socialLinksDto,
+      };
+      await user.save();
+
+      this.logger.log(`✓ Social links updated successfully for user ${user._id}`);
+
+      return {
+        socialLinks: user.socialLinks,
+        success: true,
+      };
+    } catch (error) {
+      this.logger.error(`✗ Social links update failed for user ${user._id}: ${error.message}`);
+      throw error;
+    }
   }
 
   @Get('stats')
@@ -287,35 +323,44 @@ export class UsersController {
     description: 'Forbidden - Admin or moderator role required',
   })
   async getUserStats() {
-    const stats = await this.userModel.aggregate([
-      { $match: { isActive: true } },
-      {
-        $group: {
-          _id: null,
-          totalUsers: { $sum: 1 },
-          usersWithEmail: {
-            $sum: { $cond: [{ $ne: ['$email', null] }, 1, 0] },
-          },
-          usersWithUsername: {
-            $sum: { $cond: [{ $ne: ['$username', null] }, 1, 0] },
-          },
-          adminUsers: {
-            $sum: { $cond: [{ $eq: ['$role', 'admin'] }, 1, 0] },
+    this.logger.log('📊 User statistics request (admin/moderator only)');
+
+    try {
+      const stats = await this.userModel.aggregate([
+        { $match: { isActive: true } },
+        {
+          $group: {
+            _id: null,
+            totalUsers: { $sum: 1 },
+            usersWithEmail: {
+              $sum: { $cond: [{ $ne: ['$email', null] }, 1, 0] },
+            },
+            usersWithUsername: {
+              $sum: { $cond: [{ $ne: ['$username', null] }, 1, 0] },
+            },
+            adminUsers: {
+              $sum: { $cond: [{ $eq: ['$role', 'admin'] }, 1, 0] },
+            },
           },
         },
-      },
-    ]);
+      ]);
 
-    const result = stats[0] || {
-      totalUsers: 0,
-      usersWithEmail: 0,
-      usersWithUsername: 0,
-      adminUsers: 0,
-    };
+      const result = stats[0] || {
+        totalUsers: 0,
+        usersWithEmail: 0,
+        usersWithUsername: 0,
+        adminUsers: 0,
+      };
 
-    return {
-      stats: result,
-      success: true,
-    };
+      this.logger.log(`✓ User statistics retrieved: ${result.totalUsers} total users, ${result.adminUsers} admins`);
+
+      return {
+        stats: result,
+        success: true,
+      };
+    } catch (error) {
+      this.logger.error(`✗ Failed to retrieve user statistics: ${error.message}`);
+      throw error;
+    }
   }
 }

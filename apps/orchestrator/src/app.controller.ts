@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Logger } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { Public } from './auth/decorators/public.decorator';
@@ -9,6 +9,8 @@ import { Connection } from 'mongoose';
 @Controller()
 @Public()
 export class AppController {
+  private readonly logger = new Logger(AppController.name);
+
   constructor(
     private readonly appService: AppService,
     @InjectConnection() private readonly connection: Connection,
@@ -28,6 +30,7 @@ export class AppController {
     },
   })
   getHello(): string {
+    this.logger.debug('Health check endpoint called');
     return this.appService.getHello();
   }
 
@@ -56,9 +59,13 @@ export class AppController {
     },
   })
   async getDatabaseHealth() {
+    this.logger.debug('Database health check requested');
+    
     try {
       const readyState = this.connection.readyState;
       const status = this.getConnectionStatus(readyState);
+
+      this.logger.debug(`Database connection status: ${status} (readyState: ${readyState})`);
 
       let collections: string[] = [];
       let operationTest: {
@@ -107,8 +114,10 @@ export class AppController {
             error: '',
             status: 'success',
           };
+
+          this.logger.debug(`✓ Database operations successful: ${collections.length} collections, ping: ${pingTime}ms`);
         } catch (error) {
-          console.warn('Database operation failed:', error.message);
+          this.logger.warn(`✗ Database operation failed: ${error.message}`);
           operationTest = {
             collectionsListed: 0,
             pingTime: '0ms',
@@ -117,9 +126,11 @@ export class AppController {
             error: error.message,
           };
         }
+      } else {
+        this.logger.warn(`Database not connected (readyState: ${readyState})`);
       }
 
-      return {
+      const healthResult = {
         status,
         database: connectionDetails.name,
         host: connectionDetails.host,
@@ -130,7 +141,11 @@ export class AppController {
         operationTest,
         timestamp: new Date().toISOString(),
       };
+
+      this.logger.log(`Database health check completed: ${status}`);
+      return healthResult;
     } catch (error) {
+      this.logger.error(`Database health check failed: ${error.message}`);
       return {
         status: 'error',
         error: error.message,
