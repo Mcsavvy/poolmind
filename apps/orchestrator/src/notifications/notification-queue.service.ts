@@ -128,20 +128,28 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
       attempts?: number;
     }
   ): Promise<Queue.Job<NotificationJobData>> {
-    const jobData: UserNotificationJob = {
-      type: 'user',
-      userId,
-      message,
-    };
+    try {
+      const jobData: UserNotificationJob = {
+        type: 'user',
+        userId,
+        message,
+      };
 
-    const job = await this.notificationQueue.add(jobData, {
-      priority: options?.priority,
-      delay: options?.delay,
-      attempts: options?.attempts,
-    });
+      const job = await this.notificationQueue.add(jobData, {
+        priority: options?.priority,
+        delay: options?.delay,
+        attempts: options?.attempts,
+      });
 
-    this.logger.debug(`Queued user notification job ${job.id} for user ${userId}: ${message.title}`);
-    return job;
+      this.logger.debug(
+        `Queued user notification job ${job.id} for user ${userId}: ${message.title} ` +
+        `(priority: ${options?.priority || 'default'}, delay: ${options?.delay || 0}ms)`
+      );
+      return job;
+    } catch (error) {
+      this.logger.error(`Failed to queue user notification for ${userId}:`, error);
+      throw error;
+    }
   }
 
   /**
@@ -256,28 +264,42 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
    * Get queue statistics
    */
   async getQueueStats() {
-    const waiting = await this.notificationQueue.getWaiting();
-    const active = await this.notificationQueue.getActive();
-    const completed = await this.notificationQueue.getCompleted();
-    const failed = await this.notificationQueue.getFailed();
-    const delayed = await this.notificationQueue.getDelayed();
+    try {
+      const waiting = await this.notificationQueue.getWaiting();
+      const active = await this.notificationQueue.getActive();
+      const completed = await this.notificationQueue.getCompleted();
+      const failed = await this.notificationQueue.getFailed();
+      const delayed = await this.notificationQueue.getDelayed();
 
-    return {
-      waiting: waiting.length,
-      active: active.length,
-      completed: completed.length,
-      failed: failed.length,
-      delayed: delayed.length,
-      total: waiting.length + active.length + completed.length + failed.length + delayed.length,
-    };
+      const stats = {
+        waiting: waiting.length,
+        active: active.length,
+        completed: completed.length,
+        failed: failed.length,
+        delayed: delayed.length,
+        total: waiting.length + active.length + completed.length + failed.length + delayed.length,
+      };
+
+      this.logger.debug(`Queue stats: ${JSON.stringify(stats)}`);
+      return stats;
+    } catch (error) {
+      this.logger.error('Failed to retrieve queue statistics:', error);
+      throw error;
+    }
   }
 
   /**
    * Clear all jobs from the queue
    */
   async clearQueue() {
-    await this.notificationQueue.empty();
-    this.logger.log('Notification queue cleared');
+    try {
+      const stats = await this.getQueueStats();
+      await this.notificationQueue.empty();
+      this.logger.warn(`Notification queue cleared - Removed ${stats.waiting} waiting and ${stats.delayed} delayed jobs`);
+    } catch (error) {
+      this.logger.error('Failed to clear notification queue:', error);
+      throw error;
+    }
   }
 
   /**

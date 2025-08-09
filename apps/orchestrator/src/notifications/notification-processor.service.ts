@@ -36,13 +36,20 @@ export class NotificationProcessorService implements OnModuleInit {
     const { data } = job;
     const startTime = Date.now();
 
+    const attempt = job.attemptsMade + 1;
+    const maxAttempts = job.opts.attempts || 3;
+
     try {
-      this.logger.debug(`Processing ${data.type} notification job ${job.id}: ${data.message.title}`);
+      this.logger.log(
+        `Processing ${data.type} notification job ${job.id} (attempt ${attempt}/${maxAttempts}): ${data.message.title}`
+      );
 
       let result: NotificationResult;
+      let targetInfo = '';
 
       switch (data.type) {
         case 'user':
+          targetInfo = `user ${data.userId}`;
           result = await this.notificationsService.sendToUser(
             data.userId,
             data.message
@@ -50,6 +57,7 @@ export class NotificationProcessorService implements OnModuleInit {
           break;
 
         case 'telegram-user':
+          targetInfo = `telegram user ${data.telegramId}`;
           result = await this.notificationsService.sendToTelegramUser(
             data.telegramId,
             data.message
@@ -57,6 +65,7 @@ export class NotificationProcessorService implements OnModuleInit {
           break;
 
         case 'role':
+          targetInfo = `role '${data.role}'`;
           result = await this.notificationsService.sendToRole(
             data.role,
             data.message
@@ -64,12 +73,14 @@ export class NotificationProcessorService implements OnModuleInit {
           break;
 
         case 'broadcast':
+          targetInfo = 'all users';
           result = await this.notificationsService.sendToAllUsers(
             data.message
           );
           break;
 
         case 'channel':
+          targetInfo = 'channel';
           result = await this.notificationsService.sendToChannel(
             data.message
           );
@@ -80,10 +91,18 @@ export class NotificationProcessorService implements OnModuleInit {
       }
 
       const duration = Date.now() - startTime;
-      this.logger.log(
-        `Completed ${data.type} notification job ${job.id} in ${duration}ms. ` +
-        `Sent: ${result.sentCount}, Failed: ${result.failedCount}`
-      );
+      
+      if (result.success) {
+        this.logger.log(
+          `✓ Completed ${data.type} notification job ${job.id} to ${targetInfo} in ${duration}ms. ` +
+          `Sent: ${result.sentCount}, Failed: ${result.failedCount}`
+        );
+      } else {
+        this.logger.warn(
+          `⚠ Completed ${data.type} notification job ${job.id} to ${targetInfo} with errors in ${duration}ms. ` +
+          `Sent: ${result.sentCount}, Failed: ${result.failedCount}`
+        );
+      }
 
       return {
         success: result.success,
@@ -92,10 +111,17 @@ export class NotificationProcessorService implements OnModuleInit {
 
     } catch (error) {
       const duration = Date.now() - startTime;
-      this.logger.error(
-        `Failed ${data.type} notification job ${job.id} after ${duration}ms:`,
-        error
-      );
+      
+      if (attempt < maxAttempts) {
+        this.logger.warn(
+          `⚠ Failed ${data.type} notification job ${job.id} (attempt ${attempt}/${maxAttempts}) after ${duration}ms. ` +
+          `Will retry: ${error.message}`
+        );
+      } else {
+        this.logger.error(
+          `✗ Failed ${data.type} notification job ${job.id} permanently after ${attempt} attempts and ${duration}ms: ${error.message}`
+        );
+      }
 
       return {
         success: false,
