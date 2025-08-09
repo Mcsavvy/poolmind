@@ -136,7 +136,6 @@ class PoolMindBot {
     this.bot.action(/^authenticate$/, async ctx => {
       const user = ctx.from;
       if (!user) {
-        await ctx.answerCbQuery('Unable to identify user');
         return;
       }
 

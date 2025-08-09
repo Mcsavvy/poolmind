@@ -99,9 +99,6 @@ export const authMiddleware: Middleware<SessionContext> = async (ctx, next) => {
   const user = ctx.from;
 
   if (!user) {
-    await ctx.reply(
-      '❌ Unable to identify user. Please restart the bot with /start'
-    );
     return;
   }
 
