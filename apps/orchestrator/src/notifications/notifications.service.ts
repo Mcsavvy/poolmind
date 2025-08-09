@@ -50,11 +50,15 @@ export class NotificationsService {
   ) {
     const botToken = this.configService.get<string>('telegram.botToken');
     if (!botToken) {
+      this.logger.error('Telegram bot token not configured');
       throw new Error('Telegram bot token not configured');
     }
 
     this.bot = new Telegraf(botToken);
     this.channelId = this.configService.get<string>('telegram.channelId') || '';
+    
+    this.logger.log('NotificationsService initialized successfully');
+    this.logger.debug(`Channel ID configured: ${this.channelId ? 'Yes' : 'No'}`);
   }
 
   /**
@@ -64,17 +68,31 @@ export class NotificationsService {
     userId: string,
     message: NotificationMessage,
   ): Promise<NotificationResult> {
-    const user = await this.userModel.findById(userId);
-    if (!user || !user.isActive) {
+    this.logger.debug(`Sending notification to user ${userId}: ${message.title}`);
+    
+    try {
+      const user = await this.userModel.findById(userId);
+      if (!user || !user.isActive) {
+        this.logger.warn(`Failed to send notification - User not found or inactive: ${userId}`);
+        return {
+          success: false,
+          sentCount: 0,
+          failedCount: 1,
+          errors: [{ userId, error: 'User not found or inactive' }],
+        };
+      }
+
+      this.logger.debug(`User found for notification: ${userId}, telegram linked: ${!!user.telegramAuth?.telegramId}`);
+      return this.sendToUsers([user], message);
+    } catch (error) {
+      this.logger.error(`Error in sendToUser for ${userId}:`, error);
       return {
         success: false,
         sentCount: 0,
         failedCount: 1,
-        errors: [{ userId, error: 'User not found or inactive' }],
+        errors: [{ userId, error: error.message }],
       };
     }
-
-    return this.sendToUsers([user], message);
   }
 
   /**
@@ -84,17 +102,44 @@ export class NotificationsService {
     telegramId: number,
     message: NotificationMessage,
   ): Promise<NotificationResult> {
-    const user = await this.userModel.findByTelegramId(telegramId);
-    if (!user || !user.isActive) {
+    this.logger.debug(`Sending notification to Telegram user ${telegramId}: ${message.title}`);
+    
+    
+    try {
+      const user = await this.userModel.findByTelegramId(telegramId);
+      if (!user || !user.isActive) {
+        // maybe user's telegram account is unlinked
+        const formattedMessage = this.formatMessage(message);
+        const telegramOptions = this.buildTelegramOptions(message.options);
+        await this.bot.telegram.sendMessage(
+          telegramId,
+          formattedMessage,
+          telegramOptions,
+        );
+        this.logger.debug(`Formatte message preview: ${formattedMessage.substring(0, 100)}...`);
+        this.bot.telegram.sendMessage(
+          telegramId,
+          formattedMessage,
+          telegramOptions,
+        );
+        return {
+          success: true,
+          sentCount: 1,
+          failedCount: 0,
+          errors: [],
+        };
+      }
+      this.logger.debug(`Telegram user found for notification: ${telegramId} -> userId: ${user._id}`);
+      return this.sendToUsers([user], message);
+    } catch (error) {
+      this.logger.error(`Error in sendToTelegramUser for ${telegramId}:`, error);
       return {
         success: false,
         sentCount: 0,
         failedCount: 1,
-        errors: [{ telegramId, error: 'User not found or inactive' }],
+        errors: [{ telegramId, error: error.message }],
       };
     }
-
-    return this.sendToUsers([user], message);
   }
 
   /**
@@ -104,8 +149,26 @@ export class NotificationsService {
     role: 'user' | 'admin' | 'moderator',
     message: NotificationMessage,
   ): Promise<NotificationResult> {
-    const users = await this.userModel.findByRole(role);
-    return this.sendToUsers(users, message);
+    this.logger.debug(`Sending notification to role '${role}': ${message.title}`);
+    
+    try {
+      const users = await this.userModel.findByRole(role);
+      this.logger.log(`Found ${users.length} users with role '${role}' for notification: ${message.title}`);
+      
+      if (users.length === 0) {
+        this.logger.warn(`No users found with role '${role}' for notification: ${message.title}`);
+      }
+      
+      return this.sendToUsers(users, message);
+    } catch (error) {
+      this.logger.error(`Error in sendToRole for role '${role}':`, error);
+      return {
+        success: false,
+        sentCount: 0,
+        failedCount: 1,
+        errors: [{ error: `Failed to query users with role '${role}': ${error.message}` }],
+      };
+    }
   }
 
   /**
@@ -114,8 +177,26 @@ export class NotificationsService {
   async sendToAllUsers(
     message: NotificationMessage,
   ): Promise<NotificationResult> {
-    const users = await this.userModel.findWithTelegramNotifications();
-    return this.sendToUsers(users, message);
+    this.logger.debug(`Broadcasting notification to all users: ${message.title}`);
+    
+    try {
+      const users = await this.userModel.findWithTelegramNotifications();
+      this.logger.log(`Found ${users.length} users eligible for broadcast notification: ${message.title}`);
+      
+      if (users.length === 0) {
+        this.logger.warn(`No users eligible for broadcast notification: ${message.title}`);
+      }
+      
+      return this.sendToUsers(users, message);
+    } catch (error) {
+      this.logger.error('Error in sendToAllUsers:', error);
+      return {
+        success: false,
+        sentCount: 0,
+        failedCount: 1,
+        errors: [{ error: `Failed to query all users: ${error.message}` }],
+      };
+    }
   }
 
   /**
@@ -124,7 +205,10 @@ export class NotificationsService {
   async sendToChannel(
     message: NotificationMessage,
   ): Promise<NotificationResult> {
+    this.logger.debug(`Sending notification to channel: ${message.title}`);
+    
     if (!this.channelId) {
+      this.logger.error('Cannot send channel notification - Channel ID not configured');
       return {
         success: false,
         sentCount: 0,
@@ -135,13 +219,15 @@ export class NotificationsService {
 
     try {
       const formattedMessage = this.formatMessage(message);
+      this.logger.debug(`Sending to channel ${this.channelId}: ${formattedMessage.substring(0, 100)}...`);
+      
       await this.bot.telegram.sendMessage(
         this.channelId,
         formattedMessage,
         this.buildTelegramOptions(message.options),
       );
 
-      this.logger.log(`Notification sent to channel: ${message.title}`);
+      this.logger.log(`Successfully sent notification to channel ${this.channelId}: ${message.title}`);
       return {
         success: true,
         sentCount: 1,
@@ -149,12 +235,12 @@ export class NotificationsService {
         errors: [],
       };
     } catch (error) {
-      this.logger.error(`Failed to send notification to channel:`, error);
+      this.logger.error(`Failed to send notification to channel ${this.channelId}:`, error);
       return {
         success: false,
         sentCount: 0,
         failedCount: 1,
-        errors: [{ error: error.message }],
+        errors: [{ error: `Channel notification failed: ${error.message}` }],
       };
     }
   }
@@ -166,6 +252,8 @@ export class NotificationsService {
     users: IUser[],
     message: NotificationMessage,
   ): Promise<NotificationResult> {
+    this.logger.debug(`Processing notification for ${users.length} users: ${message.title}`);
+    
     const eligibleUsers = this.filterEligibleUsers(users, message.type);
     const results: NotificationResult = {
       success: true,
@@ -173,6 +261,8 @@ export class NotificationsService {
       failedCount: 0,
       errors: [],
     };
+
+    this.logger.log(`${eligibleUsers.length} of ${users.length} users eligible for notification: ${message.title}`);
 
     if (eligibleUsers.length === 0) {
       this.logger.warn(`No eligible users found for notification: ${message.title}`);
@@ -182,10 +272,19 @@ export class NotificationsService {
     const formattedMessage = this.formatMessage(message);
     const telegramOptions = this.buildTelegramOptions(message.options);
 
+    this.logger.debug(`Formatted message preview: ${formattedMessage.substring(0, 100)}...`);
+
     // Send notifications in batches to avoid rate limiting
     const batchSize = 30; // Telegram rate limit is ~30 messages per second
+    const totalBatches = Math.ceil(eligibleUsers.length / batchSize);
+    
+    this.logger.log(`Sending notifications in ${totalBatches} batches of ${batchSize} messages each`);
+
     for (let i = 0; i < eligibleUsers.length; i += batchSize) {
       const batch = eligibleUsers.slice(i, i + batchSize);
+      const batchNumber = Math.floor(i / batchSize) + 1;
+      
+      this.logger.debug(`Processing batch ${batchNumber}/${totalBatches} with ${batch.length} users`);
       
       const batchPromises = batch.map(async (user) => {
         try {
@@ -200,7 +299,7 @@ export class NotificationsService {
           );
 
           results.sentCount++;
-          this.logger.debug(`Notification sent to user ${user._id}: ${message.title}`);
+          this.logger.debug(`✓ Notification sent to user ${user._id} (Telegram: ${user.telegramAuth.telegramId})`);
         } catch (error) {
           results.failedCount++;
           results.errors.push({
@@ -208,7 +307,7 @@ export class NotificationsService {
             telegramId: user.telegramAuth?.telegramId,
             error: error.message,
           });
-          this.logger.error(`Failed to send notification to user ${user._id}:`, error);
+          this.logger.error(`✗ Failed to send notification to user ${user._id} (Telegram: ${user.telegramAuth?.telegramId}): ${error.message}`);
         }
       });
 
@@ -216,6 +315,7 @@ export class NotificationsService {
 
       // Add delay between batches to respect rate limits
       if (i + batchSize < eligibleUsers.length) {
+        this.logger.debug(`Waiting 1 second before next batch to respect rate limits`);
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
@@ -223,9 +323,21 @@ export class NotificationsService {
     // Update success status based on results
     results.success = results.failedCount === 0;
 
-    this.logger.log(
-      `Notification batch completed - Title: ${message.title}, Sent: ${results.sentCount}, Failed: ${results.failedCount}`,
-    );
+    if (results.success) {
+      this.logger.log(`✓ Notification batch completed successfully - Title: ${message.title}, Sent: ${results.sentCount}`);
+    } else {
+      this.logger.warn(`⚠ Notification batch completed with errors - Title: ${message.title}, Sent: ${results.sentCount}, Failed: ${results.failedCount}`);
+      
+      // Log first few errors for debugging
+      const errorSample = results.errors.slice(0, 3);
+      errorSample.forEach(error => {
+        this.logger.error(`Sample error: User ${error.userId || 'unknown'} - ${error.error}`);
+      });
+      
+      if (results.errors.length > 3) {
+        this.logger.error(`... and ${results.errors.length - 3} more errors`);
+      }
+    }
 
     return results;
   }
@@ -237,15 +349,32 @@ export class NotificationsService {
     users: IUser[],
     notificationType: NotificationType,
   ): IUser[] {
-    return users.filter((user) => {
+    const startTime = Date.now();
+    let activeUsers = 0;
+    let telegramLinked = 0;
+    let notificationsEnabled = 0;
+    
+    const eligible = users.filter((user) => {
       // User must be active
-      if (!user.isActive) return false;
+      if (!user.isActive) {
+        this.logger.debug(`User ${user._id} filtered out - inactive`);
+        return false;
+      }
+      activeUsers++;
 
       // User must have Telegram linked
-      if (!user.telegramAuth?.telegramId) return false;
+      if (!user.telegramAuth?.telegramId) {
+        this.logger.debug(`User ${user._id} filtered out - no Telegram linked`);
+        return false;
+      }
+      telegramLinked++;
 
       // User must have Telegram notifications enabled
-      if (!user.notificationPreferences?.telegram) return false;
+      if (!user.notificationPreferences?.telegram) {
+        this.logger.debug(`User ${user._id} filtered out - Telegram notifications disabled`);
+        return false;
+      }
+      notificationsEnabled++;
 
       // For now, we only check the general telegram preference
       // In the future, we could add specific preferences for different notification types
@@ -253,6 +382,25 @@ export class NotificationsService {
 
       return true;
     });
+    
+    const filterTime = Date.now() - startTime;
+    
+    this.logger.debug(
+      `User filtering completed in ${filterTime}ms: ` +
+      `${users.length} total → ${activeUsers} active → ${telegramLinked} with Telegram → ` +
+      `${notificationsEnabled} with notifications enabled → ${eligible.length} eligible for ${notificationType}`
+    );
+    
+    if (eligible.length === 0 && users.length > 0) {
+      this.logger.warn(
+        `No eligible users for ${notificationType} notification. ` +
+        `Reasons: ${users.length - activeUsers} inactive, ` +
+        `${activeUsers - telegramLinked} without Telegram, ` +
+        `${telegramLinked - notificationsEnabled} with notifications disabled`
+      );
+    }
+    
+    return eligible;
   }
 
   /**
@@ -385,7 +533,15 @@ export class NotificationsService {
       attempts?: number;
     }
   ) {
-    return this.notificationQueueService.queueUserNotification(userId, message, options);
+    try {
+      this.logger.debug(`Queueing notification for user ${userId}: ${message.title} (priority: ${options?.priority || 'default'})`);
+      const job = await this.notificationQueueService.queueUserNotification(userId, message, options);
+      this.logger.log(`Successfully queued user notification - Job ID: ${job.id}, User: ${userId}, Title: ${message.title}`);
+      return job;
+    } catch (error) {
+      this.logger.error(`Failed to queue user notification for ${userId}:`, error);
+      throw error;
+    }
   }
 
   /**
@@ -478,17 +634,26 @@ export class NotificationsService {
       attempts?: number;
     }
   ) {
-    return this.queueToRole('admin', {
-      type: NotificationType.SECURITY,
-      title,
-      body,
-      options: {
-        silent: false, // Security alerts should not be silent
-      },
-    }, {
-      priority: 1, // High priority for security alerts
-      ...options,
-    });
+    this.logger.warn(`Queueing SECURITY ALERT: ${title}`);
+    try {
+      const job = await this.queueToRole('admin', {
+        type: NotificationType.SECURITY,
+        title,
+        body,
+        options: {
+          silent: false, // Security alerts should not be silent
+        },
+      }, {
+        priority: 1, // High priority for security alerts
+        attempts: 5, // More retry attempts for security alerts
+        ...options,
+      });
+      this.logger.error(`CRITICAL: Security alert queued successfully - Job ID: ${job.id}, Title: ${title}`);
+      return job;
+    } catch (error) {
+      this.logger.error(`CRITICAL: Failed to queue security alert "${title}":`, error);
+      throw error;
+    }
   }
 
   /**
@@ -545,27 +710,65 @@ export class NotificationsService {
    * Get queue statistics
    */
   async getQueueStats() {
-    return this.notificationQueueService.getQueueStats();
+    try {
+      const stats = await this.notificationQueueService.getQueueStats();
+      this.logger.debug(`Queue stats retrieved: waiting=${stats.waiting}, active=${stats.active}, completed=${stats.completed}, failed=${stats.failed}`);
+      
+      // Log warnings for concerning stats
+      if (stats.failed > 10) {
+        this.logger.warn(`High number of failed notification jobs: ${stats.failed}`);
+      }
+      
+      if (stats.waiting > 100) {
+        this.logger.warn(`Large queue backlog detected: ${stats.waiting} jobs waiting`);
+      }
+      
+      return stats;
+    } catch (error) {
+      this.logger.error('Failed to retrieve queue statistics:', error);
+      throw error;
+    }
   }
 
   /**
    * Clear all queued notifications (admin function)
    */
   async clearQueue() {
-    return this.notificationQueueService.clearQueue();
+    try {
+      this.logger.warn('ADMIN ACTION: Clearing all queued notifications');
+      await this.notificationQueueService.clearQueue();
+      this.logger.log('Successfully cleared notification queue');
+    } catch (error) {
+      this.logger.error('Failed to clear notification queue:', error);
+      throw error;
+    }
   }
 
   /**
    * Pause notification processing (admin function)
    */
   async pauseQueue() {
-    return this.notificationQueueService.pauseQueue();
+    try {
+      this.logger.warn('ADMIN ACTION: Pausing notification queue processing');
+      await this.notificationQueueService.pauseQueue();
+      this.logger.log('Notification queue processing paused');
+    } catch (error) {
+      this.logger.error('Failed to pause notification queue:', error);
+      throw error;
+    }
   }
 
   /**
    * Resume notification processing (admin function)
    */
   async resumeQueue() {
-    return this.notificationQueueService.resumeQueue();
+    try {
+      this.logger.log('ADMIN ACTION: Resuming notification queue processing');
+      await this.notificationQueueService.resumeQueue();
+      this.logger.log('Notification queue processing resumed');
+    } catch (error) {
+      this.logger.error('Failed to resume notification queue:', error);
+      throw error;
+    }
   }
 }
