@@ -11,6 +11,7 @@ import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
 import { AppConfig } from '../config/env.schema';
 import { IUser, type IUserModel } from '../lib/models/user';
+import { NotificationsService, NotificationType } from '../notifications/notifications.service';
 
 export interface WalletCredentials {
   walletAddress: string;
@@ -53,6 +54,7 @@ export class AuthService {
     private readonly configService: ConfigService<AppConfig>,
     private readonly jwtService: JwtService,
     @InjectModel('User') private readonly userModel: IUserModel,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -281,6 +283,15 @@ export class AuthService {
     };
 
     await user.save();
+    
+    // Queue welcome notification (non-blocking)
+    try {
+      await this.queueTelegramWelcomeMessage(user);
+    } catch (error) {
+      // Log error but don't fail the linking process
+      console.error('Failed to queue Telegram welcome message:', error);
+    }
+    
     return user;
   }
 
@@ -293,6 +304,14 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
+    // Queue goodbye notification before unlinking (non-blocking)
+    try {
+      await this.queueTelegramGoodbyeMessage(user);
+    } catch (error) {
+      // Log error but don't fail the unlinking process
+      console.error('Failed to queue Telegram goodbye message:', error);
+    }
+    
     user.telegramAuth = undefined;
     await user.save();
     return user;
@@ -413,5 +432,79 @@ export class AuthService {
 
     const { token, expiresAt } = await this.generateToken(user);
     return { token, expiresAt };
+  }
+
+  /**
+   * Queue welcome message when user links Telegram (non-blocking)
+   */
+  private async queueTelegramWelcomeMessage(user: IUser): Promise<void> {
+    const displayName = user.getDisplayName();
+    const groupLink = this.configService.get<string>('telegram.groupLink');
+    const channelLink = this.configService.get<string>('telegram.channelLink');
+    
+    let body = `Welcome to PoolMind, ${displayName}! 🎉\n\n`;
+    body += `Your Telegram account has been successfully linked to your PoolMind wallet.\n\n`;
+    body += `📊 You'll now receive important updates about:\n`;
+    body += `• Arbitrage opportunities\n`;
+    body += `• Trading performance\n`;
+    body += `• System announcements\n`;
+    body += `• Security alerts\n\n`;
+    
+    if (groupLink || channelLink) {
+      body += `📢 Stay connected with our community:\n`;
+      if (groupLink) {
+        body += `• Join our group: ${groupLink}\n`;
+      }
+      if (channelLink) {
+        body += `• Subscribe to our channel: ${channelLink}\n`;
+      }
+      body += `\n`;
+    }
+    
+    body += `💡 You can manage your notification preferences in your profile settings anytime.\n\n`;
+    body += `Happy trading! 🚀`;
+
+    await this.notificationsService.queueToUser(user._id.toString(), {
+      type: NotificationType.SYSTEM,
+      title: '🔗 Telegram Connected Successfully!',
+      body,
+      options: {
+        parseMode: 'Markdown',
+        disablePreview: false,
+        silent: false,
+        includeIcon: false
+      },
+    }, {
+      priority: 2, // High priority for welcome messages
+    });
+  }
+
+  /**
+   * Queue goodbye message when user unlinks Telegram (non-blocking)
+   */
+  private async queueTelegramGoodbyeMessage(user: IUser): Promise<void> {
+    const displayName = user.getDisplayName();
+    
+    let body = `Goodbye, ${displayName}! 👋\n\n`;
+    body += `Your Telegram account has been unlinked from PoolMind.\n\n`;
+    body += `📱 You will no longer receive:\n`;
+    body += `• Trading notifications\n`;
+    body += `• Arbitrage alerts\n`;
+    body += `• System updates\n\n`;
+    body += `🔄 You can always link your Telegram account again through your profile settings.\n\n`;
+    body += `Thank you for being part of PoolMind! 💙`;
+
+    await this.notificationsService.queueToTelegramUser(user.telegramAuth!.telegramId, {
+      type: NotificationType.SYSTEM,
+      title: '🔗 Telegram Disconnected',
+      body,
+      options: {
+        parseMode: 'Markdown',
+        silent: false,
+        includeIcon: false
+      },
+    }, {
+      priority: 2, // High priority for goodbye messages
+    });
   }
 }

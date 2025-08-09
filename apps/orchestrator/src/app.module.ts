@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { validateConfig } from './config/env.schema';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
@@ -20,6 +21,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     DatabaseModule,
     AuthModule,
     UsersModule,
+    NotificationsModule,
   ],
   controllers: [AppController, OpenApiController],
   providers: [

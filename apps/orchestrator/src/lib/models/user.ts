@@ -13,6 +13,8 @@ export interface IUserModel extends IBaseModel<IUser> {
   findByEmail(email: string): Promise<IUser | null>;
   findByTelegramId(telegramId: number): Promise<IUser | null>;
   findWithEmailNotifications(): Promise<IUser[]>;
+  findWithTelegramNotifications(): Promise<IUser[]>;
+  findByRole(role: 'user' | 'admin' | 'moderator'): Promise<IUser[]>;
   getStats(): Promise<{
     totalUsers: number;
     usersWithEmail: number;
@@ -97,19 +99,7 @@ const User = createModel<IUser>(
         type: Boolean,
         default: true,
       },
-      push: {
-        type: Boolean,
-        default: true,
-      },
-      sms: {
-        type: Boolean,
-        default: false,
-      },
-      marketing: {
-        type: Boolean,
-        default: false,
-      },
-      security: {
+      telegram: {
         type: Boolean,
         default: true,
       },
@@ -165,6 +155,7 @@ const User = createModel<IUser>(
         return (
           this.displayName ||
           this.username ||
+          this.telegramAuth?.username ||
           `${this.walletAddress.substring(0, 8)}...`
         );
       },
@@ -250,6 +241,25 @@ const User = createModel<IUser>(
         });
       },
 
+      // Find users with Telegram notifications enabled
+      findWithTelegramNotifications(): Promise<IUser[]> {
+        return this.find({
+          'notificationPreferences.telegram': true,
+          isActive: true,
+          'telegramAuth.telegramId': { $exists: true, $ne: null },
+        });
+      },
+
+      // Find users by role
+      findByRole(role: 'user' | 'admin' | 'moderator'): Promise<IUser[]> {
+        return this.find({
+          role,
+          isActive: true,
+          'telegramAuth.telegramId': { $exists: true, $ne: null },
+          'notificationPreferences.telegram': true,
+        });
+      },
+
       // Get user statistics
       async getStats() {
         const stats = await this.aggregate([
@@ -315,10 +325,7 @@ const User = createModel<IUser>(
 // Notification preferences interface
 export interface INotificationPreferences {
   email: boolean;
-  push: boolean;
-  sms: boolean;
-  marketing: boolean;
-  security: boolean;
+  telegram: boolean;
 }
 
 // User interface extending base document

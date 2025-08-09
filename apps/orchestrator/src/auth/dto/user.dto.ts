@@ -4,7 +4,6 @@ import {
   IsEmail,
   IsOptional,
   IsBoolean,
-  IsObject,
   IsUrl,
   MaxLength,
   MinLength,
@@ -72,40 +71,13 @@ export class UpdateNotificationPreferencesDto {
   email?: boolean;
 
   @ApiProperty({
-    description: 'Push notifications enabled',
+    description: 'Telegram notifications enabled',
     example: true,
     required: false,
   })
   @IsOptional()
   @IsBoolean()
-  push?: boolean;
-
-  @ApiProperty({
-    description: 'SMS notifications enabled',
-    example: false,
-    required: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  sms?: boolean;
-
-  @ApiProperty({
-    description: 'Marketing notifications enabled',
-    example: false,
-    required: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  marketing?: boolean;
-
-  @ApiProperty({
-    description: 'Security notifications enabled',
-    example: true,
-    required: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  security?: boolean;
+  telegram?: boolean;
 }
 
 export class UpdateSocialLinksDto {

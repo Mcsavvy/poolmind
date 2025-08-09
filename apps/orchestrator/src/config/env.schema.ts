@@ -18,6 +18,10 @@ const appConfigSchema = z.object({
   STACKS_NETWORK: z.enum(['mainnet', 'testnet', 'devnet']).default('testnet'),
   TELEGRAM_BOT_TOKEN: z.string().min(1, 'Telegram bot token is required'),
   TELEGRAM_BOT_USERNAME: z.string().min(1, 'Telegram bot username is required'),
+  TELEGRAM_CHANNEL_ID: z.string(),
+  TELEGRAM_GROUP_LINK: z.url(),
+  TELEGRAM_CHANNEL_LINK: z.string(),
+  REDIS_URL: z.string(),
 });
 
 export type AppConfig = {
@@ -34,6 +38,10 @@ export type AppConfig = {
   // Telegram
   'telegram.botToken': string;
   'telegram.botUsername': string;
+  'telegram.channelId'?: string;
+  'telegram.groupLink'?: string;
+  'telegram.channelLink'?: string;
+  'redis.url': string;
 };
 
 export function validateConfig(env: Record<string, string>): AppConfig {
@@ -62,6 +70,10 @@ export function validateConfig(env: Record<string, string>): AppConfig {
     // Telegram
     'telegram.botToken': parsedEnv.data.TELEGRAM_BOT_TOKEN,
     'telegram.botUsername': parsedEnv.data.TELEGRAM_BOT_USERNAME,
+    'telegram.channelId': parsedEnv.data.TELEGRAM_CHANNEL_ID,
+    'telegram.groupLink': parsedEnv.data.TELEGRAM_GROUP_LINK,
+    'telegram.channelLink': parsedEnv.data.TELEGRAM_CHANNEL_LINK,
+    'redis.url': parsedEnv.data.REDIS_URL,
   };
 
   return config;
