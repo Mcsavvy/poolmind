@@ -11,7 +11,7 @@ PoolMind is a full-stack platform built on the Stacks blockchain for a pooled cr
 ```
 poolmind/
 ├── apps/
-│   ├── platform/          # Next.js 15 + Tailwind v4 + Shadcn UI + Framer Motion + NextAuth.js + Stacks.js + Axios
+│   ├── platform/          # Next.js 15 + Tailwind v4 + Shadcn UI + Framer Motion + Stacks.js + Axios
 │   └── orchestrator/      # NestJS + MongoDB + Mongoose + JWT + Passport + Swagger + class-validator + class-transformer + Stacks.js
 ├── packages/
 │   └── shared/
