@@ -1,9 +1,16 @@
 import { z } from 'zod';
 
+// Import in-app notification preferences from notification types
+import { InAppNotificationPreferencesSchema } from './notification';
+
 // Notification preferences schema
 export const NotificationPreferencesSchema = z.object({
   email: z.boolean(),
   telegram: z.boolean(),
+  inApp: InAppNotificationPreferencesSchema.default({
+    enabled: true,
+    digestFrequency: 'immediate',
+  }),
 });
 
 // Telegram authentication schema
@@ -81,6 +88,7 @@ export const UpdateUserProfileSchema = z.object({
 export const UpdateNotificationPreferencesSchema = z.object({
   email: z.boolean().optional(),
   telegram: z.boolean().optional(),
+  inApp: InAppNotificationPreferencesSchema.partial().optional(),
 });
 
 export const UpdateSocialLinksSchema = z.object({
