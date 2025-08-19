@@ -9,17 +9,16 @@ export default function DashboardPage() {
   const user = session?.user;
 
   return (
-      <div className="container mx-auto py-8">
-        <div className="flex flex-col space-y-8">
-          {/* Welcome Header */}
-          <div className="flex flex-col space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">
-              Welcome back, {user?.displayName || user?.username || 'User'}!
-            </h1>
-            <p className="text-muted-foreground">
-              Here&apos;s an overview of your PoolMind account
-            </p>
-          </div>
+      <div className="flex flex-col space-y-8">
+        {/* Welcome Header */}
+        <div className="flex flex-col space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Welcome back, {user?.displayName || user?.username || 'User'}!
+          </h1>
+          <p className="text-muted-foreground">
+            Here&apos;s an overview of your PoolMind account
+          </p>
+        </div>
 
           {/* User Info Card */}
           <Card>
@@ -124,6 +123,5 @@ export default function DashboardPage() {
             </Card>
           </div>
         </div>
-      </div>
   );
 }
