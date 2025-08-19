@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { HelpCircle, ArrowRight, MessageCircle, Coins } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { config } from '@/lib/config';
 
 /**
  * Individual FAQ item with premium animation
@@ -114,9 +117,11 @@ const SupportCard = ({ delay = 0 }: { delay?: number }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground animate-golden-glow px-6 py-4 text-base font-semibold">
-                Join Telegram
-                <ArrowRight className="ml-2 h-4 w-4" />
+              <Button className="w-full bg-foreground text-primary-foreground px-6 py-4 text-base font-semibold" asChild>
+                <Link href={config.telegramGroupLink} target="_blank">
+                  Join Telegram
+                  <Image src="/telegram.png" alt="Telegram" width={20} height={20} className="ml-2" />
+                </Link>
               </Button>
             </motion.div>
             
@@ -124,8 +129,10 @@ const SupportCard = ({ delay = 0 }: { delay?: number }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Button variant="outline" className="w-full border-primary/30 text-foreground hover:bg-accent/30 hover:border-primary/50">
-                Contact Support
+              <Button variant="outline" className="w-full border-primary/30 text-foreground hover:bg-accent/30 hover:border-primary/50" asChild>
+                <Link href={`mailto:${config.supportEmail}`} target="_blank">
+                  Contact Support
+                </Link>
               </Button>
             </motion.div>
           </motion.div>

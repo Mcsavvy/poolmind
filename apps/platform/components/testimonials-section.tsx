@@ -14,6 +14,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { config } from '@/lib/config';
+import Link from 'next/link';
 
 
 
@@ -161,8 +163,10 @@ const TelegramBadge = () => {
             whileTap={{ scale: 0.95 }}
             className="w-full lg:w-auto"
           >
-            <Button className="w-full lg:w-auto bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground animate-coin-shimmer px-6 py-2">
-              Join Telegram
+            <Button className="w-full lg:w-auto bg-foreground text-primary-foreground px-6 py-4 text-base font-semibold" asChild>
+              <Link href={config.telegramGroupLink} target="_blank">
+                Join Community
+              </Link>
             </Button>
           </motion.div>
         </CardContent>

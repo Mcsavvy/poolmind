@@ -1,6 +1,11 @@
 'use client';
 
+import { AlertCircle, ArrowRight, Check, TrendingUp, Zap } from 'lucide-react';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { config } from '@/lib/config';
+import Link from 'next/link';
 
 /**
  * Animated notification component
@@ -28,25 +33,19 @@ const NotificationCard = ({
       case 'trade':
         return (
           <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
+            <TrendingUp className="size-4 text-white" />
           </div>
         );
       case 'update':
         return (
           <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+            <Zap className="size-4 text-white" />
           </div>
         );
       case 'alert':
         return (
           <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5z" />
-            </svg>
+            <AlertCircle className="size-4 text-white" />
           </div>
         );
       default:
@@ -233,45 +232,36 @@ export default function TelegramCTASection() {
             </p>
             
             {/* Features list */}
-            <div className="space-y-4 mb-10">
+            <div className="mb-10 flex flex-col gap-4 items-start">
               <div className="flex items-center justify-center lg:justify-start space-x-3">
                 <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Check className="w-3 h-3 text-white" />
                 </div>
                 <span className="text-gray-700 text-lg">Real-time trade notifications</span>
               </div>
               
               <div className="flex items-center justify-center lg:justify-start space-x-3">
                 <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Check className="w-3 h-3 text-white" />
                 </div>
                 <span className="text-gray-700 text-lg">Portfolio performance updates</span>
               </div>
               
               <div className="flex items-center justify-center lg:justify-start space-x-3">
                 <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Check className="w-3 h-3 text-white" />
                 </div>
                 <span className="text-gray-700 text-lg">Community insights & discussions</span>
               </div>
             </div>
             
             {/* CTA Button */}
-            <button className="group inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-blue-500/25 text-lg">
-              <svg className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-              </svg>
-              Join Telegram
-              <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </button>
+            <Button size="lg" className="bg-telegram text-white hover:bg-telegram/80 w-full py-6 text-lg" asChild>
+              <Link href={config.telegramChannelLink} target="_blank">
+                Join Telegram
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
           </div>
         </div>
       </div>

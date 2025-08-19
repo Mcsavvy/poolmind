@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ArrowRight, Play, Coins, ShieldCheck, ChartLine } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
+import config from '@/lib/config';
 
 /**
  * Animated crypto icon component with premium coin styling
@@ -292,9 +294,12 @@ export default function HeroSection() {
                 <Button 
                   size="lg"
                   className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground font-semibold px-8 py-6 text-lg rounded-2xl shadow-lg hover:shadow-primary/25 transition-all duration-300 animate-golden-glow"
+                  asChild
                 >
-                  Get Started
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <Link href="/dashboard">
+                    Get Started
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
                 </Button>
               </motion.div>
 
@@ -307,9 +312,12 @@ export default function HeroSection() {
                   variant="outline"
                   size="lg"
                   className="border-2 border-primary/30 hover:border-primary/50 text-foreground font-semibold px-8 py-6 text-lg rounded-2xl backdrop-blur-sm bg-card/50 hover:bg-accent/30 transition-all duration-300"
+                  asChild
                 >
-                  <Play className="mr-2 h-5 w-5" />
-                  Watch Demo
+                  <Link href={config.demoLink} target="_blank">
+                    <Play className="mr-2 h-5 w-5" />
+                    Watch Demo
+                  </Link>
                 </Button>
               </motion.div>
             </motion.div>

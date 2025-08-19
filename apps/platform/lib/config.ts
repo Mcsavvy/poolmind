@@ -39,7 +39,22 @@ const envSchema = z.object({
     .default(ms("30m")),
   NEXT_PUBLIC_TELEGRAM_BOT_USERNAME: z
     .string()
-    .min(1, "TELEGRAM_BOT_USERNAME is required")
+    .min(1, "TELEGRAM_BOT_USERNAME is required"),
+  NEXT_PUBLIC_TELEGRAM_GROUP_LINK: z
+    .string()
+    .min(1, "TELEGRAM_GROUP_LINK is required"),
+  NEXT_PUBLIC_TELEGRAM_CHANNEL_LINK: z
+    .string()
+    .min(1, "TELEGRAM_CHANNEL_LINK is required"),
+  NEXT_PUBLIC_SUPPORT_EMAIL: z
+    .string()
+    .min(1, "SUPPORT_EMAIL is required"),
+  NEXT_PUBLIC_SUPPORT_PHONE: z
+    .string()
+    .min(1, "SUPPORT_PHONE is required"),
+  NEXT_PUBLIC_DEMO_LINK: z
+    .string()
+    .min(1, "DEMO_LINK is required"),
 });
 
 interface Config {
@@ -50,6 +65,11 @@ interface Config {
   sessionMaxAge: number;
   sessionUpdateAge: number;
   telegramBotUsername: string;
+  telegramGroupLink: string;
+  telegramChannelLink: string;
+  supportEmail: string;
+  supportPhone: string;
+  demoLink: string;
 }
 
 // Build a literal object of env values using direct references so Next can inline on the client
@@ -61,6 +81,11 @@ const rawEnv = {
   NEXT_PUBLIC_SESSION_MAX_AGE: process.env.NEXT_PUBLIC_SESSION_MAX_AGE,
   NEXT_PUBLIC_SESSION_UPDATE_AGE: process.env.NEXT_PUBLIC_SESSION_UPDATE_AGE,
   NEXT_PUBLIC_TELEGRAM_BOT_USERNAME: process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME,
+  NEXT_PUBLIC_TELEGRAM_GROUP_LINK: process.env.NEXT_PUBLIC_TELEGRAM_GROUP_LINK,
+  NEXT_PUBLIC_TELEGRAM_CHANNEL_LINK: process.env.NEXT_PUBLIC_TELEGRAM_CHANNEL_LINK,
+  NEXT_PUBLIC_SUPPORT_EMAIL: process.env.NEXT_PUBLIC_SUPPORT_EMAIL,
+  NEXT_PUBLIC_SUPPORT_PHONE: process.env.NEXT_PUBLIC_SUPPORT_PHONE,
+  NEXT_PUBLIC_DEMO_LINK: process.env.NEXT_PUBLIC_DEMO_LINK,
 } as const;
 
 // Parse and validate once at module load. In dev, HMR will re-evaluate on file change.
@@ -86,6 +111,11 @@ export const config: Config = {
   sessionMaxAge: env.NEXT_PUBLIC_SESSION_MAX_AGE,
   sessionUpdateAge: env.NEXT_PUBLIC_SESSION_UPDATE_AGE,
   telegramBotUsername: env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME,
+  telegramGroupLink: env.NEXT_PUBLIC_TELEGRAM_GROUP_LINK,
+  telegramChannelLink: env.NEXT_PUBLIC_TELEGRAM_CHANNEL_LINK,
+  supportEmail: env.NEXT_PUBLIC_SUPPORT_EMAIL,
+  supportPhone: env.NEXT_PUBLIC_SUPPORT_PHONE,
+  demoLink: env.NEXT_PUBLIC_DEMO_LINK,
 };
 
 export default config;
