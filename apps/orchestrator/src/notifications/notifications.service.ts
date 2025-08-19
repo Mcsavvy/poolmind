@@ -21,6 +21,7 @@ export enum NotificationType {
   SYSTEM = 'system',
   TRADING = 'trading',
   ARBITRAGE = 'arbitrage',
+  TRANSACTION = 'transaction',
 }
 
 export interface NotificationMessage {
@@ -429,6 +430,8 @@ export class NotificationsService {
         return '📈';
       case NotificationType.ARBITRAGE:
         return '⚡';
+      case NotificationType.TRANSACTION:
+        return '💰';
       default:
         return '📋';
     }

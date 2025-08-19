@@ -1,0 +1,575 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Poolmind Orchestrator API",
+    "description": "API documentation for the Poolmind Orchestrator service",
+    "version": "1.0",
+    "contact": {}
+  },
+  "servers": [],
+  "paths": {
+    "/auth/nonce": {
+      "post": {
+        "description": "Generate a nonce and authentication message for wallet signing",
+        "operationId": "AuthController_generateNonce",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "walletAddress": {
+                    "type": "string",
+                    "description": "Wallet address for generating authentication message",
+                    "example": "SP1234567890ABCDEF"
+                  }
+                },
+                "required": [
+                  "walletAddress"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication message generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Authentication message to be signed by wallet"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid wallet address"
+          }
+        },
+        "summary": "Generate authentication message",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "description": "Authenticate user using wallet signature and get JWT token",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "walletAddress": {
+                    "type": "string",
+                    "description": "Stacks wallet address",
+                    "example": "SP1234567890ABCDEF"
+                  },
+                  "publicKey": {
+                    "type": "string",
+                    "description": "Public key from wallet",
+                    "example": "0x1234567890abcdef..."
+                  },
+                  "signature": {
+                    "type": "string",
+                    "description": "Signature of the authentication message",
+                    "example": "0xabcdef1234567890..."
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Authentication message that was signed",
+                    "example": "Sign this message to authenticate with PoolMind..."
+                  },
+                  "walletType": {
+                    "type": "string",
+                    "description": "Type of wallet used",
+                    "example": "xverse"
+                  },
+                  "network": {
+                    "type": "string",
+                    "description": "Stacks network",
+                    "enum": [
+                      "mainnet",
+                      "testnet",
+                      "devnet"
+                    ],
+                    "example": "testnet"
+                  }
+                },
+                "required": [
+                  "walletAddress",
+                  "publicKey",
+                  "signature",
+                  "message"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "JWT authentication token"
+                    },
+                    "user": {
+                      "type": "object",
+                      "description": "User information",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "walletAddress": {
+                          "type": "string"
+                        },
+                        "username": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "displayName": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "email": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "admin",
+                            "moderator"
+                          ]
+                        },
+                        "isEmailVerified": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid signature or authentication failed"
+          }
+        },
+        "summary": "Authenticate with wallet",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "description": "Get a new JWT token using an existing valid token",
+        "operationId": "AuthController_refreshToken",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "Current JWT token to refresh",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  }
+                },
+                "required": [
+                  "token"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token refreshed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "New JWT authentication token"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired token"
+          }
+        },
+        "summary": "Refresh JWT token",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "description": "Get information about the currently authenticated user",
+        "operationId": "AuthController_getCurrentUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "description": "User information",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "walletAddress": {
+                          "type": "string"
+                        },
+                        "username": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "displayName": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "email": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "admin",
+                            "moderator"
+                          ]
+                        },
+                        "isEmailVerified": {
+                          "type": "boolean"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "lastLoginAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "loginCount": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/telegram/login": {
+      "post": {
+        "description": "Authenticate user using Telegram login data and get JWT token",
+        "operationId": "AuthController_telegramLogin",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "number",
+                    "description": "Telegram user ID",
+                    "example": 123456789
+                  },
+                  "first_name": {
+                    "type": "string",
+                    "description": "Telegram user first name",
+                    "example": "John"
+                  },
+                  "last_name": {
+                    "type": "string",
+                    "description": "Telegram user last name",
+                    "example": "Doe"
+                  },
+                  "username": {
+                    "type": "string",
+                    "description": "Telegram username",
+                    "example": "johndoe"
+                  },
+                  "photo_url": {
+                    "type": "string",
+                    "description": "Telegram user photo URL",
+                    "example": "https://t.me/i/userpic/320/johndoe.jpg"
+                  },
+                  "auth_date": {
+                    "type": "number",
+                    "description": "Unix timestamp of authentication",
+                    "example": 1677654321
+                  },
+                  "hash": {
+                    "type": "string",
+                    "description": "Telegram authentication hash",
+                    "example": "abcdef1234567890..."
+                  }
+                },
+                "required": [
+                  "id",
+                  "first_name",
+                  "auth_date",
+                  "hash"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "JWT authentication token"
+                    },
+                    "user": {
+                      "type": "object",
+                      "description": "User information"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid Telegram data or account not linked"
+          }
+        },
+        "summary": "Authenticate with Telegram",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/telegram/link": {
+      "post": {
+        "description": "Link Telegram account to existing user profile",
+        "operationId": "AuthController_linkTelegram",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "telegramData": {
+                    "description": "Telegram authentication data from widget",
+                    "allOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "number",
+                            "description": "Telegram user ID",
+                            "example": 123456789
+                          },
+                          "first_name": {
+                            "type": "string",
+                            "description": "Telegram user first name",
+                            "example": "John"
+                          },
+                          "last_name": {
+                            "type": "string",
+                            "description": "Telegram user last name",
+                            "example": "Doe"
+                          },
+                          "username": {
+                            "type": "string",
+                            "description": "Telegram username",
+                            "example": "johndoe"
+                          },
+                          "photo_url": {
+                            "type": "string",
+                            "description": "Telegram user photo URL",
+                            "example": "https://t.me/i/userpic/320/johndoe.jpg"
+                          },
+                          "auth_date": {
+                            "type": "number",
+                            "description": "Unix timestamp of authentication",
+                            "example": 1677654321
+                          },
+                          "hash": {
+                            "type": "string",
+                            "description": "Telegram authentication hash",
+                            "example": "abcdef1234567890..."
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "first_name",
+                          "auth_date",
+                          "hash"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "telegramData"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Telegram account linked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "description": "Updated user information"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Telegram account already linked to another user"
+          },
+          "401": {
+            "description": "Invalid Telegram data or unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Link Telegram account",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/telegram/unlink": {
+      "post": {
+        "description": "Remove Telegram authentication from user profile",
+        "operationId": "AuthController_unlinkTelegram",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Telegram account unlinked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "description": "Updated user information"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unlink Telegram account",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    }
+  }
+}
