@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -15,58 +15,50 @@ import { Badge } from '@/components/ui/badge';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import UserProfileDropdown from '@/components/auth/user-profile-dropdown';
 import { ThemeToggle } from '@/components/theme-toggle';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  type: 'info' | 'success' | 'warning' | 'error';
-}
-
-// Mock notifications data - replace with real data from your API
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    title: 'Deposit Successful',
-    message: 'Your deposit of 1000 STX has been processed.',
-    time: '2 min ago',
-    read: false,
-    type: 'success'
-  },
-  {
-    id: '2', 
-    title: 'Withdrawal Processed',
-    message: 'Your withdrawal request has been completed.',
-    time: '1 hour ago',
-    read: false,
-    type: 'info'
-  },
-  {
-    id: '3',
-    title: 'Pool Performance Update',
-    message: 'Monthly returns are +15% this period.',
-    time: '3 hours ago',
-    read: true,
-    type: 'success'
-  }
-];
+import { useNotificationManager } from '@/hooks/notifications';
+import { useEffect } from 'react';
 
 export default function DashboardHeader() {
-  const unreadCount = mockNotifications.filter(n => !n.read).length;
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    error,
+    fetchNotifications,
+    handleMarkAsRead,
+    handleDelete,
+    handleBulkAction
+  } = useNotificationManager();
 
-  const getNotificationIcon = (type: Notification['type']) => {
-    switch (type) {
-      case 'success':
-        return '🟢';
-      case 'warning':
-        return '🟡';
-      case 'error':
+  // Fetch notifications on component mount
+  useEffect(() => {
+    fetchNotifications();
+  }, []); // Empty dependency array - only run once on mount
+
+  const getNotificationIcon = (priority: string) => {
+    switch (priority) {
+      case 'high':
         return '🔴';
+      case 'urgent':
+        return '🚨';
+      case 'normal':
+        return '🔵';
+      case 'low':
+        return '🟢';
       default:
         return '🔵';
     }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hour${Math.floor(diffInMinutes / 60) > 1 ? 's' : ''} ago`;
+    return `${Math.floor(diffInMinutes / 1440)} day${Math.floor(diffInMinutes / 1440) > 1 ? 's' : ''} ago`;
   };
 
   return (
@@ -113,16 +105,25 @@ export default function DashboardHeader() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               
-              {mockNotifications.length === 0 ? (
+              {loading ? (
+                <DropdownMenuItem disabled className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading notifications...
+                </DropdownMenuItem>
+              ) : notifications.length === 0 ? (
                 <DropdownMenuItem disabled>
                   No notifications
                 </DropdownMenuItem>
               ) : (
-                mockNotifications.map((notification) => (
-                  <DropdownMenuItem key={notification.id} className="flex flex-col items-start gap-1 p-3">
+                notifications.map((notification) => (
+                  <DropdownMenuItem 
+                    key={notification.id} 
+                    className="flex flex-col items-start gap-1 p-3"
+                    onClick={() => !notification.read && handleMarkAsRead(notification.id)}
+                  >
                     <div className="flex w-full items-start justify-between">
                       <div className="flex items-center gap-2">
-                        <span>{getNotificationIcon(notification.type)}</span>
+                        <span>{getNotificationIcon(notification.priority)}</span>
                         <div className="flex flex-col">
                           <span className={`text-sm font-medium ${!notification.read ? 'text-foreground' : 'text-muted-foreground'}`}>
                             {notification.title}
@@ -133,7 +134,7 @@ export default function DashboardHeader() {
                         </div>
                       </div>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {notification.time}
+                        {formatTimeAgo(notification.createdAt)}
                       </span>
                     </div>
                     {!notification.read && (
@@ -141,6 +142,50 @@ export default function DashboardHeader() {
                     )}
                   </DropdownMenuItem>
                 ))
+              )}
+              
+              {error && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem disabled className="text-red-500 text-center text-sm">
+                    Error: {error}
+                  </DropdownMenuItem>
+                </>
+              )}
+              
+              {notifications.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <div className="flex gap-2 p-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-xs"
+                      onClick={() => {
+                        const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+                        if (unreadIds.length > 0) {
+                          handleBulkAction('markRead', unreadIds);
+                        }
+                      }}
+                      disabled={notifications.filter(n => !n.read).length === 0}
+                    >
+                      Mark All Read
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-xs"
+                      onClick={() => {
+                        const allIds = notifications.map(n => n.id);
+                        if (allIds.length > 0) {
+                          handleBulkAction('delete', allIds);
+                        }
+                      }}
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                </>
               )}
               
               <DropdownMenuSeparator />
