@@ -103,6 +103,17 @@ const User = createModel<IUser>(
         type: Boolean,
         default: true,
       },
+      inApp: {
+        enabled: {
+          type: Boolean,
+          default: true,
+        },
+        digestFrequency: {
+          type: String,
+          enum: ['immediate', 'hourly', 'daily', 'weekly', 'never'],
+          default: 'immediate',
+        },
+      },
     },
 
     // Telegram authentication (optional)
@@ -326,6 +337,10 @@ const User = createModel<IUser>(
 export interface INotificationPreferences {
   email: boolean;
   telegram: boolean;
+  inApp: {
+    enabled: boolean;
+    digestFrequency: 'immediate' | 'hourly' | 'daily' | 'weekly' | 'never';
+  };
 }
 
 // User interface extending base document

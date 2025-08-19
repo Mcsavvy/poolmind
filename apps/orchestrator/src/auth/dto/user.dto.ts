@@ -4,6 +4,7 @@ import {
   IsEmail,
   IsOptional,
   IsBoolean,
+  IsObject,
   IsUrl,
   MaxLength,
   MinLength,
@@ -78,6 +79,21 @@ export class UpdateNotificationPreferencesDto {
   @IsOptional()
   @IsBoolean()
   telegram?: boolean;
+
+  @ApiProperty({
+    description: 'In-app notifications enabled',
+    example: {
+      enabled: true,
+      digestFrequency: 'immediate',
+    },
+    required: false,
+  })
+  @IsOptional()
+  @IsObject()
+  inApp?: {
+    enabled: boolean;
+    digestFrequency: 'immediate' | 'hourly' | 'daily' | 'weekly' | 'never';
+  };
 }
 
 export class UpdateSocialLinksDto {

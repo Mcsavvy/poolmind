@@ -184,7 +184,42 @@ export class UsersController {
     }
   }
 
-  @Patch('notifications')
+  @Get('notification-preferences')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get notification preferences',
+    description: "Get the current user's notification preferences",
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification preferences retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        notificationPreferences: {
+          type: 'object',
+          description: 'Notification preferences',
+        },
+        success: {
+          type: 'boolean',
+          example: true,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  async getNotificationPreferences(@CurrentUser() user: IUser) {
+    this.logger.log(`🔔 Notification preferences get from user ${user._id}`);
+    return {
+      notificationPreferences: user.notificationPreferences,
+      success: true,
+    };
+  }
+
+  @Patch('notification-preferences')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Update notification preferences',

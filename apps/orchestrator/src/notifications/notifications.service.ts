@@ -5,6 +5,13 @@ import { Telegraf } from 'telegraf';
 import { AppConfig } from '../config/env.schema';
 import { IUser, type IUserModel } from '../lib/models/user';
 import { NotificationQueueService } from './notification-queue.service';
+import Notification, { 
+  type INotificationModel, 
+  type INotification,
+  NotificationPriority,
+  NotificationTargetType,
+} from '../lib/models/notification';
+import { UserNotification, type IUserNotificationModel, type IUserNotification } from '../lib/models/notification';
 
 export interface NotificationOptions {
   disablePreview?: boolean;
@@ -47,6 +54,8 @@ export class NotificationsService {
   constructor(
     private readonly configService: ConfigService<AppConfig>,
     @InjectModel('User') private readonly userModel: IUserModel,
+    @InjectModel('Notification') private readonly notificationModel: INotificationModel,
+    @InjectModel('UserNotification') private readonly userNotificationModel: IUserNotificationModel,
     private readonly notificationQueueService: NotificationQueueService,
   ) {
     const botToken = this.configService.get<string>('telegram.botToken');
@@ -704,6 +713,233 @@ export class NotificationsService {
     return this.queueToAllUsers(message, queueOptions);
   }
 
+  // =====================================
+  // QUEUED IN-APP NOTIFICATION METHODS
+  // =====================================
+
+  /**
+   * Queue in-app notification creation (non-blocking)
+   */
+  async queueInAppNotification(
+    data: {
+      type: string;
+      title: string;
+      body: string;
+      targetType: string;
+      targetDetails: {
+        userId?: string;
+        role?: 'user' | 'admin' | 'moderator';
+      };
+      priority?: string;
+      metadata?: {
+        relatedEntityType?: 'transaction' | 'user' | 'system' | 'trading';
+        relatedEntityId?: string;
+        actionUrl?: string;
+        actionText?: string;
+        data?: Record<string, string>;
+      };
+      expiresAt?: Date;
+      sentBy?: {
+        userId?: string;
+        system?: boolean;
+      };
+    },
+    options?: {
+      priority?: number;
+      delay?: number;
+      attempts?: number;
+    }
+  ) {
+    try {
+      this.logger.debug(`Queueing in-app notification: ${data.title} (type: ${data.type}, target: ${data.targetType})`);
+      
+      const job = await this.notificationQueueService.queueInAppNotification(data, options);
+      
+      this.logger.log(`Successfully queued in-app notification - Job ID: ${job.id}, Title: ${data.title}`);
+      return job;
+    } catch (error) {
+      this.logger.error(`Failed to queue in-app notification "${data.title}":`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Queue in-app notification for specific user
+   */
+  async queueInAppNotificationForUser(
+    userId: string,
+    title: string,
+    body: string,
+    type: NotificationType = NotificationType.SYSTEM,
+    options?: {
+      priority?: NotificationPriority;
+      metadata?: {
+        relatedEntityType?: 'transaction' | 'user' | 'system' | 'trading';
+        relatedEntityId?: string;
+        actionUrl?: string;
+        actionText?: string;
+        data?: Record<string, string>;
+      };
+      expiresAt?: Date;
+      delay?: number;
+      attempts?: number;
+    }
+  ) {
+    return this.queueInAppNotification({
+      type,
+      title,
+      body,
+      targetType: NotificationTargetType.USER,
+      targetDetails: { userId },
+      priority: options?.priority,
+      metadata: options?.metadata,
+      expiresAt: options?.expiresAt,
+    }, {
+      delay: options?.delay,
+      attempts: options?.attempts,
+    });
+  }
+
+  /**
+   * Queue in-app notification for role
+   */
+  async queueInAppNotificationForRole(
+    role: 'user' | 'admin' | 'moderator',
+    title: string,
+    body: string,
+    type: NotificationType = NotificationType.SYSTEM,
+    options?: {
+      priority?: NotificationPriority;
+      metadata?: {
+        relatedEntityType?: 'transaction' | 'user' | 'system' | 'trading';
+        relatedEntityId?: string;
+        actionUrl?: string;
+        actionText?: string;
+        data?: Record<string, string>;
+      };
+      expiresAt?: Date;
+      delay?: number;
+      attempts?: number;
+    }
+  ) {
+    return this.queueInAppNotification({
+      type,
+      title,
+      body,
+      targetType: NotificationTargetType.ROLE,
+      targetDetails: { role },
+      priority: options?.priority,
+      metadata: options?.metadata,
+      expiresAt: options?.expiresAt,
+    }, {
+      delay: options?.delay,
+      attempts: options?.attempts,
+    });
+  }
+
+  /**
+   * Queue in-app broadcast notification
+   */
+  async queueInAppBroadcastNotification(
+    title: string,
+    body: string,
+    type: NotificationType = NotificationType.SYSTEM,
+    options?: {
+      priority?: NotificationPriority;
+      metadata?: {
+        relatedEntityType?: 'transaction' | 'user' | 'system' | 'trading';
+        relatedEntityId?: string;
+        actionUrl?: string;
+        actionText?: string;
+        data?: Record<string, string>;
+      };
+      expiresAt?: Date;
+      delay?: number;
+      attempts?: number;
+    }
+  ) {
+    return this.queueInAppNotification({
+      type,
+      title,
+      body,
+      targetType: NotificationTargetType.BROADCAST,
+      targetDetails: {},
+      priority: options?.priority,
+      metadata: options?.metadata,
+      expiresAt: options?.expiresAt,
+    }, {
+      priority: 10, // Lower priority for broadcasts
+      delay: options?.delay,
+      attempts: options?.attempts,
+    });
+  }
+
+  /**
+   * Queue transaction-related in-app notification
+   */
+  async queueTransactionNotification(
+    userId: string,
+    title: string,
+    body: string,
+    transactionId: string,
+    options?: {
+      priority?: NotificationPriority;
+      actionUrl?: string;
+      actionText?: string;
+      delay?: number;
+      attempts?: number;
+    }
+  ) {
+    return this.queueInAppNotificationForUser(
+      userId,
+      title,
+      body,
+      NotificationType.TRANSACTION,
+      {
+        priority: options?.priority || NotificationPriority.HIGH,
+        metadata: {
+          relatedEntityType: 'transaction',
+          relatedEntityId: transactionId,
+          actionUrl: options?.actionUrl,
+          actionText: options?.actionText || 'View Transaction',
+        },
+        delay: options?.delay,
+        attempts: options?.attempts,
+      }
+    );
+  }
+
+  /**
+   * Queue security alert as in-app notification
+   */
+  async queueInAppSecurityAlert(
+    title: string,
+    body: string,
+    options?: {
+      targetUser?: string;
+      delay?: number;
+      attempts?: number;
+    }
+  ) {
+    const targetType = options?.targetUser ? NotificationTargetType.USER : NotificationTargetType.ROLE;
+    const targetDetails = options?.targetUser 
+      ? { userId: options.targetUser }
+      : { role: 'admin' as const };
+
+    return this.queueInAppNotification({
+      type: NotificationType.SECURITY,
+      title,
+      body,
+      targetType,
+      targetDetails,
+      priority: NotificationPriority.URGENT,
+    }, {
+      priority: 1, // Highest priority for security alerts
+      attempts: 5, // More retry attempts for security alerts
+      delay: options?.delay,
+    });
+  }
+
   /**
    * Get queue statistics
    */
@@ -766,6 +1002,569 @@ export class NotificationsService {
       this.logger.log('Notification queue processing resumed');
     } catch (error) {
       this.logger.error('Failed to resume notification queue:', error);
+      throw error;
+    }
+  }
+
+  // =====================================
+  // IN-APP NOTIFICATION METHODS
+  // =====================================
+
+  /**
+   * Create an in-app notification
+   */
+  async createInAppNotification(data: {
+    type: string;
+    title: string;
+    body: string;
+    targetType: string;
+    targetDetails: {
+      userId?: string;
+      role?: 'user' | 'admin' | 'moderator';
+    };
+    priority?: string;
+    metadata?: {
+      relatedEntityType?: 'transaction' | 'user' | 'system' | 'trading';
+      relatedEntityId?: string;
+      actionUrl?: string;
+      actionText?: string;
+      data?: Record<string, string>;
+    };
+    expiresAt?: Date;
+    sentBy?: {
+      userId?: string;
+      system?: boolean;
+    };
+  }): Promise<INotification> {
+    try {
+      this.logger.debug(`Creating in-app notification: ${data.title} (type: ${data.type}, target: ${data.targetType})`);
+
+      // Create the notification
+      const notification = new this.notificationModel({
+        type: data.type,
+        title: data.title,
+        body: data.body,
+        priority: data.priority || NotificationPriority.NORMAL,
+        targetType: data.targetType,
+        targetDetails: data.targetDetails,
+        metadata: data.metadata,
+        sentBy: {
+          system: true,
+          ...data.sentBy,
+        },
+        expiresAt: data.expiresAt,
+        stats: {
+          totalRecipients: 0,
+          totalRead: 0,
+          totalDeleted: 0,
+        },
+      });
+
+      const savedNotification = await notification.save();
+
+      // Create UserNotification records for recipients
+      await this.createUserNotificationRecords(savedNotification);
+
+      // Update stats
+      await savedNotification.updateStats();
+
+      this.logger.log(`Created in-app notification ${savedNotification._id}: ${data.title}`);
+      return savedNotification;
+    } catch (error) {
+      this.logger.error('Failed to create in-app notification:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create UserNotification records for notification recipients
+   */
+  private async createUserNotificationRecords(notification: INotification): Promise<void> {
+    let recipients: IUser[] = [];
+
+    switch (notification.targetType) {
+      case NotificationTargetType.USER:
+        if (notification.targetDetails.userId) {
+          const user = await this.userModel.findById(notification.targetDetails.userId);
+          if (user && user.isActive) {
+            recipients = [user];
+          }
+        }
+        break;
+
+      case NotificationTargetType.ROLE:
+        if (notification.targetDetails.role) {
+          recipients = await this.userModel.findByRole(notification.targetDetails.role);
+        }
+        break;
+
+      case NotificationTargetType.BROADCAST:
+        recipients = await this.userModel.find({ isActive: true });
+        break;
+    }
+
+    // Filter recipients based on in-app notification preferences
+    const eligibleRecipients = recipients.filter(user => 
+      this.isEligibleForInAppNotification(user, notification.type)
+    );
+
+    if (eligibleRecipients.length === 0) {
+      this.logger.warn(`No eligible recipients for in-app notification ${notification._id}`);
+      return;
+    }
+
+    // Create UserNotification records in batches
+    const batchSize = 100;
+    for (let i = 0; i < eligibleRecipients.length; i += batchSize) {
+      const batch = eligibleRecipients.slice(i, i + batchSize);
+      const userNotifications = batch.map(user => ({
+        notificationId: notification._id.toString(),
+        userId: user._id.toString(),
+        isRead: false,
+        isDeleted: false,
+        metadata: {
+          starred: false,
+          archived: false,
+        },
+      }));
+
+      await this.userNotificationModel.insertMany(userNotifications);
+      this.logger.debug(`Created ${userNotifications.length} UserNotification records for notification ${notification._id}`);
+    }
+
+    this.logger.log(`Created UserNotification records for ${eligibleRecipients.length} recipients`);
+  }
+
+  /**
+   * Check if user is eligible for in-app notification based on preferences
+   */
+  private isEligibleForInAppNotification(user: IUser, notificationType: string): boolean {
+    // User must be active
+    if (!user.isActive) return false;
+
+    // Check if in-app notifications are enabled
+    if (!user.notificationPreferences?.inApp?.enabled) return false;
+
+    return true;
+  }
+
+  /**
+   * Get in-app notifications for a user
+   */
+  async getInAppNotificationsForUser(
+    userId: string,
+    options: {
+      limit?: number;
+      offset?: number;
+      unreadOnly?: boolean;
+      types?: string[];
+      priority?: string;
+    } = {}
+  ): Promise<{
+    notifications: Array<INotification & { userNotification: IUserNotification }>;
+    total: number;
+    unreadCount: number;
+  }> {
+    try {
+      const { limit = 50, offset = 0, unreadOnly = false, types, priority } = options;
+
+      this.logger.debug(`Getting in-app notifications for user ${userId} (limit: ${limit}, offset: ${offset}, unreadOnly: ${unreadOnly})`);
+
+      // Build aggregation pipeline
+      const matchConditions: any = {
+        $or: [
+          { 'targetDetails.userId': userId },
+          { targetType: 'broadcast' },
+        ],
+        isActive: true,
+      };
+
+      if (types && types.length > 0) {
+        matchConditions.type = { $in: types };
+      }
+
+      if (priority) {
+        matchConditions.priority = priority;
+      }
+
+      const pipeline = [
+        { $match: matchConditions },
+        {
+          $lookup: {
+            from: 'usernotifications',
+            localField: '_id',
+            foreignField: 'notificationId',
+            as: 'userNotifications',
+            pipeline: [{ $match: { userId } }],
+          },
+        },
+        {
+          $addFields: {
+            userNotification: { $arrayElemAt: ['$userNotifications', 0] },
+          },
+        },
+      ];
+
+      if (unreadOnly) {
+        pipeline.push({
+          $match: {
+            $or: [
+              { 'userNotification.isRead': false },
+              { userNotification: null },
+            ],
+          },
+        } as any);
+      }
+
+      // Add filtering for non-deleted notifications
+      pipeline.push({
+        $match: {
+          $or: [
+            { 'userNotification.isDeleted': { $ne: true } },
+            { userNotification: null },
+          ],
+        },
+      } as any);
+
+      // Get total count before pagination
+      const countPipeline = [...pipeline, { $count: 'total' }];
+      const countResult = await this.notificationModel.aggregate(countPipeline);
+      const total = countResult.length > 0 ? countResult[0].total : 0;
+
+      // Add sorting and pagination
+              pipeline.push(
+          { $sort: { createdAt: -1 } } as any,
+          { $skip: offset } as any,
+          { $limit: limit } as any,
+          { $unset: 'userNotifications' } as any
+        );
+
+      const notifications = await this.notificationModel.aggregate(pipeline);
+
+      // Get unread count
+      const unreadCount = await this.getUnreadCountForUser(userId);
+
+      this.logger.debug(`Retrieved ${notifications.length} in-app notifications for user ${userId} (total: ${total}, unread: ${unreadCount})`);
+
+      return {
+        notifications,
+        total,
+        unreadCount,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get in-app notifications for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark in-app notification as read for user
+   */
+  async markInAppNotificationAsRead(notificationId: string, userId: string): Promise<boolean> {
+    try {
+      this.logger.debug(`Marking in-app notification ${notificationId} as read for user ${userId}`);
+
+      const result = await this.userNotificationModel.findOneAndUpdate(
+        { notificationId, userId },
+        { 
+          isRead: true, 
+          readAt: new Date(),
+          $setOnInsert: { isDeleted: false },
+        },
+        { upsert: true, new: true }
+      );
+
+      if (result) {
+        // Update notification stats
+        const notification = await this.notificationModel.findById(notificationId);
+        if (notification) {
+          await notification.updateStats();
+        }
+
+        this.logger.log(`Marked in-app notification ${notificationId} as read for user ${userId}`);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      this.logger.error(`Failed to mark in-app notification ${notificationId} as read for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark all in-app notifications as read for user
+   */
+  async markAllInAppNotificationsAsRead(userId: string, types?: string[]): Promise<number> {
+    try {
+      this.logger.debug(`Marking all in-app notifications as read for user ${userId}`);
+
+      // First, get all notification IDs for the user
+      const matchConditions: any = {
+        $or: [
+          { 'targetDetails.userId': userId },
+          { targetType: 'broadcast' },
+        ],
+        isActive: true,
+      };
+
+      if (types && types.length > 0) {
+        matchConditions.type = { $in: types };
+      }
+
+      const notifications = await this.notificationModel.find(matchConditions, '_id');
+      const notificationIds = notifications.map(n => n._id.toString());
+
+      if (notificationIds.length === 0) return 0;
+
+      // Update or create UserNotification records
+      const operations = notificationIds.map(notificationId => ({
+        updateOne: {
+          filter: { notificationId, userId },
+          update: { 
+            $set: { isRead: true, readAt: new Date() },
+            $setOnInsert: { isDeleted: false },
+          },
+          upsert: true,
+        },
+      }));
+
+      const result = await this.userNotificationModel.bulkWrite(operations);
+      const updatedCount = result.modifiedCount + result.upsertedCount;
+
+      this.logger.log(`Marked ${updatedCount} in-app notifications as read for user ${userId}`);
+      return updatedCount;
+    } catch (error) {
+      this.logger.error(`Failed to mark all in-app notifications as read for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete in-app notification for user (soft delete)
+   */
+  async deleteInAppNotificationForUser(notificationId: string, userId: string): Promise<boolean> {
+    try {
+      this.logger.debug(`Deleting in-app notification ${notificationId} for user ${userId}`);
+
+      const result = await this.userNotificationModel.findOneAndUpdate(
+        { notificationId, userId },
+        { 
+          isDeleted: true, 
+          deletedAt: new Date(),
+          $setOnInsert: { isRead: false },
+        },
+        { upsert: true, new: true }
+      );
+
+      if (result) {
+        this.logger.log(`Deleted in-app notification ${notificationId} for user ${userId}`);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      this.logger.error(`Failed to delete in-app notification ${notificationId} for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get unread count for user
+   */
+  async getUnreadCountForUser(userId: string, types?: string[]): Promise<number> {
+    try {
+      const matchConditions: any = {
+        $or: [
+          { 'targetDetails.userId': userId },
+          { targetType: 'broadcast' },
+        ],
+        isActive: true,
+      };
+
+      if (types && types.length > 0) {
+        matchConditions.type = { $in: types };
+      }
+
+      const pipeline = [
+        { $match: matchConditions },
+        {
+          $lookup: {
+            from: 'usernotifications',
+            localField: '_id',
+            foreignField: 'notificationId',
+            as: 'userNotifications',
+            pipeline: [{ $match: { userId } }],
+          },
+        },
+        {
+          $match: {
+            $and: [
+              {
+                $or: [
+                  { 'userNotifications.isRead': false },
+                  { userNotifications: { $size: 0 } },
+                ],
+              },
+              {
+                $or: [
+                  { 'userNotifications.isDeleted': { $ne: true } },
+                  { userNotifications: { $size: 0 } },
+                ],
+              },
+            ],
+          },
+        },
+        { $count: 'unreadCount' },
+      ];
+
+      const result = await this.notificationModel.aggregate(pipeline);
+      return result.length > 0 ? result[0].unreadCount : 0;
+    } catch (error) {
+      this.logger.error(`Failed to get unread count for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get notification statistics for admin
+   */
+  async getInAppNotificationStats(): Promise<{
+    total: number;
+    byType: Record<string, number>;
+    byPriority: Record<string, number>;
+    readPercentage: number;
+    recentActivity: {
+      sent24h: number;
+      read24h: number;
+    };
+  }> {
+    try {
+      this.logger.debug('Getting in-app notification statistics');
+
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+      const [typeStats, priorityStats, recentStats] = await Promise.all([
+        // Stats by type
+        this.notificationModel.aggregate([
+          { $match: { isActive: true } },
+          { $group: { _id: '$type', count: { $sum: 1 } } },
+        ]),
+
+        // Stats by priority
+        this.notificationModel.aggregate([
+          { $match: { isActive: true } },
+          { $group: { _id: '$priority', count: { $sum: 1 } } },
+        ]),
+
+        // Recent activity stats
+        this.notificationModel.aggregate([
+          {
+            $facet: {
+              total: [
+                { $match: { isActive: true } },
+                { $count: 'count' },
+              ],
+              totalRead: [
+                { $match: { isActive: true } },
+                { $group: { _id: null, totalRead: { $sum: '$stats.totalRead' }, totalRecipients: { $sum: '$stats.totalRecipients' } } },
+              ],
+              sent24h: [
+                { $match: { isActive: true, createdAt: { $gte: twentyFourHoursAgo } } },
+                { $count: 'count' },
+              ],
+              read24h: [
+                {
+                  $lookup: {
+                    from: 'usernotifications',
+                    localField: '_id',
+                    foreignField: 'notificationId',
+                    as: 'userNotifications',
+                  },
+                },
+                { $unwind: '$userNotifications' },
+                { $match: { 'userNotifications.readAt': { $gte: twentyFourHoursAgo } } },
+                { $count: 'count' },
+              ],
+            },
+          },
+        ]),
+      ]);
+
+      const byType = typeStats.reduce((acc, item) => {
+        acc[item._id] = item.count;
+        return acc;
+      }, {});
+
+      const byPriority = priorityStats.reduce((acc, item) => {
+        acc[item._id] = item.count;
+        return acc;
+      }, {});
+
+      const stats = recentStats[0];
+      const total = stats.total[0]?.count || 0;
+      const totalReadData = stats.totalRead[0] || { totalRead: 0, totalRecipients: 0 };
+      const readPercentage = totalReadData.totalRecipients > 0 
+        ? Math.round((totalReadData.totalRead / totalReadData.totalRecipients) * 100)
+        : 0;
+
+      const result = {
+        total,
+        unread: total - totalReadData.totalRead,
+        byType,
+        byPriority,
+        readPercentage,
+        recentActivity: {
+          sent24h: stats.sent24h[0]?.count || 0,
+          read24h: stats.read24h[0]?.count || 0,
+        },
+      };
+
+      this.logger.debug(`Retrieved in-app notification statistics: ${JSON.stringify(result)}`);
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to get in-app notification statistics:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Cleanup old notifications (admin function)
+   */
+  async cleanupOldInAppNotifications(daysOld = 30): Promise<{ 
+    deactivatedNotifications: number; 
+    deletedUserNotifications: number; 
+  }> {
+    try {
+      this.logger.log(`ADMIN ACTION: Cleaning up in-app notifications older than ${daysOld} days`);
+
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+
+      // Deactivate old notifications
+      const notificationResult = await this.notificationModel.updateMany(
+        { 
+          createdAt: { $lt: cutoffDate },
+          isActive: true,
+        },
+        { isActive: false }
+      );
+
+      // Delete old UserNotification records
+      const userNotificationResult = await this.userNotificationModel.deleteMany({
+        createdAt: { $lt: cutoffDate },
+      });
+
+      const result = {
+        deactivatedNotifications: notificationResult.modifiedCount || 0,
+        deletedUserNotifications: userNotificationResult.deletedCount || 0,
+      };
+
+      this.logger.log(`Cleanup completed: ${result.deactivatedNotifications} notifications deactivated, ${result.deletedUserNotifications} user notifications deleted`);
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to cleanup old in-app notifications:', error);
       throw error;
     }
   }

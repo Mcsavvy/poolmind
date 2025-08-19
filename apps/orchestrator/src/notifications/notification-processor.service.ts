@@ -40,8 +40,12 @@ export class NotificationProcessorService implements OnModuleInit {
     const maxAttempts = job.opts.attempts || 3;
 
     try {
+      const title = data.type === 'in-app' 
+        ? data.notificationData.title 
+        : data.message?.title || 'Unknown';
+      
       this.logger.log(
-        `Processing ${data.type} notification job ${job.id} (attempt ${attempt}/${maxAttempts}): ${data.message.title}`
+        `Processing ${data.type} notification job ${job.id} (attempt ${attempt}/${maxAttempts}): ${title}`
       );
 
       let result: NotificationResult;
@@ -84,6 +88,17 @@ export class NotificationProcessorService implements OnModuleInit {
           result = await this.notificationsService.sendToChannel(
             data.message
           );
+          break;
+
+        case 'in-app':
+          targetInfo = `in-app ${data.notificationData.targetType}`;
+          const inAppResult = await this.notificationsService.createInAppNotification(data.notificationData);
+          result = {
+            success: true,
+            sentCount: inAppResult.stats.totalRecipients,
+            failedCount: 0,
+            errors: [],
+          };
           break;
 
         default:

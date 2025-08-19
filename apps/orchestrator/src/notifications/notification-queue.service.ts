@@ -33,12 +33,40 @@ export interface ChannelNotificationJob {
   message: NotificationMessage;
 }
 
+export interface InAppNotificationJob {
+  type: 'in-app';
+  notificationData: {
+    type: string;
+    title: string;
+    body: string;
+    targetType: string;
+    targetDetails: {
+      userId?: string;
+      role?: 'user' | 'admin' | 'moderator';
+    };
+    priority?: string;
+    metadata?: {
+      relatedEntityType?: 'transaction' | 'user' | 'system' | 'trading';
+      relatedEntityId?: string;
+      actionUrl?: string;
+      actionText?: string;
+      data?: Record<string, string>;
+    };
+    expiresAt?: Date;
+    sentBy?: {
+      userId?: string;
+      system?: boolean;
+    };
+  };
+}
+
 export type NotificationJobData = 
   | UserNotificationJob
   | TelegramUserNotificationJob
   | RoleNotificationJob
   | BroadcastNotificationJob
-  | ChannelNotificationJob;
+  | ChannelNotificationJob
+  | InAppNotificationJob;
 
 export interface NotificationJobResult {
   success: boolean;
@@ -316,6 +344,54 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
   async resumeQueue() {
     await this.notificationQueue.resume();
     this.logger.log('Notification queue resumed');
+  }
+
+  /**
+   * Queue in-app notification creation
+   */
+  async queueInAppNotification(
+    notificationData: {
+      type: string;
+      title: string;
+      body: string;
+      targetType: string;
+      targetDetails: {
+        userId?: string;
+        role?: 'user' | 'admin' | 'moderator';
+      };
+      priority?: string;
+      metadata?: {
+        relatedEntityType?: 'transaction' | 'user' | 'system' | 'trading';
+        relatedEntityId?: string;
+        actionUrl?: string;
+        actionText?: string;
+        data?: Record<string, string>;
+      };
+      expiresAt?: Date;
+      sentBy?: {
+        userId?: string;
+        system?: boolean;
+      };
+    },
+    options?: {
+      priority?: number;
+      delay?: number;
+      attempts?: number;
+    }
+  ): Promise<Queue.Job<NotificationJobData>> {
+    const jobData: InAppNotificationJob = {
+      type: 'in-app',
+      notificationData,
+    };
+
+    const job = await this.notificationQueue.add(jobData, {
+      priority: options?.priority || 5, // Medium priority for in-app notifications
+      delay: options?.delay,
+      attempts: options?.attempts,
+    });
+
+    this.logger.debug(`Queued in-app notification job ${job.id}: ${notificationData.title}`);
+    return job;
   }
 
   /**
