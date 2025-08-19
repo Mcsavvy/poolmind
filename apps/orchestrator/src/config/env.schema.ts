@@ -29,7 +29,7 @@ export type AppConfig = {
   nodeEnv: 'development' | 'production' | 'test';
   'database.uri': string;
   'database.name': string;
-  corsOrigins?: string;
+  'cors.origins'?: string;
 
   // Authentication
   'auth.jwtSecret': string;
@@ -60,7 +60,7 @@ export function validateConfig(env: Record<string, string>): AppConfig {
     nodeEnv: parsedEnv.data.NODE_ENV,
     'database.uri': parsedEnv.data.DATABASE_URI,
     'database.name': parsedEnv.data.DATABASE_NAME,
-    corsOrigins: parsedEnv.data.CORS_ORIGINS,
+    'cors.origins': parsedEnv.data.CORS_ORIGINS,
 
     // Authentication
     'auth.jwtSecret': parsedEnv.data.JWT_SECRET,

@@ -19,7 +19,7 @@ async function bootstrap() {
     // Get configuration values
     const port = configService.get<number>('port')!;
     const nodeEnv = configService.get<string>('nodeEnv')!;
-    const corsOrigins = configService.get<string>('corsOrigins')!;
+    const corsOrigins = configService.get<string>('cors.origins')!;
 
     logger.log(`📋 Configuration loaded: environment=${nodeEnv}, port=${port}`);
 
