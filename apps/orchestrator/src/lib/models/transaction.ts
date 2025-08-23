@@ -160,7 +160,6 @@ const Transaction = createModel<ITransaction>(
         type: String,
         sparse: true, // Allows null but unique when present
         validate: transactionValidators.stacksTxId,
-        index: true,
       },
       
       blockHeight: {
@@ -239,7 +238,6 @@ const Transaction = createModel<ITransaction>(
       
       confirmedAt: {
         type: Date,
-        index: true,
       },
     },
     
@@ -583,7 +581,6 @@ const Transaction = createModel<ITransaction>(
     indexes: [
       [{ userId: 1, createdAt: -1 }], // User transactions by date
       [{ status: 1, 'metadata.lastCheckedAt': 1 }], // For polling service
-      [{ 'metadata.txId': 1 }, { unique: true, sparse: true }], // Unique transaction IDs
       [{ type: 1, status: 1 }], // Type and status queries
       [{ 'metadata.confirmedAt': 1 }], // Confirmed transactions by date
       [{ 'metadata.retryCount': 1 }], // For retry tracking

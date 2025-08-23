@@ -149,7 +149,6 @@ const Notification = createModel<INotification>(
     // Expiration (for temporary notifications)
     expiresAt: {
       type: Date,
-      index: true,
     },
 
     // Statistics
@@ -437,7 +436,6 @@ const Notification = createModel<INotification>(
       [{ priority: 1, createdAt: -1 }],
       [{ expiresAt: 1 }, { expireAfterSeconds: 0 }],
       [{ 'metadata.relatedEntityType': 1, 'metadata.relatedEntityId': 1 }],
-      [{ isActive: 1, createdAt: -1 }],
     ],
   },
 );
