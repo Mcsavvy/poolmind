@@ -45,6 +45,11 @@ export const TransactionMetadataSchema = z.object({
   lastCheckedAt: z.date().optional(), // Last time we polled for this transaction
   broadcastAt: z.date().optional(), // When transaction was broadcast
   confirmedAt: z.date().optional(), // When transaction was confirmed
+  
+  // Pool-specific data at transaction time
+  nav: z.string().optional(), // Net Asset Value at time of transaction
+  poolTotalValue: z.string().optional(), // Total pool value at time of transaction
+  poolTotalShares: z.string().optional(), // Total pool shares at time of transaction
 });
 
 // Base transaction schema
@@ -77,6 +82,11 @@ export const DepositTransactionSchema = BaseTransactionSchema.extend({
     // Pool-specific data
     poolSharesExpected: z.string().optional(), // Expected pool shares to receive
     poolSharesActual: z.string().optional(), // Actual pool shares received
+    tokensReceived: z.string().optional(), // PLMD tokens actually received
+    
+    // Fee information
+    entryFeeRate: z.string().optional(), // Entry fee rate at time of deposit (as percentage)
+    entryFeeAmount: z.string().optional(), // Actual entry fee amount in STX
     
     // Slippage and pricing
     expectedPrice: z.string().optional(), // Expected STX/USD price at time of deposit
@@ -97,6 +107,11 @@ export const WithdrawalTransactionSchema = BaseTransactionSchema.extend({
     
     // Pool-specific data
     poolSharesBurned: z.string().optional(), // Pool shares being burned for withdrawal
+    tokensBurned: z.string().optional(), // PLMD tokens actually burned
+    
+    // Fee information
+    exitFeeRate: z.string().optional(), // Exit fee rate at time of withdrawal (as percentage)
+    exitFeeAmount: z.string().optional(), // Actual exit fee amount in STX
     
     // Withdrawal constraints
     minimumAmount: z.string().optional(), // Minimum STX amount to receive

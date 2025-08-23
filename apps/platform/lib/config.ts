@@ -55,6 +55,12 @@ const envSchema = z.object({
   NEXT_PUBLIC_DEMO_LINK: z
     .string()
     .min(1, "DEMO_LINK is required"),
+  NEXT_PUBLIC_POOLMIND_CONTRACT_ADDRESS: z
+    .string()
+    .min(1, "POOLMIND_CONTRACT_ADDRESS is required"),
+  NEXT_PUBLIC_POOLMIND_CONTRACT_NAME: z
+    .string()
+    .min(1, "POOLMIND_CONTRACT_NAME is required"),
 });
 
 interface Config {
@@ -70,6 +76,8 @@ interface Config {
   supportEmail: string;
   supportPhone: string;
   demoLink: string;
+  poolmindContractAddress: string;
+  poolmindContractName: string;
 }
 
 // Build a literal object of env values using direct references so Next can inline on the client
@@ -86,6 +94,8 @@ const rawEnv = {
   NEXT_PUBLIC_SUPPORT_EMAIL: process.env.NEXT_PUBLIC_SUPPORT_EMAIL,
   NEXT_PUBLIC_SUPPORT_PHONE: process.env.NEXT_PUBLIC_SUPPORT_PHONE,
   NEXT_PUBLIC_DEMO_LINK: process.env.NEXT_PUBLIC_DEMO_LINK,
+  NEXT_PUBLIC_POOLMIND_CONTRACT_ADDRESS: process.env.NEXT_PUBLIC_POOLMIND_CONTRACT_ADDRESS,
+  NEXT_PUBLIC_POOLMIND_CONTRACT_NAME: process.env.NEXT_PUBLIC_POOLMIND_CONTRACT_NAME,
 } as const;
 
 // Parse and validate once at module load. In dev, HMR will re-evaluate on file change.
@@ -116,6 +126,8 @@ export const config: Config = {
   supportEmail: env.NEXT_PUBLIC_SUPPORT_EMAIL,
   supportPhone: env.NEXT_PUBLIC_SUPPORT_PHONE,
   demoLink: env.NEXT_PUBLIC_DEMO_LINK,
+  poolmindContractAddress: env.NEXT_PUBLIC_POOLMIND_CONTRACT_ADDRESS,
+  poolmindContractName: env.NEXT_PUBLIC_POOLMIND_CONTRACT_NAME,
 };
 
 export default config;

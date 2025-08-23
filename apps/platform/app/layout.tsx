@@ -3,6 +3,7 @@ import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthSessionProvider } from "@/components/auth/session-provider";
+import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner"
 import { AuthRefresher } from "@/components/auth/auth-refresher";
 
@@ -40,11 +41,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
-          <AuthSessionProvider>
-            <AuthRefresher />
-            {children}
-            <Toaster position="bottom-right" expand richColors />
-          </AuthSessionProvider>
+          <QueryProvider>
+            <AuthSessionProvider>
+              <AuthRefresher />
+              {children}
+              <Toaster position="bottom-right" expand richColors />
+            </AuthSessionProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

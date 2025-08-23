@@ -8,10 +8,10 @@
   },
   "servers": [],
   "paths": {
-    "/auth/nonce": {
+    "/transactions/deposits": {
       "post": {
-        "description": "Generate a nonce and authentication message for wallet signing",
-        "operationId": "AuthController_generateNonce",
+        "description": "Creates a new deposit transaction for the authenticated user. The transaction will be set to pending status and monitored for confirmation.",
+        "operationId": "TransactionsController_createDeposit",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -19,493 +19,77 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "walletAddress": {
-                    "type": "string",
-                    "description": "Wallet address for generating authentication message",
-                    "example": "SP1234567890ABCDEF"
-                  }
-                },
                 "required": [
-                  "walletAddress"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Authentication message generated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Authentication message to be signed by wallet"
-                    },
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid wallet address"
-          }
-        },
-        "summary": "Generate authentication message",
-        "tags": [
-          "Authentication"
-        ]
-      }
-    },
-    "/auth/login": {
-      "post": {
-        "description": "Authenticate user using wallet signature and get JWT token",
-        "operationId": "AuthController_login",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
+                  "amount",
+                  "sourceAddress"
+                ],
                 "properties": {
-                  "walletAddress": {
+                  "amount": {
                     "type": "string",
-                    "description": "Stacks wallet address",
-                    "example": "SP1234567890ABCDEF"
+                    "description": "Amount of STX to deposit (as string to preserve precision)",
+                    "example": "100.000000"
                   },
-                  "publicKey": {
+                  "sourceAddress": {
                     "type": "string",
-                    "description": "Public key from wallet",
-                    "example": "0x1234567890abcdef..."
-                  },
-                  "signature": {
-                    "type": "string",
-                    "description": "Signature of the authentication message",
-                    "example": "0xabcdef1234567890..."
-                  },
-                  "message": {
-                    "type": "string",
-                    "description": "Authentication message that was signed",
-                    "example": "Sign this message to authenticate with PoolMind..."
-                  },
-                  "walletType": {
-                    "type": "string",
-                    "description": "Type of wallet used",
-                    "example": "xverse"
+                    "description": "Stacks wallet address sending the deposit",
+                    "example": "SP1HTBVD3JG9C05J7HBJTHGR0GGW7KX975CN9AX18"
                   },
                   "network": {
                     "type": "string",
-                    "description": "Stacks network",
                     "enum": [
                       "mainnet",
-                      "testnet",
-                      "devnet"
+                      "testnet"
                     ],
-                    "example": "testnet"
-                  }
-                },
-                "required": [
-                  "walletAddress",
-                  "publicKey",
-                  "signature",
-                  "message"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Authentication successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "token": {
-                      "type": "string",
-                      "description": "JWT authentication token"
-                    },
-                    "user": {
-                      "type": "object",
-                      "description": "User information",
-                      "properties": {
-                        "id": {
-                          "type": "string"
-                        },
-                        "walletAddress": {
-                          "type": "string"
-                        },
-                        "username": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "displayName": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "email": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "role": {
-                          "type": "string",
-                          "enum": [
-                            "user",
-                            "admin",
-                            "moderator"
-                          ]
-                        },
-                        "isEmailVerified": {
-                          "type": "boolean"
-                        }
-                      }
-                    },
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid signature or authentication failed"
-          }
-        },
-        "summary": "Authenticate with wallet",
-        "tags": [
-          "Authentication"
-        ]
-      }
-    },
-    "/auth/refresh": {
-      "post": {
-        "description": "Get a new JWT token using an existing valid token",
-        "operationId": "AuthController_refreshToken",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "token": {
-                    "type": "string",
-                    "description": "Current JWT token to refresh",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  }
-                },
-                "required": [
-                  "token"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Token refreshed successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "token": {
-                      "type": "string",
-                      "description": "New JWT authentication token"
-                    },
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid or expired token"
-          }
-        },
-        "summary": "Refresh JWT token",
-        "tags": [
-          "Authentication"
-        ]
-      }
-    },
-    "/auth/me": {
-      "get": {
-        "description": "Get information about the currently authenticated user",
-        "operationId": "AuthController_getCurrentUser",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "User information retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "user": {
-                      "type": "object",
-                      "description": "User information",
-                      "properties": {
-                        "id": {
-                          "type": "string"
-                        },
-                        "walletAddress": {
-                          "type": "string"
-                        },
-                        "username": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "displayName": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "email": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "role": {
-                          "type": "string",
-                          "enum": [
-                            "user",
-                            "admin",
-                            "moderator"
-                          ]
-                        },
-                        "isEmailVerified": {
-                          "type": "boolean"
-                        },
-                        "createdAt": {
-                          "type": "string",
-                          "format": "date-time"
-                        },
-                        "lastLoginAt": {
-                          "type": "string",
-                          "format": "date-time"
-                        },
-                        "loginCount": {
-                          "type": "number"
-                        }
-                      }
-                    },
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get current user",
-        "tags": [
-          "Authentication"
-        ]
-      }
-    },
-    "/auth/telegram/login": {
-      "post": {
-        "description": "Authenticate user using Telegram login data and get JWT token",
-        "operationId": "AuthController_telegramLogin",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "number",
-                    "description": "Telegram user ID",
-                    "example": 123456789
+                    "description": "Network to use for the transaction",
+                    "example": "mainnet"
                   },
-                  "first_name": {
+                  "notes": {
                     "type": "string",
-                    "description": "Telegram user first name",
-                    "example": "John"
+                    "description": "Optional notes for the transaction",
+                    "example": "First deposit to the pool"
                   },
-                  "last_name": {
-                    "type": "string",
-                    "description": "Telegram user last name",
-                    "example": "Doe"
-                  },
-                  "username": {
-                    "type": "string",
-                    "description": "Telegram username",
-                    "example": "johndoe"
-                  },
-                  "photo_url": {
-                    "type": "string",
-                    "description": "Telegram user photo URL",
-                    "example": "https://t.me/i/userpic/320/johndoe.jpg"
-                  },
-                  "auth_date": {
-                    "type": "number",
-                    "description": "Unix timestamp of authentication",
-                    "example": 1677654321
-                  },
-                  "hash": {
-                    "type": "string",
-                    "description": "Telegram authentication hash",
-                    "example": "abcdef1234567890..."
-                  }
-                },
-                "required": [
-                  "id",
-                  "first_name",
-                  "auth_date",
-                  "hash"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Authentication successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "token": {
-                      "type": "string",
-                      "description": "JWT authentication token"
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
                     },
-                    "user": {
-                      "type": "object",
-                      "description": "User information"
-                    },
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid Telegram data or account not linked"
-          }
-        },
-        "summary": "Authenticate with Telegram",
-        "tags": [
-          "Authentication"
-        ]
-      }
-    },
-    "/auth/telegram/link": {
-      "post": {
-        "description": "Link Telegram account to existing user profile",
-        "operationId": "AuthController_linkTelegram",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "telegramData": {
-                    "description": "Telegram authentication data from widget",
-                    "allOf": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "number",
-                            "description": "Telegram user ID",
-                            "example": 123456789
-                          },
-                          "first_name": {
-                            "type": "string",
-                            "description": "Telegram user first name",
-                            "example": "John"
-                          },
-                          "last_name": {
-                            "type": "string",
-                            "description": "Telegram user last name",
-                            "example": "Doe"
-                          },
-                          "username": {
-                            "type": "string",
-                            "description": "Telegram username",
-                            "example": "johndoe"
-                          },
-                          "photo_url": {
-                            "type": "string",
-                            "description": "Telegram user photo URL",
-                            "example": "https://t.me/i/userpic/320/johndoe.jpg"
-                          },
-                          "auth_date": {
-                            "type": "number",
-                            "description": "Unix timestamp of authentication",
-                            "example": 1677654321
-                          },
-                          "hash": {
-                            "type": "string",
-                            "description": "Telegram authentication hash",
-                            "example": "abcdef1234567890..."
-                          }
-                        },
-                        "required": [
-                          "id",
-                          "first_name",
-                          "auth_date",
-                          "hash"
-                        ]
-                      }
+                    "description": "Optional tags for categorization",
+                    "example": [
+                      "initial",
+                      "large"
                     ]
                   }
                 },
-                "required": [
-                  "telegramData"
-                ]
+                "description": "Reference not found: #/components/schemas/",
+                "x-missing-ref": "#/components/schemas/"
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Telegram account linked successfully",
+          "201": {
+            "description": "Deposit transaction created successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "user": {
-                      "type": "object",
-                      "description": "Updated user information"
-                    },
                     "success": {
                       "type": "boolean",
                       "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transaction": {
+                          "type": "object",
+                          "description": "The created transaction object"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Deposit transaction created successfully"
                     }
                   }
                 }
@@ -513,10 +97,24 @@
             }
           },
           "400": {
-            "description": "Telegram account already linked to another user"
-          },
-          "401": {
-            "description": "Invalid Telegram data or unauthorized"
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid amount specified"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -524,40 +122,134 @@
             "bearer": []
           }
         ],
-        "summary": "Link Telegram account",
+        "summary": "Create a deposit transaction",
         "tags": [
-          "Authentication"
+          "Transactions"
         ]
       }
     },
-    "/auth/telegram/unlink": {
+    "/transactions/withdrawals": {
       "post": {
-        "description": "Remove Telegram authentication from user profile",
-        "operationId": "AuthController_unlinkTelegram",
+        "description": "Creates a new withdrawal transaction for the authenticated user. The transaction will be set to pending status and monitored for confirmation.",
+        "operationId": "TransactionsController_createWithdrawal",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "amount",
+                  "destinationAddress"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "string",
+                    "description": "Amount of STX to withdraw (as string to preserve precision)",
+                    "example": "50.000000"
+                  },
+                  "destinationAddress": {
+                    "type": "string",
+                    "description": "Stacks wallet address to receive the withdrawal",
+                    "example": "SP1HTBVD3JG9C05J7HBJTHGR0GGW7KX975CN9AX18"
+                  },
+                  "poolSharesBurned": {
+                    "type": "string",
+                    "description": "Amount of pool shares to burn for this withdrawal",
+                    "example": "45.123456"
+                  },
+                  "minimumAmount": {
+                    "type": "string",
+                    "description": "Minimum STX amount to receive (slippage protection)",
+                    "example": "49.000000"
+                  },
+                  "isEmergencyWithdrawal": {
+                    "type": "boolean",
+                    "description": "Whether this is an emergency withdrawal",
+                    "example": false
+                  },
+                  "network": {
+                    "type": "string",
+                    "enum": [
+                      "mainnet",
+                      "testnet"
+                    ],
+                    "description": "Network to use for the transaction",
+                    "example": "mainnet"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "description": "Optional notes for the transaction",
+                    "example": "Partial withdrawal for expenses"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Optional tags for categorization",
+                    "example": [
+                      "partial",
+                      "expenses"
+                    ]
+                  }
+                },
+                "description": "Reference not found: #/components/schemas/",
+                "x-missing-ref": "#/components/schemas/"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Telegram account unlinked successfully",
+          "201": {
+            "description": "Withdrawal transaction created successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "user": {
-                      "type": "object",
-                      "description": "Updated user information"
-                    },
                     "success": {
                       "type": "boolean",
                       "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transaction": {
+                          "type": "object",
+                          "description": "The created transaction object"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Withdrawal transaction created successfully"
                     }
                   }
                 }
               }
             }
           },
-          "401": {
-            "description": "Unauthorized"
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid amount specified"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -565,9 +257,321 @@
             "bearer": []
           }
         ],
-        "summary": "Unlink Telegram account",
+        "summary": "Create a withdrawal transaction",
         "tags": [
-          "Authentication"
+          "Transactions"
+        ]
+      }
+    },
+    "/transactions/{id}": {
+      "get": {
+        "description": "Retrieves a specific transaction by its ID. Users can only access their own transactions unless they are admin/moderator.",
+        "operationId": "TransactionsController_getTransaction",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Transaction ID",
+            "schema": {
+              "example": "507f1f77bcf86cd799439011",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "description": "Transaction object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Transaction not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Transaction not found"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get transaction by ID",
+        "tags": [
+          "Transactions"
+        ]
+      }
+    },
+    "/transactions": {
+      "get": {
+        "description": "Retrieves transactions for the authenticated user with pagination and filtering options.",
+        "operationId": "TransactionsController_getUserTransactions",
+        "parameters": [
+          {
+            "name": "toDate",
+            "required": false,
+            "in": "query",
+            "description": "Filter to date (ISO string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fromDate",
+            "required": false,
+            "in": "query",
+            "description": "Filter from date (ISO string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search in notes, txId, addresses",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort order",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Sort field",
+            "schema": {
+              "enum": [
+                "createdAt",
+                "updatedAt",
+                "amount"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by transaction status",
+            "schema": {
+              "enum": [
+                "pending",
+                "broadcast",
+                "confirming",
+                "confirmed",
+                "failed",
+                "cancelled"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Filter by transaction type",
+            "schema": {
+              "enum": [
+                "deposit",
+                "withdrawal"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (1-100)",
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transactions retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          },
+                          "description": "Array of transaction objects"
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "page": {
+                              "type": "number",
+                              "example": 1
+                            },
+                            "limit": {
+                              "type": "number",
+                              "example": 20
+                            },
+                            "total": {
+                              "type": "number",
+                              "example": 150
+                            },
+                            "totalPages": {
+                              "type": "number",
+                              "example": 8
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get user transactions",
+        "tags": [
+          "Transactions"
+        ]
+      }
+    },
+    "/transactions/stats/summary": {
+      "get": {
+        "description": "Retrieves transaction statistics and summary for the authenticated user.",
+        "operationId": "TransactionsController_getUserTransactionStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Transaction statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalTransactions": {
+                          "type": "number",
+                          "example": 25
+                        },
+                        "totalDeposits": {
+                          "type": "number",
+                          "example": 15
+                        },
+                        "totalWithdrawals": {
+                          "type": "number",
+                          "example": 10
+                        },
+                        "pendingTransactions": {
+                          "type": "number",
+                          "example": 2
+                        },
+                        "confirmedTransactions": {
+                          "type": "number",
+                          "example": 20
+                        },
+                        "failedTransactions": {
+                          "type": "number",
+                          "example": 3
+                        },
+                        "totalDepositAmount": {
+                          "type": "string",
+                          "example": "1500.000000"
+                        },
+                        "totalWithdrawalAmount": {
+                          "type": "string",
+                          "example": "500.000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get user transaction statistics",
+        "tags": [
+          "Transactions"
         ]
       }
     }

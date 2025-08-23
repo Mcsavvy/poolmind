@@ -27,6 +27,8 @@
     "@stacks/encryption": "^7.1.0",
     "@stacks/network": "^7.0.2",
     "@stacks/transactions": "^7.1.0",
+    "@tanstack/react-query": "^5.85.5",
+    "@tanstack/react-query-devtools": "^5.85.5",
     "@telegram-auth/react": "^1.0.4",
     "axios": "^1.7.2",
     "class-variance-authority": "^0.7.1",
