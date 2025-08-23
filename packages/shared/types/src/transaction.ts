@@ -118,6 +118,7 @@ export const TransactionSchema = z.discriminatedUnion('type', [
 export const CreateDepositRequestSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
   sourceAddress: z.string().min(1, 'Source address is required'),
+  txId: z.string().min(1, 'Transaction ID is required'), // MANDATORY: Blockchain transaction ID
   network: z.enum(['mainnet', 'testnet', 'devnet']).default('testnet'),
   notes: z.string().optional(),
   tags: z.array(z.string()).optional(),
@@ -129,6 +130,7 @@ export const CreateWithdrawalRequestSchema = z.object({
   poolSharesBurned: z.string().optional(),
   minimumAmount: z.string().optional(),
   isEmergencyWithdrawal: z.boolean().optional(),
+  txId: z.string().min(1, 'Transaction ID is required'), // MANDATORY: Blockchain transaction ID
   network: z.enum(['mainnet', 'testnet', 'devnet']).default('testnet'),
   notes: z.string().optional(),
   tags: z.array(z.string()).optional(),

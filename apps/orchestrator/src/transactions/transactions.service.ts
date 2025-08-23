@@ -92,16 +92,18 @@ export class TransactionsService {
       const transaction = new this.transactionModel({
         userId,
         type: 'deposit',
-        status: 'pending',
+        status: 'broadcast', // Set to broadcast since we have the blockchain txId
         metadata: {
           network: createDepositDto.network || 'mainnet',
           amount: createDepositDto.amount,
+          txId: createDepositDto.txId, // Set the blockchain transaction ID immediately
           contractAddress: poolContractAddress,
           contractName: poolContractName,
           functionName: 'deposit',
           confirmations: 0,
           requiredConfirmations: 6,
           retryCount: 0,
+          broadcastAt: new Date(), // Set broadcast time since transaction is already on blockchain
         },
         depositMetadata: {
           sourceAddress: createDepositDto.sourceAddress,
@@ -201,16 +203,18 @@ export class TransactionsService {
       const transaction = new this.transactionModel({
         userId,
         type: 'withdrawal',
-        status: 'pending',
+        status: 'broadcast', // Set to broadcast since we have the blockchain txId
         metadata: {
           network: createWithdrawalDto.network || 'mainnet',
           amount: createWithdrawalDto.amount,
+          txId: createWithdrawalDto.txId, // Set the blockchain transaction ID immediately
           contractAddress: poolContractAddress,
           contractName: poolContractName,
           functionName: 'withdraw',
           confirmations: 0,
           requiredConfirmations: 6,
           retryCount: 0,
+          broadcastAt: new Date(), // Set broadcast time since transaction is already on blockchain
         },
         withdrawalMetadata: {
           destinationAddress: createWithdrawalDto.destinationAddress,

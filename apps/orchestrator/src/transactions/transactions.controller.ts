@@ -94,7 +94,7 @@ export class TransactionsController {
     type: 'object',
     schema: {
       type: 'object',
-      required: ['amount', 'sourceAddress'],
+      required: ['amount', 'sourceAddress', 'txId'],
       properties: {
         amount: {
           type: 'string',
@@ -105,6 +105,11 @@ export class TransactionsController {
           type: 'string',
           description: 'Stacks wallet address sending the deposit',
           example: 'SP1HTBVD3JG9C05J7HBJTHGR0GGW7KX975CN9AX18',
+        },
+        txId: {
+          type: 'string',
+          description: 'Blockchain transaction ID (mandatory)',
+          example: '0x1234567890abcdef1234567890abcdef12345678',
         },
         network: {
           type: 'string',
@@ -210,7 +215,7 @@ export class TransactionsController {
     type: 'object',
     schema: {
       type: 'object',
-      required: ['amount', 'destinationAddress'],
+      required: ['amount', 'destinationAddress', 'txId'],
       properties: {
         amount: {
           type: 'string',
@@ -221,6 +226,11 @@ export class TransactionsController {
           type: 'string',
           description: 'Stacks wallet address to receive the withdrawal',
           example: 'SP1HTBVD3JG9C05J7HBJTHGR0GGW7KX975CN9AX18',
+        },
+        txId: {
+          type: 'string',
+          description: 'Blockchain transaction ID (mandatory)',
+          example: '0x1234567890abcdef1234567890abcdef12345678',
         },
         poolSharesBurned: {
           type: 'string',
