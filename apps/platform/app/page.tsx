@@ -1,15 +1,15 @@
 'use client';
 
 import { Easing, motion } from 'framer-motion';
-import Navbar from '@/components/navbar';
-import HeroSection from '@/components/hero-section';
-import HowItWorksSection from '@/components/how-it-works-section';
-import FeaturesGridSection from '@/components/features-grid-section';
-import StatsSection from '@/components/stats-section';
-import TestimonialsSection from '@/components/testimonials-section';
-import TelegramCTASection from '@/components/telegram-cta-section';
-import FAQSection from '@/components/faq-section';
-import Footer from '@/components/footer';
+import Navbar from '@/components/landing/navbar';
+import HeroSection from '@/components/landing/hero-section';
+import HowItWorksSection from '@/components/landing/how-it-works-section';
+import FeaturesGridSection from '@/components/landing/features-grid-section';
+import StatsSection from '@/components/landing/stats-section';
+import TestimonialsSection from '@/components/landing/testimonials-section';
+import TelegramCTASection from '@/components/landing/telegram-cta-section';
+import FAQSection from '@/components/landing/faq-section';
+import Footer from '@/components/landing/footer';
 
 // Animation variants for section entrance
 const sectionVariants = {

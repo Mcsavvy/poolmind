@@ -3,7 +3,7 @@
 import { AlertCircle, ArrowRight, Check, TrendingUp, Zap } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { Button } from './ui/button';
+import { Button } from '../ui/button';
 import { config } from '@/lib/config';
 import Link from 'next/link';
 
