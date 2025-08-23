@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 import ProtectedRoute from '@/components/auth/protected-route';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import DashboardSidebar from '@/components/dashboard-sidebar';
-import DashboardHeader from '@/components/dashboard-header';
+import DashboardSidebar from '@/components/dashboard/sidebar';
+import DashboardHeader from '@/components/dashboard/header';
 
 export const metadata: Metadata = {
   title: 'Dashboard - PoolMind',
