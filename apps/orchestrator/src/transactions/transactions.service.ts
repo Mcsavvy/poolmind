@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
-import { 
+import {
   TransactionType,
   TransactionStatus,
   CreateDepositRequest,
@@ -16,9 +16,15 @@ import {
   UpdateTransactionStatusRequest,
   Transaction as SharedTransaction,
 } from '@poolmind/shared-types';
-import { ITransaction, type ITransactionModel } from '../lib/models/transaction';
+import {
+  ITransaction,
+  type ITransactionModel,
+} from '../lib/models/transaction';
 import { type IUserModel } from '../lib/models/user';
-import { NotificationsService, NotificationType } from '../notifications/notifications.service';
+import {
+  NotificationsService,
+  NotificationType,
+} from '../notifications/notifications.service';
 import { PoolMindContractService } from '../lib/contract-service';
 import { AppConfig } from '../config/env.schema';
 
@@ -43,7 +49,8 @@ export class TransactionsService {
   private readonly logger = new Logger(TransactionsService.name);
 
   constructor(
-    @InjectModel('Transaction') private readonly transactionModel: ITransactionModel,
+    @InjectModel('Transaction')
+    private readonly transactionModel: ITransactionModel,
     @InjectModel('User') private readonly userModel: IUserModel,
     private readonly notificationsService: NotificationsService,
     private readonly configService: ConfigService<AppConfig>,
@@ -62,10 +69,10 @@ export class TransactionsService {
     createDepositDto: CreateDepositRequest,
   ): Promise<TransactionCreationResult> {
     const startTime = Date.now();
-    
+
     try {
       this.logger.log(
-        `Creating deposit transaction for user ${userId}: ${createDepositDto.amount} STX from ${createDepositDto.sourceAddress}`
+        `Creating deposit transaction for user ${userId}: ${createDepositDto.amount} STX from ${createDepositDto.sourceAddress}`,
       );
 
       // Validate user exists
@@ -83,8 +90,12 @@ export class TransactionsService {
       }
 
       // Get pool contract address from config
-      const poolContractAddress = this.configService.get<string>('stacks.poolContractAddress');
-      const poolContractName = this.configService.get<string>('stacks.poolContractName');
+      const poolContractAddress = this.configService.get<string>(
+        'stacks.poolContractAddress',
+      );
+      const poolContractName = this.configService.get<string>(
+        'stacks.poolContractName',
+      );
       if (!poolContractAddress || !poolContractName) {
         this.logger.error('Pool contract address not configured');
         throw new InternalServerErrorException('Pool contract not configured');
@@ -98,17 +109,22 @@ export class TransactionsService {
         totalPoolValue: string;
         totalShares: string;
       } | null = null;
-      
+
       try {
-        this.logger.debug('Fetching real pool state from smart contract for deposit...');
-        poolState = await this.contractService.getPoolStateSnapshot();
-        
         this.logger.debug(
-          `Pool state loaded for deposit: NAV=${Number(poolState.nav)/1000000} STX/PLMD, ` +
-          `Entry Fee=${poolState.entryFeeRate}%, Pool Value=${Number(poolState.totalPoolValue)/1000000} STX`
+          'Fetching real pool state from smart contract for deposit...',
+        );
+        poolState = await this.contractService.getPoolStateSnapshot();
+
+        this.logger.debug(
+          `Pool state loaded for deposit: NAV=${Number(poolState.nav) / 1000000} STX/PLMD, ` +
+            `Entry Fee=${poolState.entryFeeRate}%, Pool Value=${Number(poolState.totalPoolValue) / 1000000} STX`,
         );
       } catch (error) {
-        this.logger.warn('Failed to fetch pool state from contract for deposit, using fallback values:', error);
+        this.logger.warn(
+          'Failed to fetch pool state from contract for deposit, using fallback values:',
+          error,
+        );
         poolState = {
           nav: '1000000', // 1 STX per PLMD (fallback)
           entryFeeRate: '0.5', // 0.5%
@@ -122,14 +138,14 @@ export class TransactionsService {
       const grossAmount = parseFloat(createDepositDto.amount);
       const entryFeeRate = poolState ? parseFloat(poolState.entryFeeRate) : 0.5;
       const nav = poolState ? parseFloat(poolState.nav) : 1000000;
-      
+
       const entryFeeAmount = Math.floor((grossAmount * entryFeeRate) / 100);
       const netAmount = grossAmount - entryFeeAmount;
       const expectedShares = Math.floor((netAmount * 1000000) / nav); // TOKEN_PRECISION = 1000000
-      
+
       this.logger.debug(
-        `Deposit calculation: ${grossAmount/1000000} STX -> ${expectedShares/1000000} PLMD ` +
-        `(fee: ${entryFeeAmount/1000000} STX, net: ${netAmount/1000000} STX, NAV: ${nav/1000000})`
+        `Deposit calculation: ${grossAmount / 1000000} STX -> ${expectedShares / 1000000} PLMD ` +
+          `(fee: ${entryFeeAmount / 1000000} STX, net: ${netAmount / 1000000} STX, NAV: ${nav / 1000000})`,
       );
 
       // Create transaction document
@@ -169,7 +185,7 @@ export class TransactionsService {
       const duration = Date.now() - startTime;
 
       this.logger.log(
-        `✓ Deposit transaction created successfully in ${duration}ms - ID: ${savedTransaction._id}, Amount: ${createDepositDto.amount} STX`
+        `✓ Deposit transaction created successfully in ${duration}ms - ID: ${savedTransaction._id}, Amount: ${createDepositDto.amount} STX`,
       );
 
       // Send notification to user
@@ -178,15 +194,18 @@ export class TransactionsService {
           userId,
           {
             title: 'Deposit Created',
-            body: `Your deposit of ${createDepositDto.amount} STX has been created and is pending confirmation.`,
+            body: `Your deposit of ${parseFloat(createDepositDto.amount) / 1000000} STX has been created and is pending confirmation.`,
             type: NotificationType.TRANSACTION,
           },
-          { priority: 5 }
+          { priority: 5 },
         );
 
         this.logger.debug(`Deposit notification queued for user ${userId}`);
       } catch (notificationError) {
-        this.logger.warn(`Failed to queue deposit notification for user ${userId}:`, notificationError);
+        this.logger.warn(
+          `Failed to queue deposit notification for user ${userId}:`,
+          notificationError,
+        );
         // Don't fail the transaction creation if notification fails
       }
 
@@ -195,19 +214,23 @@ export class TransactionsService {
         success: true,
         message: 'Deposit transaction created successfully',
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
       this.logger.error(
         `Failed to create deposit transaction for user ${userId} in ${duration}ms:`,
-        error
+        error,
       );
 
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
 
-      throw new InternalServerErrorException('Failed to create deposit transaction');
+      throw new InternalServerErrorException(
+        'Failed to create deposit transaction',
+      );
     }
   }
 
@@ -223,10 +246,10 @@ export class TransactionsService {
     createWithdrawalDto: CreateWithdrawalRequest,
   ): Promise<TransactionCreationResult> {
     const startTime = Date.now();
-    
+
     try {
       this.logger.log(
-        `Creating withdrawal transaction for user ${userId}: ${createWithdrawalDto.amount} STX to ${createWithdrawalDto.destinationAddress}`
+        `Creating withdrawal transaction for user ${userId}: ${createWithdrawalDto.amount} STX to ${createWithdrawalDto.destinationAddress}`,
       );
 
       // Validate user exists
@@ -239,13 +262,19 @@ export class TransactionsService {
       // Validate amount
       const amount = parseFloat(createWithdrawalDto.amount);
       if (isNaN(amount) || amount <= 0) {
-        this.logger.error(`Invalid withdrawal amount: ${createWithdrawalDto.amount}`);
+        this.logger.error(
+          `Invalid withdrawal amount: ${createWithdrawalDto.amount}`,
+        );
         throw new BadRequestException('Invalid amount specified');
       }
 
       // Get pool contract address from config
-      const poolContractAddress = this.configService.get<string>('stacks.poolContractAddress');
-      const poolContractName = this.configService.get<string>('stacks.poolContractName');
+      const poolContractAddress = this.configService.get<string>(
+        'stacks.poolContractAddress',
+      );
+      const poolContractName = this.configService.get<string>(
+        'stacks.poolContractName',
+      );
       if (!poolContractAddress || !poolContractName) {
         this.logger.error('Pool contract address or name not configured');
         throw new InternalServerErrorException('Pool contract not configured');
@@ -259,17 +288,22 @@ export class TransactionsService {
         totalPoolValue: string;
         totalShares: string;
       } | null = null;
-      
+
       try {
-        this.logger.debug('Fetching real pool state from smart contract for withdrawal...');
-        poolState = await this.contractService.getPoolStateSnapshot();
-        
         this.logger.debug(
-          `Pool state loaded for withdrawal: NAV=${Number(poolState.nav)/1000000} STX/PLMD, ` +
-          `Exit Fee=${poolState.exitFeeRate}%, Pool Value=${Number(poolState.totalPoolValue)/1000000} STX`
+          'Fetching real pool state from smart contract for withdrawal...',
+        );
+        poolState = await this.contractService.getPoolStateSnapshot();
+
+        this.logger.debug(
+          `Pool state loaded for withdrawal: NAV=${Number(poolState.nav) / 1000000} STX/PLMD, ` +
+            `Exit Fee=${poolState.exitFeeRate}%, Pool Value=${Number(poolState.totalPoolValue) / 1000000} STX`,
         );
       } catch (error) {
-        this.logger.warn('Failed to fetch pool state from contract for withdrawal, using fallback values:', error);
+        this.logger.warn(
+          'Failed to fetch pool state from contract for withdrawal, using fallback values:',
+          error,
+        );
         poolState = {
           nav: '1000000', // 1 STX per PLMD (fallback)
           entryFeeRate: '0.5', // 0.5%
@@ -283,17 +317,17 @@ export class TransactionsService {
       const netSTXAmount = parseFloat(createWithdrawalDto.amount);
       const exitFeeRate = poolState ? parseFloat(poolState.exitFeeRate) : 0.5;
       const nav = poolState ? parseFloat(poolState.nav) : 1000000;
-      
+
       // Calculate gross STX amount before fees
-      const grossSTXAmount = netSTXAmount / (1 - (exitFeeRate / 100));
+      const grossSTXAmount = netSTXAmount / (1 - exitFeeRate / 100);
       const exitFeeAmount = grossSTXAmount - netSTXAmount;
-      
+
       // Calculate PLMD tokens burned to get this STX amount
       const sharesBurned = Math.floor((grossSTXAmount * 1000000) / nav); // TOKEN_PRECISION = 1000000
-      
+
       this.logger.debug(
-        `Withdrawal calculation: ${sharesBurned/1000000} PLMD -> ${netSTXAmount/1000000} STX ` +
-        `(fee: ${exitFeeAmount/1000000} STX, gross: ${grossSTXAmount/1000000} STX, NAV: ${nav/1000000})`
+        `Withdrawal calculation: ${sharesBurned / 1000000} PLMD -> ${netSTXAmount / 1000000} STX ` +
+          `(fee: ${exitFeeAmount / 1000000} STX, gross: ${grossSTXAmount / 1000000} STX, NAV: ${nav / 1000000})`,
       );
 
       // Create transaction document
@@ -320,12 +354,14 @@ export class TransactionsService {
         withdrawalMetadata: {
           destinationAddress: createWithdrawalDto.destinationAddress,
           sourceAddress: poolContractAddress,
-          poolSharesBurned: createWithdrawalDto.poolSharesBurned || sharesBurned.toString(),
+          poolSharesBurned:
+            createWithdrawalDto.poolSharesBurned || sharesBurned.toString(),
           tokensBurned: sharesBurned.toString(), // PLMD tokens actually burned
           exitFeeRate: exitFeeRate.toString(), // Exit fee rate at time of transaction
           exitFeeAmount: Math.floor(exitFeeAmount).toString(), // Actual exit fee amount in STX
           minimumAmount: createWithdrawalDto.minimumAmount,
-          isEmergencyWithdrawal: createWithdrawalDto.isEmergencyWithdrawal || false,
+          isEmergencyWithdrawal:
+            createWithdrawalDto.isEmergencyWithdrawal || false,
         },
         notes: createWithdrawalDto.notes,
         tags: createWithdrawalDto.tags || [],
@@ -335,7 +371,7 @@ export class TransactionsService {
       const duration = Date.now() - startTime;
 
       this.logger.log(
-        `✓ Withdrawal transaction created successfully in ${duration}ms - ID: ${savedTransaction._id}, Amount: ${createWithdrawalDto.amount} STX`
+        `✓ Withdrawal transaction created successfully in ${duration}ms - ID: ${savedTransaction._id}, Amount: ${createWithdrawalDto.amount} STX`,
       );
 
       // Send notification to user
@@ -344,15 +380,18 @@ export class TransactionsService {
           userId,
           {
             title: 'Withdrawal Created',
-            body: `Your withdrawal of ${createWithdrawalDto.amount} STX has been created and is pending confirmation.`,
+            body: `Your withdrawal of ${parseFloat(createWithdrawalDto.amount) / 1000000} STX has been created and is pending confirmation.`,
             type: NotificationType.TRANSACTION,
           },
-          { priority: 5 }
+          { priority: 5 },
         );
 
         this.logger.debug(`Withdrawal notification queued for user ${userId}`);
       } catch (notificationError) {
-        this.logger.warn(`Failed to queue withdrawal notification for user ${userId}:`, notificationError);
+        this.logger.warn(
+          `Failed to queue withdrawal notification for user ${userId}:`,
+          notificationError,
+        );
         // Don't fail the transaction creation if notification fails
       }
 
@@ -361,19 +400,23 @@ export class TransactionsService {
         success: true,
         message: 'Withdrawal transaction created successfully',
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
       this.logger.error(
         `Failed to create withdrawal transaction for user ${userId} in ${duration}ms:`,
-        error
+        error,
       );
 
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
 
-      throw new InternalServerErrorException('Failed to create withdrawal transaction');
+      throw new InternalServerErrorException(
+        'Failed to create withdrawal transaction',
+      );
     }
   }
 
@@ -384,9 +427,14 @@ export class TransactionsService {
   /**
    * Get transaction by ID
    */
-  async getTransactionById(transactionId: string, userId?: string): Promise<ITransaction> {
+  async getTransactionById(
+    transactionId: string,
+    userId?: string,
+  ): Promise<ITransaction> {
     try {
-      this.logger.debug(`Fetching transaction ${transactionId}${userId ? ` for user ${userId}` : ''}`);
+      this.logger.debug(
+        `Fetching transaction ${transactionId}${userId ? ` for user ${userId}` : ''}`,
+      );
 
       const query: any = { _id: transactionId };
       if (userId) {
@@ -401,14 +449,13 @@ export class TransactionsService {
 
       this.logger.debug(`✓ Transaction fetched successfully: ${transactionId}`);
       return transaction;
-
     } catch (error) {
       this.logger.error(`Failed to fetch transaction ${transactionId}:`, error);
-      
+
       if (error instanceof NotFoundException) {
         throw error;
       }
-      
+
       throw new InternalServerErrorException('Failed to fetch transaction');
     }
   }
@@ -421,10 +468,10 @@ export class TransactionsService {
     query: TransactionQuery,
   ): Promise<TransactionPaginationResult> {
     const startTime = Date.now();
-    
+
     try {
       this.logger.debug(
-        `Fetching transactions for user ${userId} - Page: ${query.page}, Limit: ${query.limit}, Type: ${query.type || 'all'}, Status: ${query.status || 'all'}`
+        `Fetching transactions for user ${userId} - Page: ${query.page}, Limit: ${query.limit}, Type: ${query.type || 'all'}, Status: ${query.status || 'all'}`,
       );
 
       // Validate user exists
@@ -436,15 +483,15 @@ export class TransactionsService {
 
       // Build filters
       const filters: any = {};
-      
+
       if (query.type) filters.type = query.type;
       if (query.status) filters.status = query.status;
-      
+
       if (query.fromDate || query.toDate) {
         if (query.fromDate) filters.fromDate = new Date(query.fromDate);
         if (query.toDate) filters.toDate = new Date(query.toDate);
       }
-      
+
       if (query.search) filters.search = query.search;
 
       // Get paginated results
@@ -452,13 +499,13 @@ export class TransactionsService {
         userId,
         query.page,
         query.limit,
-        filters
+        filters,
       );
 
       const duration = Date.now() - startTime;
-      
+
       this.logger.log(
-        `✓ Fetched ${result.transactions.length} transactions for user ${userId} in ${duration}ms (${result.total} total)`
+        `✓ Fetched ${result.transactions.length} transactions for user ${userId} in ${duration}ms (${result.total} total)`,
       );
 
       return {
@@ -470,12 +517,11 @@ export class TransactionsService {
           totalPages: result.totalPages,
         },
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
       this.logger.error(
         `Failed to fetch transactions for user ${userId} in ${duration}ms:`,
-        error
+        error,
       );
 
       if (error instanceof NotFoundException) {
@@ -501,18 +547,22 @@ export class TransactionsService {
       }
 
       const stats = await this.transactionModel.getStats(userId);
-      
+
       this.logger.debug(`✓ Transaction statistics fetched for user ${userId}`);
       return stats;
-
     } catch (error) {
-      this.logger.error(`Failed to fetch transaction statistics for user ${userId}:`, error);
-      
+      this.logger.error(
+        `Failed to fetch transaction statistics for user ${userId}:`,
+        error,
+      );
+
       if (error instanceof NotFoundException) {
         throw error;
       }
-      
-      throw new InternalServerErrorException('Failed to fetch transaction statistics');
+
+      throw new InternalServerErrorException(
+        'Failed to fetch transaction statistics',
+      );
     }
   }
 
@@ -528,10 +578,10 @@ export class TransactionsService {
     updateData: UpdateTransactionStatusRequest,
   ): Promise<ITransaction> {
     const startTime = Date.now();
-    
+
     try {
       this.logger.log(
-        `Updating transaction ${transactionId} status to ${updateData.status}${updateData.txId ? ` with txId ${updateData.txId}` : ''}`
+        `Updating transaction ${transactionId} status to ${updateData.status}${updateData.txId ? ` with txId ${updateData.txId}` : ''}`,
       );
 
       const transaction = await this.transactionModel.findById(transactionId);
@@ -543,50 +593,58 @@ export class TransactionsService {
       const previousStatus = transaction.status;
 
       // Update transaction
-      const updatedTransaction = await transaction.updateStatus(updateData.status, {
-        txId: updateData.txId,
-        blockHeight: updateData.blockHeight,
-        confirmations: updateData.confirmations,
-        errorMessage: updateData.errorMessage,
-        errorCode: updateData.errorCode,
-        metadata: updateData.metadata,
-      });
+      const updatedTransaction = await transaction.updateStatus(
+        updateData.status,
+        {
+          txId: updateData.txId,
+          blockHeight: updateData.blockHeight,
+          confirmations: updateData.confirmations,
+          errorMessage: updateData.errorMessage,
+          errorCode: updateData.errorCode,
+          metadata: updateData.metadata,
+        },
+      );
 
       const duration = Date.now() - startTime;
 
       this.logger.log(
-        `✓ Transaction ${transactionId} status updated from ${previousStatus} to ${updateData.status} in ${duration}ms`
+        `✓ Transaction ${transactionId} status updated from ${previousStatus} to ${updateData.status} in ${duration}ms`,
       );
 
       // Send notification if status changed to confirmed or failed
-      if ((updateData.status === 'confirmed' || updateData.status === 'failed') && 
-          previousStatus !== updateData.status) {
-        
+      if (
+        (updateData.status === 'confirmed' || updateData.status === 'failed') &&
+        previousStatus !== updateData.status
+      ) {
         try {
-          await this.sendTransactionStatusNotification(updatedTransaction, previousStatus);
+          await this.sendTransactionStatusNotification(
+            updatedTransaction,
+            previousStatus,
+          );
         } catch (notificationError) {
           this.logger.warn(
             `Failed to send status notification for transaction ${transactionId}:`,
-            notificationError
+            notificationError,
           );
           // Don't fail the status update if notification fails
         }
       }
 
       return updatedTransaction;
-
     } catch (error) {
       const duration = Date.now() - startTime;
       this.logger.error(
         `Failed to update transaction ${transactionId} status in ${duration}ms:`,
-        error
+        error,
       );
 
       if (error instanceof NotFoundException) {
         throw error;
       }
 
-      throw new InternalServerErrorException('Failed to update transaction status');
+      throw new InternalServerErrorException(
+        'Failed to update transaction status',
+      );
     }
   }
 
@@ -603,18 +661,18 @@ export class TransactionsService {
   ): Promise<void> {
     const isConfirmed = transaction.status === 'confirmed';
     const isFailed = transaction.status === 'failed';
-    
+
     if (!isConfirmed && !isFailed) {
       return; // Only notify on final states
     }
 
-    const notificationTitle = isConfirmed 
+    const notificationTitle = isConfirmed
       ? `${transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)} Confirmed`
       : `${transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)} Failed`;
 
     const notificationBody = isConfirmed
-      ? `Your ${transaction.type} of ${transaction.getFormattedAmount()} has been confirmed.`
-      : `Your ${transaction.type} of ${transaction.getFormattedAmount()} has failed. ${transaction.metadata.errorMessage || 'Please try again or contact support.'}`;
+      ? `Your ${transaction.type} of ${parseFloat(transaction.metadata.amount) / 1000000} STX has been confirmed.`
+      : `Your ${transaction.type} of ${parseFloat(transaction.metadata.amount) / 1000000} STX has failed. ${transaction.metadata.errorMessage || 'Please try again or contact support.'}`;
 
     await this.notificationsService.queueToUser(
       transaction.userId,
@@ -623,11 +681,11 @@ export class TransactionsService {
         body: notificationBody,
         type: NotificationType.TRANSACTION,
       },
-      { priority: isConfirmed ? 5 : 8 } // Higher priority for failures
+      { priority: isConfirmed ? 5 : 8 }, // Higher priority for failures
     );
 
     this.logger.debug(
-      `Transaction status notification queued for user ${transaction.userId}: ${transaction.type} ${transaction.status}`
+      `Transaction status notification queued for user ${transaction.userId}: ${transaction.type} ${transaction.status}`,
     );
   }
 
@@ -640,23 +698,34 @@ export class TransactionsService {
    */
   async getPendingTransactions(maxRetries = 10): Promise<ITransaction[]> {
     try {
-      this.logger.debug(`Fetching pending transactions for polling (maxRetries: ${maxRetries})`);
-      
-      const transactions = await this.transactionModel.findPendingTransactions(maxRetries);
-      
-      this.logger.debug(`Found ${transactions.length} pending transactions for polling`);
-      return transactions;
+      this.logger.debug(
+        `Fetching pending transactions for polling (maxRetries: ${maxRetries})`,
+      );
 
+      const transactions =
+        await this.transactionModel.findPendingTransactions(maxRetries);
+
+      this.logger.debug(
+        `Found ${transactions.length} pending transactions for polling`,
+      );
+      return transactions;
     } catch (error) {
-      this.logger.error('Failed to fetch pending transactions for polling:', error);
-      throw new InternalServerErrorException('Failed to fetch pending transactions');
+      this.logger.error(
+        'Failed to fetch pending transactions for polling:',
+        error,
+      );
+      throw new InternalServerErrorException(
+        'Failed to fetch pending transactions',
+      );
     }
   }
 
   /**
    * Increment retry count for a transaction
    */
-  async incrementTransactionRetry(transactionId: string): Promise<ITransaction> {
+  async incrementTransactionRetry(
+    transactionId: string,
+  ): Promise<ITransaction> {
     try {
       const transaction = await this.transactionModel.findById(transactionId);
       if (!transaction) {
@@ -664,9 +733,11 @@ export class TransactionsService {
       }
 
       return await transaction.incrementRetry();
-
     } catch (error) {
-      this.logger.error(`Failed to increment retry for transaction ${transactionId}:`, error);
+      this.logger.error(
+        `Failed to increment retry for transaction ${transactionId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -678,42 +749,44 @@ export class TransactionsService {
   /**
    * Get all transactions (admin only)
    */
-  async getAllTransactions(query: TransactionQuery): Promise<TransactionPaginationResult> {
+  async getAllTransactions(
+    query: TransactionQuery,
+  ): Promise<TransactionPaginationResult> {
     const startTime = Date.now();
-    
+
     try {
       this.logger.debug(
-        `Admin fetching all transactions - Page: ${query.page}, Limit: ${query.limit}`
+        `Admin fetching all transactions - Page: ${query.page}, Limit: ${query.limit}`,
       );
 
       // Build filters
       const filters: any = {};
-      
+
       if (query.type) filters.type = query.type;
       if (query.status) filters.status = query.status;
       if (query.userId) filters.userId = query.userId;
-      
+
       if (query.fromDate || query.toDate) {
         if (query.fromDate) filters.fromDate = new Date(query.fromDate);
         if (query.toDate) filters.toDate = new Date(query.toDate);
       }
-      
+
       if (query.search) filters.search = query.search;
 
       // For admin view, we'll create a similar pagination function
       const skip = (query.page - 1) * query.limit;
       const mongoQuery: any = {};
-      
+
       if (filters.type) mongoQuery.type = filters.type;
       if (filters.status) mongoQuery.status = filters.status;
       if (filters.userId) mongoQuery.userId = filters.userId;
-      
+
       if (filters.fromDate || filters.toDate) {
         mongoQuery.createdAt = {};
         if (filters.fromDate) mongoQuery.createdAt.$gte = filters.fromDate;
         if (filters.toDate) mongoQuery.createdAt.$lte = filters.toDate;
       }
-      
+
       if (filters.search) {
         mongoQuery.$or = [
           { 'metadata.txId': { $regex: filters.search, $options: 'i' } },
@@ -733,9 +806,9 @@ export class TransactionsService {
       ]);
 
       const duration = Date.now() - startTime;
-      
+
       this.logger.log(
-        `✓ Admin fetched ${transactions.length} transactions in ${duration}ms (${total} total)`
+        `✓ Admin fetched ${transactions.length} transactions in ${duration}ms (${total} total)`,
       );
 
       return {
@@ -747,10 +820,12 @@ export class TransactionsService {
           totalPages: Math.ceil(total / query.limit),
         },
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      this.logger.error(`Failed to fetch all transactions in ${duration}ms:`, error);
+      this.logger.error(
+        `Failed to fetch all transactions in ${duration}ms:`,
+        error,
+      );
       throw new InternalServerErrorException('Failed to fetch transactions');
     }
   }
@@ -763,13 +838,17 @@ export class TransactionsService {
       this.logger.debug('Fetching global transaction statistics');
 
       const stats = await this.transactionModel.getStats();
-      
+
       this.logger.debug('✓ Global transaction statistics fetched');
       return stats;
-
     } catch (error) {
-      this.logger.error('Failed to fetch global transaction statistics:', error);
-      throw new InternalServerErrorException('Failed to fetch transaction statistics');
+      this.logger.error(
+        'Failed to fetch global transaction statistics:',
+        error,
+      );
+      throw new InternalServerErrorException(
+        'Failed to fetch transaction statistics',
+      );
     }
   }
 
