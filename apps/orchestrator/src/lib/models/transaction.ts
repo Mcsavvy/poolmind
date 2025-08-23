@@ -18,7 +18,7 @@ const transactionValidators = {
     validator: function (v: string) {
       if (!v) return false;
       const parsed = parseFloat(v);
-      return !isNaN(parsed) && parsed > 0 && /^\d+(\.\d{1,6})?$/.test(v);
+      return !isNaN(parsed) && parsed >= 0 && /^\d+(\.\d{1,6})?$/.test(v);
     },
     message: 'Invalid STX amount format (must be positive number with up to 6 decimal places)',
   },
@@ -113,6 +113,12 @@ export interface ITransactionModel extends IBaseModel<ITransaction> {
     limit: number;
     totalPages: number;
   }>;
+  
+  // Get NAV history over time
+  getNavHistory(limit?: number): Promise<ITransaction[]>;
+  
+  // Get fee analytics
+  getFeeAnalytics(userId?: string, days?: number): Promise<any[]>;
 }
 
 // Create the Transaction model
@@ -158,7 +164,6 @@ const Transaction = createModel<ITransaction>(
       // Transaction identifiers
       txId: {
         type: String,
-        sparse: true, // Allows null but unique when present
         validate: transactionValidators.stacksTxId,
       },
       
@@ -239,6 +244,27 @@ const Transaction = createModel<ITransaction>(
       confirmedAt: {
         type: Date,
       },
+      
+      // Pool state at time of transaction (CRITICAL for historical accuracy)
+      nav: {
+        type: String,
+        validate: transactionValidators.stxAmount,
+      },
+      
+      poolTotalValue: {
+        type: String,
+        validate: transactionValidators.stxAmount,
+      },
+      
+      poolTotalShares: {
+        type: String,
+        validate: transactionValidators.stxAmount,
+      },
+      
+      contractName: {
+        type: String,
+        trim: true,
+      },
     },
     
     // Type-specific metadata
@@ -277,6 +303,22 @@ const Transaction = createModel<ITransaction>(
         type: String,
         validate: transactionValidators.stxAmount,
       },
+      
+      // New fields for tracking actual transaction results
+      tokensReceived: {
+        type: String,
+        validate: transactionValidators.stxAmount,
+      },
+      
+      entryFeeRate: {
+        type: String,
+        validate: transactionValidators.stxAmount,
+      },
+      
+      entryFeeAmount: {
+        type: String,
+        validate: transactionValidators.stxAmount,
+      },
     },
     
     withdrawalMetadata: {
@@ -311,6 +353,22 @@ const Transaction = createModel<ITransaction>(
       
       approvedAt: {
         type: Date,
+      },
+      
+      // New fields for tracking actual withdrawal results
+      tokensBurned: {
+        type: String,
+        validate: transactionValidators.stxAmount,
+      },
+      
+      exitFeeRate: {
+        type: String,
+        validate: transactionValidators.stxAmount,
+      },
+      
+      exitFeeAmount: {
+        type: String,
+        validate: transactionValidators.stxAmount,
       },
     },
     
@@ -406,6 +464,41 @@ const Transaction = createModel<ITransaction>(
           return this.withdrawalMetadata;
         }
         return null;
+      },
+      
+      // Get NAV at time of transaction
+      getHistoricalNAV() {
+        return this.metadata.nav ? parseFloat(this.metadata.nav) / 1000000 : null;
+      },
+      
+      // Get fee amount for this transaction
+      getFeeAmount() {
+        if (this.type === 'deposit' && this.depositMetadata?.entryFeeAmount) {
+          return parseFloat(this.depositMetadata.entryFeeAmount) / 1000000;
+        } else if (this.type === 'withdrawal' && this.withdrawalMetadata?.exitFeeAmount) {
+          return parseFloat(this.withdrawalMetadata.exitFeeAmount) / 1000000;
+        }
+        return 0;
+      },
+      
+      // Get fee rate for this transaction
+      getFeeRate() {
+        if (this.type === 'deposit' && this.depositMetadata?.entryFeeRate) {
+          return parseFloat(this.depositMetadata.entryFeeRate);
+        } else if (this.type === 'withdrawal' && this.withdrawalMetadata?.exitFeeRate) {
+          return parseFloat(this.withdrawalMetadata.exitFeeRate);
+        }
+        return 0;
+      },
+      
+      // Get tokens received/burned for this transaction
+      getTokenAmount() {
+        if (this.type === 'deposit' && this.depositMetadata?.tokensReceived) {
+          return parseFloat(this.depositMetadata.tokensReceived) / 1000000;
+        } else if (this.type === 'withdrawal' && this.withdrawalMetadata?.tokensBurned) {
+          return parseFloat(this.withdrawalMetadata.tokensBurned) / 1000000;
+        }
+        return 0;
       },
     },
     
@@ -575,6 +668,56 @@ const Transaction = createModel<ITransaction>(
           totalPages: Math.ceil(total / limit),
         };
       },
+      
+      // Get NAV history over time
+      async getNavHistory(limit = 50) {
+        return this.find({
+          'metadata.nav': { $exists: true, $ne: null },
+          status: 'confirmed'
+        })
+        .select('metadata.nav createdAt type')
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .exec();
+      },
+      
+      // Get average fees by type
+      async getFeeAnalytics(userId?: string, days = 30) {
+        const query: any = {
+          status: 'confirmed',
+          createdAt: { $gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000) }
+        };
+        
+        if (userId) query.userId = userId;
+        
+        return this.aggregate([
+          { $match: query },
+          {
+            $group: {
+              _id: '$type',
+              avgFeeRate: {
+                $avg: {
+                  $cond: [
+                    { $eq: ['$type', 'deposit'] },
+                    { $toDouble: '$depositMetadata.entryFeeRate' },
+                    { $toDouble: '$withdrawalMetadata.exitFeeRate' }
+                  ]
+                }
+              },
+              totalFees: {
+                $sum: {
+                  $cond: [
+                    { $eq: ['$type', 'deposit'] },
+                    { $toDouble: '$depositMetadata.entryFeeAmount' },
+                    { $toDouble: '$withdrawalMetadata.exitFeeAmount' }
+                  ]
+                }
+              },
+              transactionCount: { $sum: 1 }
+            }
+          }
+        ]);
+      },
     },
     
     // Indexes for better performance
@@ -584,6 +727,9 @@ const Transaction = createModel<ITransaction>(
       [{ type: 1, status: 1 }], // Type and status queries
       [{ 'metadata.confirmedAt': 1 }], // Confirmed transactions by date
       [{ 'metadata.retryCount': 1 }], // For retry tracking
+      [{ 'metadata.nav': 1, createdAt: -1 }], // NAV tracking over time
+      [{ userId: 1, type: 1, createdAt: -1 }], // User transactions by type and date
+      [{ 'metadata.txId': 1 }, { unique: true, sparse: true }], // Unique transaction IDs
     ],
   }
 );
@@ -612,6 +758,10 @@ export interface ITransaction extends IBaseDocument {
     lastCheckedAt?: Date;
     broadcastAt?: Date;
     confirmedAt?: Date;
+    // Pool state at time of transaction
+    nav?: string;
+    poolTotalValue?: string;
+    poolTotalShares?: string;
   };
   
   depositMetadata?: {
@@ -622,6 +772,10 @@ export interface ITransaction extends IBaseDocument {
     expectedPrice?: string;
     actualPrice?: string;
     slippage?: string;
+    // New fields for tracking actual transaction results
+    tokensReceived?: string;
+    entryFeeRate?: string;
+    entryFeeAmount?: string;
   };
   
   withdrawalMetadata?: {
@@ -632,6 +786,10 @@ export interface ITransaction extends IBaseDocument {
     isEmergencyWithdrawal?: boolean;
     approvedBy?: string;
     approvedAt?: Date;
+    // New fields for tracking actual withdrawal results
+    tokensBurned?: string;
+    exitFeeRate?: string;
+    exitFeeAmount?: string;
   };
   
   notes?: string;
@@ -645,6 +803,10 @@ export interface ITransaction extends IBaseDocument {
   updateStatus(status: TransactionStatus, updates?: any): Promise<ITransaction>;
   incrementRetry(): Promise<ITransaction>;
   getTypeMetadata(): any;
+  getHistoricalNAV(): number | null;
+  getFeeAmount(): number;
+  getFeeRate(): number;
+  getTokenAmount(): number;
 }
 
 export default Transaction as ITransactionModel;

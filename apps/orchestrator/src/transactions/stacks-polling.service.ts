@@ -93,6 +93,8 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
   private readonly POLL_INTERVAL = 30000; // 30 seconds
   private readonly MAX_RETRIES = 50; // Maximum polling attempts
   private readonly CONFIRMATION_THRESHOLD = 6; // Required confirmations
+  private readonly STUCK_TRANSACTION_THRESHOLD = 2 * 60 * 60 * 1000; // 2 hours
+  private readonly FORCE_CONFIRMATION_THRESHOLD = 10 * 60 * 1000; // 10 minutes
 
   constructor(
     private readonly transactionsService: TransactionsService,
@@ -269,6 +271,12 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
     this.intervalTimer = setInterval(async () => {
       try {
         await this.schedulePendingTransactions();
+        
+        // Every 5 minutes, check for stuck transactions
+        const now = Date.now();
+        if (now % (5 * 60 * 1000) < this.POLL_INTERVAL) {
+          await this.checkForStuckTransactions();
+        }
       } catch (error) {
         this.logger.error('Error in polling scheduler:', error);
       }
@@ -330,6 +338,59 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
 
     } catch (error) {
       this.logger.error('Failed to schedule pending transactions:', error);
+    }
+  }
+
+  /**
+   * Check for transactions that have been stuck in confirming status too long
+   */
+  private async checkForStuckTransactions() {
+    try {
+      const startTime = Date.now();
+      
+      // Find transactions stuck in confirming status for too long
+      const stuckThreshold = new Date(Date.now() - this.STUCK_TRANSACTION_THRESHOLD);
+      
+      // This would require a query method in the transaction model
+      const potentiallyStuckTransactions = await this.transactionsService.getTransactionModel()
+        .find({
+          status: 'confirming',
+          updatedAt: { $lt: stuckThreshold },
+          'metadata.txId': { $exists: true, $ne: null }
+        })
+        .limit(10) // Don't process too many at once
+        .exec();
+
+      if (potentiallyStuckTransactions.length > 0) {
+        this.logger.warn(
+          `Found ${potentiallyStuckTransactions.length} potentially stuck transactions in confirming status`
+        );
+
+        for (const transaction of potentiallyStuckTransactions) {
+          try {
+            this.logger.warn(
+              `Attempting to resolve stuck transaction ${transaction._id} (stuck for ${
+                Math.round((Date.now() - transaction.updatedAt.getTime()) / 60000)
+              } minutes)`
+            );
+
+            // Force a high-priority polling job for this transaction
+            await this.queueTransactionForPolling(transaction, 100, 0);
+          } catch (error) {
+            this.logger.error(`Failed to queue stuck transaction ${transaction._id}:`, error);
+          }
+        }
+      } else {
+        this.logger.debug('No stuck transactions found');
+      }
+
+      const duration = Date.now() - startTime;
+      if (potentiallyStuckTransactions.length > 0) {
+        this.logger.log(`Stuck transaction check completed in ${duration}ms`);
+      }
+
+    } catch (error) {
+      this.logger.error('Failed to check for stuck transactions:', error);
     }
   }
 
@@ -527,6 +588,21 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
     let newStatus: string;
     let confirmations = 0;
 
+    this.logger.debug(
+      `Processing transaction ${transaction._id} - Stacks status: ${stacksTransaction.tx_status}, ` +
+      `Block height: ${stacksTransaction.block_height}, Current status: ${currentStatus}`
+    );
+
+    // Check if transaction has been stuck in confirming for too long (2 hours)
+    if (currentStatus === 'confirming') {
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+      if (transaction.updatedAt < twoHoursAgo) {
+        this.logger.warn(
+          `Transaction ${transaction._id} stuck in confirming for over 2 hours - forcing confirmation check`
+        );
+      }
+    }
+
     // Determine new status based on Stacks transaction status
     switch (stacksTransaction.tx_status) {
       case TRANSACTION_STATUS.PENDING:
@@ -536,16 +612,64 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
       case TRANSACTION_STATUS.SUCCESS:
         // Calculate confirmations if we have block height
         if (stacksTransaction.block_height) {
-          const currentBlockHeight = await this.getCurrentBlockHeight();
-          confirmations = Math.max(0, currentBlockHeight - stacksTransaction.block_height + 1);
+          try {
+            const currentBlockHeight = await this.getCurrentBlockHeight();
+            confirmations = Math.max(0, currentBlockHeight - stacksTransaction.block_height + 1);
+            
+            this.logger.debug(
+              `Confirmation calculation for ${transaction._id}: ` +
+              `Current block: ${currentBlockHeight}, TX block: ${stacksTransaction.block_height}, ` +
+              `Confirmations: ${confirmations}/${this.CONFIRMATION_THRESHOLD}`
+            );
+            
+            if (confirmations >= this.CONFIRMATION_THRESHOLD) {
+              newStatus = 'confirmed';
+            } else {
+              newStatus = 'confirming';
+            }
+          } catch (error) {
+            this.logger.error(`Failed to get block height for confirmation calculation:`, error);
+            
+            // Fallback: If we can't get block height, check if the transaction has been 
+            // in "confirming" status for a reasonable time and force confirmation
+            if (currentStatus === 'confirming') {
+              const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+              if (transaction.updatedAt < tenMinutesAgo) {
+                this.logger.warn(
+                  `Transaction ${transaction._id} forcing confirmation due to block height API failure ` +
+                  `and sufficient time passed`
+                );
+                newStatus = 'confirmed';
+                confirmations = this.CONFIRMATION_THRESHOLD; // Assume sufficient confirmations
+              } else {
+                newStatus = 'confirming';
+                confirmations = transaction.metadata.confirmations; // Keep existing count
+              }
+            } else {
+              newStatus = 'confirming';
+            }
+          }
+        } else {
+          // No block height in transaction response - this shouldn't happen for successful transactions
+          this.logger.warn(
+            `Transaction ${transaction._id} marked as SUCCESS but no block_height in response`
+          );
           
-          if (confirmations >= this.CONFIRMATION_THRESHOLD) {
-            newStatus = 'confirmed';
+          // Check if transaction has been processing for too long without block height
+          if (currentStatus === 'confirming' || currentStatus === 'pending') {
+            const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+            if (transaction.updatedAt < fifteenMinutesAgo) {
+              this.logger.warn(
+                `Transaction ${transaction._id} forcing confirmation - SUCCESS status but no block height for 15+ minutes`
+              );
+              newStatus = 'confirmed';
+              confirmations = this.CONFIRMATION_THRESHOLD;
+            } else {
+              newStatus = 'confirming';
+            }
           } else {
             newStatus = 'confirming';
           }
-        } else {
-          newStatus = 'confirming';
         }
         break;
         
@@ -559,6 +683,7 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
         break;
         
       default:
+        this.logger.warn(`Unknown Stacks transaction status: ${stacksTransaction.tx_status}`);
         newStatus = 'pending';
     }
 
@@ -654,29 +779,48 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
   // =====================================
 
   /**
-   * Get current block height from Stacks network
+   * Get current block height from Stacks network with retry logic
    */
   private async getCurrentBlockHeight(): Promise<number> {
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/v2/info`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'PoolMind-Orchestrator/1.0.0',
-        },
-        signal: AbortSignal.timeout(10000),
-      });
+    const maxRetries = 3;
+    let lastError: Error | null = null;
 
-      if (!response.ok) {
-        throw new Error(`Failed to get network info: ${response.status} ${response.statusText}`);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(`${this.apiBaseUrl}/v2/info`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'PoolMind-Orchestrator/1.0.0',
+          },
+          signal: AbortSignal.timeout(10000),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to get network info: ${response.status} ${response.statusText}`);
+        }
+
+        const networkInfo: NetworkInfo = await response.json();
+        const blockHeight = networkInfo.stacks_tip_height || 0;
+        
+        if (blockHeight === 0) {
+          throw new Error('Network returned block height of 0');
+        }
+
+        this.logger.debug(`Current block height: ${blockHeight}`);
+        return blockHeight;
+      } catch (error) {
+        lastError = error as Error;
+        this.logger.warn(`Attempt ${attempt}/${maxRetries} to get block height failed:`, error);
+        
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 2000 * attempt)); // Exponential backoff
+        }
       }
-
-      const networkInfo: NetworkInfo = await response.json();
-      return networkInfo.stacks_tip_height || 0;
-    } catch (error) {
-      this.logger.warn('Failed to get current block height:', error);
-      return 0;
     }
+
+    this.logger.error(`Failed to get block height after ${maxRetries} attempts:`, lastError);
+    throw new Error(`Unable to get current block height: ${lastError?.message}`);
   }
 
   // =====================================
@@ -783,6 +927,116 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
       return await response.json();
     } catch (error) {
       this.logger.error('Failed to get network info:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Force confirmation of a stuck transaction
+   */
+  async forceTransactionConfirmation(transactionId: string): Promise<boolean> {
+    try {
+      this.logger.warn(`Forcing confirmation for potentially stuck transaction ${transactionId}`);
+
+      const transaction = await this.transactionsService.getTransactionById(transactionId);
+      
+      if (!transaction) {
+        this.logger.error(`Transaction ${transactionId} not found for force confirmation`);
+        return false;
+      }
+
+      if (transaction.status !== 'confirming') {
+        this.logger.warn(`Transaction ${transactionId} is not in confirming status (${transaction.status})`);
+        return false;
+      }
+
+      if (!transaction.metadata.txId) {
+        this.logger.error(`Transaction ${transactionId} has no txId - cannot force confirmation`);
+        return false;
+      }
+
+      // Try to get transaction details from Stacks API one more time
+      try {
+        const stacksTransaction = await this.getTransactionDetails(transaction.metadata.txId);
+        
+        if (stacksTransaction && stacksTransaction.tx_status === 'success') {
+          this.logger.warn(
+            `Transaction ${transactionId} found as successful in Stacks API - forcing confirmation`
+          );
+
+          await this.transactionsService.updateTransactionStatus(transactionId, {
+            status: 'confirmed',
+            confirmations: this.CONFIRMATION_THRESHOLD,
+            metadata: {
+              forcedConfirmation: true,
+              forcedAt: new Date().toISOString(),
+            }
+          });
+
+          return true;
+        }
+      } catch (apiError) {
+        this.logger.warn(`API check failed for transaction ${transactionId}:`, apiError);
+      }
+
+      // Last resort: If transaction has been stuck for over 2 hours, force confirm
+      const stuckThreshold = new Date(Date.now() - this.STUCK_TRANSACTION_THRESHOLD);
+      if (transaction.updatedAt < stuckThreshold) {
+        this.logger.warn(
+          `Transaction ${transactionId} stuck for over 2 hours - forcing confirmation as last resort`
+        );
+
+        await this.transactionsService.updateTransactionStatus(transactionId, {
+          status: 'confirmed',
+          confirmations: this.CONFIRMATION_THRESHOLD,
+          metadata: {
+            forcedConfirmation: true,
+            forcedReason: 'stuck_timeout',
+            forcedAt: new Date().toISOString(),
+          }
+        });
+
+        return true;
+      }
+
+      this.logger.warn(`Transaction ${transactionId} not eligible for force confirmation yet`);
+      return false;
+
+    } catch (error) {
+      this.logger.error(`Failed to force confirmation for transaction ${transactionId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get stuck transactions that can be force-confirmed
+   */
+  async getStuckTransactions(): Promise<any[]> {
+    try {
+      const stuckThreshold = new Date(Date.now() - this.STUCK_TRANSACTION_THRESHOLD);
+      
+      const stuckTransactions = await this.transactionsService.getTransactionModel()
+        .find({
+          status: 'confirming',
+          updatedAt: { $lt: stuckThreshold },
+          'metadata.txId': { $exists: true, $ne: null }
+        })
+        .select('_id metadata.txId status updatedAt createdAt')
+        .sort({ updatedAt: 1 })
+        .limit(20)
+        .exec();
+
+      return stuckTransactions.map(tx => ({
+        id: tx._id.toString(),
+        txId: tx.metadata.txId,
+        status: tx.status,
+        stuckForMinutes: Math.round((Date.now() - tx.updatedAt.getTime()) / 60000),
+        createdAt: tx.createdAt,
+        updatedAt: tx.updatedAt,
+      }));
+
+    } catch (error) {
+      this.logger.error('Failed to get stuck transactions:', error);
       throw error;
     }
   }

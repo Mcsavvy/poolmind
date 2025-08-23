@@ -19,6 +19,7 @@ import {
 import { ITransaction, type ITransactionModel } from '../lib/models/transaction';
 import { type IUserModel } from '../lib/models/user';
 import { NotificationsService, NotificationType } from '../notifications/notifications.service';
+import { PoolMindContractService } from '../lib/contract-service';
 import { AppConfig } from '../config/env.schema';
 
 export interface TransactionCreationResult {
@@ -46,6 +47,7 @@ export class TransactionsService {
     @InjectModel('User') private readonly userModel: IUserModel,
     private readonly notificationsService: NotificationsService,
     private readonly configService: ConfigService<AppConfig>,
+    private readonly contractService: PoolMindContractService,
   ) {}
 
   // =====================================
@@ -88,13 +90,55 @@ export class TransactionsService {
         throw new InternalServerErrorException('Pool contract not configured');
       }
 
+      // Fetch current pool state for NAV and fees from smart contract
+      let poolState: {
+        nav: string;
+        entryFeeRate: string;
+        exitFeeRate: string;
+        totalPoolValue: string;
+        totalShares: string;
+      } | null = null;
+      
+      try {
+        this.logger.debug('Fetching real pool state from smart contract for deposit...');
+        poolState = await this.contractService.getPoolStateSnapshot();
+        
+        this.logger.debug(
+          `Pool state loaded for deposit: NAV=${Number(poolState.nav)/1000000} STX/PLMD, ` +
+          `Entry Fee=${poolState.entryFeeRate}%, Pool Value=${Number(poolState.totalPoolValue)/1000000} STX`
+        );
+      } catch (error) {
+        this.logger.warn('Failed to fetch pool state from contract for deposit, using fallback values:', error);
+        poolState = {
+          nav: '1000000', // 1 STX per PLMD (fallback)
+          entryFeeRate: '0.5', // 0.5%
+          exitFeeRate: '0.5', // 0.5%
+          totalPoolValue: '10',
+          totalShares: '10',
+        };
+      }
+
+      // Calculate expected PLMD tokens based on real pool state
+      const grossAmount = parseFloat(createDepositDto.amount);
+      const entryFeeRate = poolState ? parseFloat(poolState.entryFeeRate) : 0.5;
+      const nav = poolState ? parseFloat(poolState.nav) : 1000000;
+      
+      const entryFeeAmount = Math.floor((grossAmount * entryFeeRate) / 100);
+      const netAmount = grossAmount - entryFeeAmount;
+      const expectedShares = Math.floor((netAmount * 1000000) / nav); // TOKEN_PRECISION = 1000000
+      
+      this.logger.debug(
+        `Deposit calculation: ${grossAmount/1000000} STX -> ${expectedShares/1000000} PLMD ` +
+        `(fee: ${entryFeeAmount/1000000} STX, net: ${netAmount/1000000} STX, NAV: ${nav/1000000})`
+      );
+
       // Create transaction document
       const transaction = new this.transactionModel({
         userId,
         type: 'deposit',
         status: 'broadcast', // Set to broadcast since we have the blockchain txId
         metadata: {
-          network: createDepositDto.network || 'mainnet',
+          network: createDepositDto.network,
           amount: createDepositDto.amount,
           txId: createDepositDto.txId, // Set the blockchain transaction ID immediately
           contractAddress: poolContractAddress,
@@ -104,10 +148,18 @@ export class TransactionsService {
           requiredConfirmations: 6,
           retryCount: 0,
           broadcastAt: new Date(), // Set broadcast time since transaction is already on blockchain
+          // Pool state at time of transaction (CRITICAL for historical accuracy)
+          nav: poolState?.nav,
+          poolTotalValue: poolState?.totalPoolValue,
+          poolTotalShares: poolState?.totalShares,
         },
         depositMetadata: {
           sourceAddress: createDepositDto.sourceAddress,
           destinationAddress: poolContractAddress,
+          poolSharesExpected: expectedShares.toString(),
+          tokensReceived: expectedShares.toString(), // PLMD tokens actually received
+          entryFeeRate: entryFeeRate.toString(), // Entry fee rate at time of transaction
+          entryFeeAmount: entryFeeAmount.toString(), // Actual entry fee amount in STX
         },
         notes: createDepositDto.notes,
         tags: createDepositDto.tags || [],
@@ -199,13 +251,58 @@ export class TransactionsService {
         throw new InternalServerErrorException('Pool contract not configured');
       }
 
+      // Fetch current pool state for NAV and fees from smart contract
+      let poolState: {
+        nav: string;
+        entryFeeRate: string;
+        exitFeeRate: string;
+        totalPoolValue: string;
+        totalShares: string;
+      } | null = null;
+      
+      try {
+        this.logger.debug('Fetching real pool state from smart contract for withdrawal...');
+        poolState = await this.contractService.getPoolStateSnapshot();
+        
+        this.logger.debug(
+          `Pool state loaded for withdrawal: NAV=${Number(poolState.nav)/1000000} STX/PLMD, ` +
+          `Exit Fee=${poolState.exitFeeRate}%, Pool Value=${Number(poolState.totalPoolValue)/1000000} STX`
+        );
+      } catch (error) {
+        this.logger.warn('Failed to fetch pool state from contract for withdrawal, using fallback values:', error);
+        poolState = {
+          nav: '1000000', // 1 STX per PLMD (fallback)
+          entryFeeRate: '0.5', // 0.5%
+          exitFeeRate: '0.5', // 0.5%
+          totalPoolValue: '10',
+          totalShares: '10',
+        };
+      }
+
+      // Calculate PLMD tokens burned based on real pool state
+      const netSTXAmount = parseFloat(createWithdrawalDto.amount);
+      const exitFeeRate = poolState ? parseFloat(poolState.exitFeeRate) : 0.5;
+      const nav = poolState ? parseFloat(poolState.nav) : 1000000;
+      
+      // Calculate gross STX amount before fees
+      const grossSTXAmount = netSTXAmount / (1 - (exitFeeRate / 100));
+      const exitFeeAmount = grossSTXAmount - netSTXAmount;
+      
+      // Calculate PLMD tokens burned to get this STX amount
+      const sharesBurned = Math.floor((grossSTXAmount * 1000000) / nav); // TOKEN_PRECISION = 1000000
+      
+      this.logger.debug(
+        `Withdrawal calculation: ${sharesBurned/1000000} PLMD -> ${netSTXAmount/1000000} STX ` +
+        `(fee: ${exitFeeAmount/1000000} STX, gross: ${grossSTXAmount/1000000} STX, NAV: ${nav/1000000})`
+      );
+
       // Create transaction document
       const transaction = new this.transactionModel({
         userId,
         type: 'withdrawal',
         status: 'broadcast', // Set to broadcast since we have the blockchain txId
         metadata: {
-          network: createWithdrawalDto.network || 'mainnet',
+          network: createWithdrawalDto.network,
           amount: createWithdrawalDto.amount,
           txId: createWithdrawalDto.txId, // Set the blockchain transaction ID immediately
           contractAddress: poolContractAddress,
@@ -215,11 +312,18 @@ export class TransactionsService {
           requiredConfirmations: 6,
           retryCount: 0,
           broadcastAt: new Date(), // Set broadcast time since transaction is already on blockchain
+          // Pool state at time of transaction (CRITICAL for historical accuracy)
+          nav: poolState?.nav,
+          poolTotalValue: poolState?.totalPoolValue,
+          poolTotalShares: poolState?.totalShares,
         },
         withdrawalMetadata: {
           destinationAddress: createWithdrawalDto.destinationAddress,
           sourceAddress: poolContractAddress,
-          poolSharesBurned: createWithdrawalDto.poolSharesBurned,
+          poolSharesBurned: createWithdrawalDto.poolSharesBurned || sharesBurned.toString(),
+          tokensBurned: sharesBurned.toString(), // PLMD tokens actually burned
+          exitFeeRate: exitFeeRate.toString(), // Exit fee rate at time of transaction
+          exitFeeAmount: Math.floor(exitFeeAmount).toString(), // Actual exit fee amount in STX
           minimumAmount: createWithdrawalDto.minimumAmount,
           isEmergencyWithdrawal: createWithdrawalDto.isEmergencyWithdrawal || false,
         },
@@ -667,5 +771,12 @@ export class TransactionsService {
       this.logger.error('Failed to fetch global transaction statistics:', error);
       throw new InternalServerErrorException('Failed to fetch transaction statistics');
     }
+  }
+
+  /**
+   * Get the transaction model (for polling service)
+   */
+  getTransactionModel() {
+    return this.transactionModel;
   }
 }

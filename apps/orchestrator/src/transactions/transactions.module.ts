@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TransactionsController } from './transactions.controller';
 import { TransactionsService } from './transactions.service';
 import { StacksPollingService } from './stacks-polling.service';
+import { PoolMindContractService } from '../lib/contract-service';
 import Transaction from '../lib/models/transaction';
 import User from '../lib/models/user';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -26,10 +27,12 @@ import { NotificationsModule } from '../notifications/notifications.module';
   providers: [
     TransactionsService,
     StacksPollingService,
+    PoolMindContractService,
   ],
   exports: [
     TransactionsService,
     StacksPollingService,
+    PoolMindContractService,
   ],
 })
 export class TransactionsModule {}
