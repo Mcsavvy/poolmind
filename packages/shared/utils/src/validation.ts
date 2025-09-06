@@ -1,6 +1,9 @@
 import { ApiResponse } from '@poolmind/shared-types';
 
-export function createSuccessResponse<T>(data: T, message?: string): ApiResponse<T> {
+export function createSuccessResponse<T>(
+  data: T,
+  message?: string,
+): ApiResponse<T> {
   return {
     success: true,
     data,
@@ -8,7 +11,10 @@ export function createSuccessResponse<T>(data: T, message?: string): ApiResponse
   };
 }
 
-export function createErrorResponse(error: string, message?: string): ApiResponse {
+export function createErrorResponse(
+  error: string,
+  message?: string,
+): ApiResponse {
   return {
     success: false,
     error,

@@ -42,6 +42,7 @@ TELEGRAM_BOT_USERNAME=your_bot_username
 ## Implementation Flow
 
 ### User Flow
+
 1. User creates account with Stacks wallet (primary authentication)
 2. User goes to profile settings
 3. User can enable Telegram login by clicking "Connect Telegram"
@@ -49,6 +50,7 @@ TELEGRAM_BOT_USERNAME=your_bot_username
 5. Account is linked and user can now login with either wallet or Telegram
 
 ### Technical Flow
+
 1. Frontend displays Telegram login widget after wallet account creation
 2. Widget handles Telegram OAuth flow
 3. Backend validates Telegram auth data using bot token
@@ -66,6 +68,7 @@ TELEGRAM_BOT_USERNAME=your_bot_username
 ## Development Testing
 
 For local development:
+
 1. Use ngrok or similar to expose localhost
 2. Configure bot domain to your ngrok URL
 3. Test with actual Telegram account

@@ -21,7 +21,7 @@ export function TokenIcon({ symbol, size = 24, className }: TokenIconProps) {
         alt={`${symbol} token`}
         width={size}
         height={size}
-        className="rounded-full"
+        className='rounded-full'
         priority
       />
     </div>
@@ -30,11 +30,11 @@ export function TokenIcon({ symbol, size = 24, className }: TokenIconProps) {
 
 // Convenience components for specific tokens
 export function STXIcon(props: Omit<TokenIconProps, 'symbol'>) {
-  return <TokenIcon {...props} symbol="STX" />;
+  return <TokenIcon {...props} symbol='STX' />;
 }
 
 export function PLMDIcon(props: Omit<TokenIconProps, 'symbol'>) {
-  return <TokenIcon {...props} symbol="PLMD" />;
+  return <TokenIcon {...props} symbol='PLMD' />;
 }
 
 // Component for displaying token amount with icon
@@ -46,20 +46,20 @@ interface TokenAmountProps {
   showSymbol?: boolean;
 }
 
-export function TokenAmount({ 
-  symbol, 
-  amount, 
-  size = 20, 
+export function TokenAmount({
+  symbol,
+  amount,
+  size = 20,
   className,
-  showSymbol = true 
+  showSymbol = true,
 }: TokenAmountProps) {
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <TokenIcon symbol={symbol} size={size} />
-      <span className="font-medium">
+      <span className='font-medium'>
         {amount}
         {showSymbol && (
-          <span className="text-muted-foreground ml-1">{symbol}</span>
+          <span className='text-muted-foreground ml-1'>{symbol}</span>
         )}
       </span>
     </div>

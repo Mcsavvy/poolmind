@@ -59,15 +59,17 @@ export const LoginResponseSchema = z.object({
     profilePicture: z.string().optional(),
     role: z.enum(['user', 'admin', 'moderator']),
     isEmailVerified: z.boolean(),
-    telegramAuth: z.object({
-      telegramId: z.number(),
-      firstName: z.string(),
-      lastName: z.string().optional(),
-      username: z.string().optional(),
-      photoUrl: z.string().optional(),
-      authDate: z.number(),
-      linkedAt: z.string(),
-    }).optional(),
+    telegramAuth: z
+      .object({
+        telegramId: z.number(),
+        firstName: z.string(),
+        lastName: z.string().optional(),
+        username: z.string().optional(),
+        photoUrl: z.string().optional(),
+        authDate: z.number(),
+        linkedAt: z.string(),
+      })
+      .optional(),
   }),
   success: z.boolean(),
 });
@@ -90,25 +92,29 @@ export const UserProfileResponseSchema = z.object({
     bio: z.string().optional(),
     role: z.enum(['user', 'admin', 'moderator']),
     isEmailVerified: z.boolean(),
-    telegramAuth: z.object({
-      telegramId: z.number(),
-      firstName: z.string(),
-      lastName: z.string().optional(),
-      username: z.string().optional(),
-      photoUrl: z.string().optional(),
-      authDate: z.number(),
-      linkedAt: z.string(),
-    }).optional(),
+    telegramAuth: z
+      .object({
+        telegramId: z.number(),
+        firstName: z.string(),
+        lastName: z.string().optional(),
+        username: z.string().optional(),
+        photoUrl: z.string().optional(),
+        authDate: z.number(),
+        linkedAt: z.string(),
+      })
+      .optional(),
     notificationPreferences: z.object({
       email: z.boolean(),
       telegram: z.boolean(),
     }),
-    socialLinks: z.object({
-      twitter: z.string().optional(),
-      discord: z.string().optional(),
-      telegram: z.string().optional(),
-      website: z.string().optional(),
-    }).optional(),
+    socialLinks: z
+      .object({
+        twitter: z.string().optional(),
+        discord: z.string().optional(),
+        telegram: z.string().optional(),
+        website: z.string().optional(),
+      })
+      .optional(),
     createdAt: z.string(),
     updatedAt: z.string(),
     lastLoginAt: z.string().optional(),
@@ -132,12 +138,14 @@ export const UpdateProfileResponseSchema = z.object({
       email: z.boolean(),
       telegram: z.boolean(),
     }),
-    socialLinks: z.object({
-      twitter: z.string().optional(),
-      discord: z.string().optional(),
-      telegram: z.string().optional(),
-      website: z.string().optional(),
-    }).optional(),
+    socialLinks: z
+      .object({
+        twitter: z.string().optional(),
+        discord: z.string().optional(),
+        telegram: z.string().optional(),
+        website: z.string().optional(),
+      })
+      .optional(),
     updatedAt: z.string(),
   }),
   message: z.string().optional(),

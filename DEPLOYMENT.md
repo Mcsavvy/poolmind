@@ -5,10 +5,12 @@ This guide covers deploying the PoolMind monorepo on a VPS using Coolify with Do
 ## 🏗️ Architecture Overview
 
 PoolMind consists of two main services:
+
 - **Orchestrator**: NestJS API backend (Port 3001)
 - **Platform**: Next.js frontend (Port 3000)
 
 External dependencies:
+
 - **MongoDB**: Database (external)
 - **Redis**: Caching and job queue (external)
 
@@ -17,6 +19,7 @@ External dependencies:
 ### Recommended: Docker Compose with Coolify
 
 **Why Docker Compose?**
+
 - ✅ Perfect for monorepo deployments
 - ✅ Easy service orchestration
 - ✅ Excellent Coolify integration
@@ -36,6 +39,7 @@ External dependencies:
 ### 1. Prepare External Services
 
 #### MongoDB Setup
+
 ```bash
 # Create MongoDB database
 # Use MongoDB Atlas or self-hosted MongoDB
@@ -43,6 +47,7 @@ External dependencies:
 ```
 
 #### Redis Setup
+
 ```bash
 # Create Redis instance
 # Use Redis Cloud or self-hosted Redis
@@ -52,11 +57,13 @@ External dependencies:
 ### 2. Environment Configuration
 
 1. Copy the environment template:
+
 ```bash
 cp env.production.example .env.production
 ```
 
 2. Fill in your production values:
+
 ```bash
 # Database Configuration
 DATABASE_URI=mongodb://username:password@your-mongodb-host:27017/poolmind_prod?authSource=admin
@@ -189,6 +196,7 @@ Both services include health check endpoints:
 ## 📊 Monitoring
 
 ### Service Health
+
 ```bash
 # Check orchestrator health
 curl https://api.your-domain.com/api/docs
@@ -198,6 +206,7 @@ curl https://your-domain.com/api/health
 ```
 
 ### Logs
+
 ```bash
 # View orchestrator logs
 docker logs poolmind-orchestrator-prod
@@ -209,11 +218,13 @@ docker logs poolmind-platform-prod
 ## 🔄 Updates and Maintenance
 
 ### Updating Services
+
 1. Push changes to your Git repository
 2. Coolify will automatically rebuild and redeploy
 3. Monitor health checks to ensure successful deployment
 
 ### Database Migrations
+
 ```bash
 # Connect to MongoDB and run any necessary migrations
 # The application handles schema validation automatically
@@ -243,6 +254,7 @@ docker logs poolmind-platform-prod
    - Verify file permissions
 
 ### Debug Commands
+
 ```bash
 # Check running containers
 docker ps
@@ -295,6 +307,7 @@ curl -f http://localhost:3001/api/docs
 ## 🆘 Support
 
 For deployment issues:
+
 1. Check the troubleshooting section
 2. Review container logs
 3. Verify environment configuration
@@ -303,6 +316,7 @@ For deployment issues:
 ---
 
 **Deployment Checklist:**
+
 - [ ] External MongoDB configured and accessible
 - [ ] External Redis configured and accessible
 - [ ] Environment variables set correctly

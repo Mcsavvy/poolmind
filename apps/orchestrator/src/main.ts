@@ -7,10 +7,10 @@ import { AppConfig } from './config/env.schema';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  
+
   try {
     logger.log('🚀 Starting PoolMind Orchestrator...');
-    
+
     const app = await NestFactory.create(AppModule);
 
     // Get the ConfigService instance
@@ -57,16 +57,18 @@ async function bootstrap() {
         persistAuthorization: true,
       },
     });
-    
+
     logger.log('📚 Swagger documentation configured');
 
     await app.listen(port);
-    
+
     logger.log(`✅ Orchestrator is running successfully!`);
     logger.log(`🌐 Server: http://localhost:${port}`);
     logger.log(`📚 Swagger docs: http://localhost:${port}/api/docs`);
     logger.log(`📄 OpenAPI schema: http://localhost:${port}/api/docs-json`);
-    logger.log(`💾 Download OpenAPI: http://localhost:${port}/api/openapi.json`);
+    logger.log(
+      `💾 Download OpenAPI: http://localhost:${port}/api/openapi.json`,
+    );
     logger.log(`🛢 Database: ${configService.get('database.name')}`);
     logger.log(`🌍 Environment: ${nodeEnv}`);
 
@@ -78,7 +80,10 @@ async function bootstrap() {
       logger.log(`🔒 CORS: No origins allowed (production mode)`);
     }
   } catch (error) {
-    logger.error(`❌ Failed to start Orchestrator: ${error.message}`, error.stack);
+    logger.error(
+      `❌ Failed to start Orchestrator: ${error.message}`,
+      error.stack,
+    );
     process.exit(1);
   }
 }

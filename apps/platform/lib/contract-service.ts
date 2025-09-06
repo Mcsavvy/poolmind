@@ -5,14 +5,14 @@ import {
   STACKS_MAINNET,
   STACKS_TESTNET,
   STACKS_DEVNET,
-} from "@stacks/network";
+} from '@stacks/network';
 import {
   fetchCallReadOnlyFunction,
   cvToValue,
   standardPrincipalCV,
   uintCV,
-} from "@stacks/transactions";
-import { config } from "@/lib/config";
+} from '@stacks/transactions';
+import { config } from '@/lib/config';
 
 export interface ContractState {
   admin: string;
@@ -71,11 +71,11 @@ export class PoolMindContractService {
     const networkType = config.stacksNetwork;
 
     switch (networkType) {
-      case "mainnet":
+      case 'mainnet':
         return STACKS_MAINNET;
-      case "testnet":
+      case 'testnet':
         return STACKS_TESTNET;
-      case "devnet":
+      case 'devnet':
         return STACKS_DEVNET;
       default:
         return STACKS_TESTNET;
@@ -89,7 +89,7 @@ export class PoolMindContractService {
     functionName: string,
     functionArgs: any[] = [],
     senderAddress?: string,
-    retries: number = 3
+    retries: number = 3,
   ): Promise<any> {
     const readOnlyCall = async () => {
       const result = await fetchCallReadOnlyFunction({
@@ -114,9 +114,9 @@ export class PoolMindContractService {
           console.warn(
             `Retry attempt ${i + 1} for ${functionName} after error: ${
               lastError.message
-            }. Retrying in 1s...`
+            }. Retrying in 1s...`,
           );
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
     }
@@ -132,11 +132,11 @@ export class PoolMindContractService {
    */
   async getName(): Promise<string> {
     try {
-      const result = await this.callReadOnlyFunction("get-name");
-      return result?.value || "";
+      const result = await this.callReadOnlyFunction('get-name');
+      return result?.value || '';
     } catch (error) {
-      console.error("Error getting token name:", error);
-      return "PoolMind";
+      console.error('Error getting token name:', error);
+      return 'PoolMind';
     }
   }
 
@@ -145,11 +145,11 @@ export class PoolMindContractService {
    */
   async getSymbol(): Promise<string> {
     try {
-      const result = await this.callReadOnlyFunction("get-symbol");
-      return result?.value || "";
+      const result = await this.callReadOnlyFunction('get-symbol');
+      return result?.value || '';
     } catch (error) {
-      console.error("Error getting token symbol:", error);
-      return "PLMD";
+      console.error('Error getting token symbol:', error);
+      return 'PLMD';
     }
   }
 
@@ -158,10 +158,10 @@ export class PoolMindContractService {
    */
   async getDecimals(): Promise<number> {
     try {
-      const result = await this.callReadOnlyFunction("get-decimals");
+      const result = await this.callReadOnlyFunction('get-decimals');
       return result?.value || 6;
     } catch (error) {
-      console.error("Error getting token decimals:", error);
+      console.error('Error getting token decimals:', error);
       return 6;
     }
   }
@@ -172,13 +172,16 @@ export class PoolMindContractService {
   async getBalance(address: string): Promise<BalanceResult> {
     try {
       const functionArgs = [standardPrincipalCV(address)];
-      const result = await this.callReadOnlyFunction("get-balance", functionArgs);
+      const result = await this.callReadOnlyFunction(
+        'get-balance',
+        functionArgs,
+      );
 
       return {
         balance: result?.value || 0,
       };
     } catch (error) {
-      console.error("Error getting balance:", error);
+      console.error('Error getting balance:', error);
       return { balance: 0 };
     }
   }
@@ -188,12 +191,12 @@ export class PoolMindContractService {
    */
   async getTotalSupply(): Promise<TotalSupplyResult> {
     try {
-      const result = await this.callReadOnlyFunction("get-total-supply");
+      const result = await this.callReadOnlyFunction('get-total-supply');
       return {
         totalSupply: result?.value || 0,
       };
     } catch (error) {
-      console.error("Error getting total supply:", error);
+      console.error('Error getting total supply:', error);
       return { totalSupply: 0 };
     }
   }
@@ -203,10 +206,10 @@ export class PoolMindContractService {
    */
   async getTokenUri(): Promise<string | null> {
     try {
-      const result = await this.callReadOnlyFunction("get-token-uri");
+      const result = await this.callReadOnlyFunction('get-token-uri');
       return result?.value || null;
     } catch (error) {
-      console.error("Error getting token URI:", error);
+      console.error('Error getting token URI:', error);
       return null;
     }
   }
@@ -220,12 +223,12 @@ export class PoolMindContractService {
    */
   async getNav(): Promise<NavResult> {
     try {
-      const result = await this.callReadOnlyFunction("get-nav");
+      const result = await this.callReadOnlyFunction('get-nav');
       return {
         nav: result?.value || 1000000, // Default 1 STX per token
       };
     } catch (error) {
-      console.error("Error getting NAV:", error);
+      console.error('Error getting NAV:', error);
       return { nav: 1000000 };
     }
   }
@@ -236,7 +239,10 @@ export class PoolMindContractService {
   async getNavHistoryById(id: number): Promise<NavHistoryEntry | null> {
     try {
       const functionArgs = [uintCV(id)];
-      const result = await this.callReadOnlyFunction("get-nav-history-by-id", functionArgs);
+      const result = await this.callReadOnlyFunction(
+        'get-nav-history-by-id',
+        functionArgs,
+      );
 
       if (result?.value) {
         return {
@@ -247,7 +253,7 @@ export class PoolMindContractService {
 
       return null;
     } catch (error) {
-      console.error("Error getting NAV history:", error);
+      console.error('Error getting NAV history:', error);
       return null;
     }
   }
@@ -257,23 +263,23 @@ export class PoolMindContractService {
    */
   async getContractState(): Promise<ContractState> {
     try {
-      const result = await this.callReadOnlyFunction("get-contract-state");
+      const result = await this.callReadOnlyFunction('get-contract-state');
 
       if (result?.value) {
         return {
-          admin: result.value.admin?.value || "",
+          admin: result.value.admin?.value || '',
           paused: Boolean(result.value.paused?.value),
           transferable: Boolean(result.value.transferable?.value),
           nav: result.value.nav?.value || 1000000,
-          entryFee: result.value["entry-fee"]?.value || 50, // 0.5%
-          exitFee: result.value["exit-fee"]?.value || 50, // 0.5%
-          stxBalance: result.value["stx-balance"]?.value || 0,
+          entryFee: result.value['entry-fee']?.value || 50, // 0.5%
+          exitFee: result.value['exit-fee']?.value || 50, // 0.5%
+          stxBalance: result.value['stx-balance']?.value || 0,
         };
       }
 
       // Return default state if contract call fails
       return {
-        admin: "",
+        admin: '',
         paused: false,
         transferable: false,
         nav: 1000000, // 1 STX per token
@@ -282,9 +288,9 @@ export class PoolMindContractService {
         stxBalance: 0,
       };
     } catch (error) {
-      console.error("Error getting contract state:", error);
+      console.error('Error getting contract state:', error);
       return {
-        admin: "",
+        admin: '',
         paused: false,
         transferable: false,
         nav: 1000000,
@@ -300,13 +306,15 @@ export class PoolMindContractService {
    */
   async getTokenInfo(): Promise<TokenInfo> {
     try {
-      const [name, symbol, decimals, totalSupply, tokenUri] = await Promise.all([
-        this.getName(),
-        this.getSymbol(),
-        this.getDecimals(),
-        this.getTotalSupply(),
-        this.getTokenUri(),
-      ]);
+      const [name, symbol, decimals, totalSupply, tokenUri] = await Promise.all(
+        [
+          this.getName(),
+          this.getSymbol(),
+          this.getDecimals(),
+          this.getTotalSupply(),
+          this.getTokenUri(),
+        ],
+      );
 
       return {
         name,
@@ -316,10 +324,10 @@ export class PoolMindContractService {
         tokenUri: tokenUri || undefined,
       };
     } catch (error) {
-      console.error("Error getting token info:", error);
+      console.error('Error getting token info:', error);
       return {
-        name: "PoolMind",
-        symbol: "PLMD",
+        name: 'PoolMind',
+        symbol: 'PLMD',
         decimals: 6,
         totalSupply: 0,
       };
@@ -340,19 +348,19 @@ export class PoolMindContractService {
       const entryFeeRate = contractState.entryFee;
 
       if (nav === 0) {
-        throw new Error("NAV is not set");
+        throw new Error('NAV is not set');
       }
 
       // Calculate entry fee (fee rate is in basis points, so divide by 1000)
       const fee = Math.floor((stxAmount * entryFeeRate) / 1000);
       const netAmount = stxAmount - fee;
-      
+
       // Calculate shares (TOKEN_PRECISION = 1000000)
       const shares = Math.floor((netAmount * 1000000) / nav);
 
       return shares;
     } catch (error) {
-      console.error("Error calculating shares for deposit:", error);
+      console.error('Error calculating shares for deposit:', error);
       // Fallback calculation assuming 1:1 ratio
       return stxAmount;
     }
@@ -368,19 +376,19 @@ export class PoolMindContractService {
       const exitFeeRate = contractState.exitFee;
 
       if (nav === 0) {
-        throw new Error("NAV is not set");
+        throw new Error('NAV is not set');
       }
 
       // Calculate STX value (TOKEN_PRECISION = 1000000)
       const stxValue = Math.floor((sharesAmount * nav) / 1000000);
-      
+
       // Calculate exit fee (fee rate is in basis points, so divide by 1000)
       const fee = Math.floor((stxValue * exitFeeRate) / 1000);
       const netStx = stxValue - fee;
 
       return netStx;
     } catch (error) {
-      console.error("Error calculating STX for withdraw:", error);
+      console.error('Error calculating STX for withdraw:', error);
       // Fallback calculation assuming 1:1 ratio
       return sharesAmount;
     }
@@ -392,12 +400,12 @@ export class PoolMindContractService {
   async getStxBalance(address: string): Promise<number> {
     try {
       const response = await fetch(
-        `${this.network.client.baseUrl}/extended/v1/address/${address}/stx`
+        `${this.network.client.baseUrl}/extended/v1/address/${address}/stx`,
       );
       const data = await response.json();
       return parseInt(data.balance) || 0;
     } catch (error) {
-      console.error("Error fetching STX balance:", error);
+      console.error('Error fetching STX balance:', error);
       return 0;
     }
   }
@@ -410,7 +418,7 @@ export class PoolMindContractService {
       const contractState = await this.getContractState();
       return contractState.paused;
     } catch (error) {
-      console.error("Error checking if contract is paused:", error);
+      console.error('Error checking if contract is paused:', error);
       return false;
     }
   }

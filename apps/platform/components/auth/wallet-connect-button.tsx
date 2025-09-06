@@ -9,19 +9,24 @@ import { useRouter } from 'next/navigation';
 import { useWallet } from '@/hooks/auth';
 import { request } from '@stacks/connect';
 
-
 interface WalletConnectButtonProps {
   className?: string;
-  variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive';
+  variant?:
+    | 'default'
+    | 'outline'
+    | 'secondary'
+    | 'ghost'
+    | 'link'
+    | 'destructive';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   children?: React.ReactNode;
 }
 
-export default function WalletConnectButton({ 
+export default function WalletConnectButton({
   className,
   variant = 'default',
   size = 'default',
-  children
+  children,
 }: WalletConnectButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -38,7 +43,7 @@ export default function WalletConnectButton({
 
       // Sign the message with the user's wallet
       const signatureResponse = await request('stx_signMessage', {
-        message
+        message,
       });
 
       // Authenticate directly with orchestrator and store session locally
@@ -63,7 +68,7 @@ export default function WalletConnectButton({
   // Button always shown; guard can be handled by caller if needed
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className='flex flex-col items-center gap-2'>
       <Button
         onClick={connectWallet}
         disabled={isLoading}
@@ -72,9 +77,9 @@ export default function WalletConnectButton({
         className={className}
       >
         {isLoading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className='mr-2 h-4 w-4 animate-spin' />
         ) : (
-          <Wallet className="mr-2 h-4 w-4" />
+          <Wallet className='mr-2 h-4 w-4' />
         )}
         {children || 'Connect Wallet'}
       </Button>

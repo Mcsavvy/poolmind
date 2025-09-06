@@ -5,6 +5,7 @@ This document explains the wallet-based authentication system implemented in the
 ## 🚀 Overview
 
 The authentication system provides:
+
 - Wallet-based authentication using Stacks signatures
 - JWT token-based session management
 - Role-based access control (user, moderator, admin)
@@ -26,6 +27,7 @@ STACKS_NETWORK=testnet  # or 'mainnet' for production
 ## 🔐 How Authentication Works
 
 ### 1. Wallet Authentication Flow
+
 1. Client requests authentication message via `POST /auth/nonce`
 2. Client signs the message with their Stacks wallet
 3. Client submits signature via `POST /auth/login`
@@ -33,6 +35,7 @@ STACKS_NETWORK=testnet  # or 'mainnet' for production
 5. Server returns JWT token for subsequent requests
 
 ### 2. JWT Token Usage
+
 - Include token in `Authorization: Bearer <token>` header
 - Tokens are validated on protected routes
 - Use `GET /auth/me` to get current user info
@@ -47,8 +50,8 @@ STACKS_NETWORK=testnet  # or 'mainnet' for production
 const { message } = await fetch('/auth/nonce', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ walletAddress: 'SP123...' })
-}).then(res => res.json());
+  body: JSON.stringify({ walletAddress: 'SP123...' }),
+}).then((res) => res.json());
 
 // 2. Sign message with wallet (implementation depends on wallet)
 const signature = await signMessage(message);
@@ -62,14 +65,14 @@ const { token, user } = await fetch('/auth/login', {
     publicKey: '0x456...',
     signature: signature,
     message: message,
-    walletType: 'xverse'
-  })
-}).then(res => res.json());
+    walletType: 'xverse',
+  }),
+}).then((res) => res.json());
 
 // 4. Use token for authenticated requests
 const userProfile = await fetch('/users/profile', {
-  headers: { 'Authorization': `Bearer ${token}` }
-}).then(res => res.json());
+  headers: { Authorization: `Bearer ${token}` },
+}).then((res) => res.json());
 ```
 
 ### Server-Side Route Protection
@@ -141,12 +144,14 @@ export class ContentController {
 ## 📡 API Endpoints
 
 ### Authentication
+
 - `POST /auth/nonce` - Generate authentication message
 - `POST /auth/login` - Authenticate with wallet signature
 - `POST /auth/refresh` - Refresh JWT token
 - `GET /auth/me` - Get current user information
 
 ### User Management
+
 - `GET /users/profile` - Get user profile
 - `PATCH /users/profile` - Update user profile
 - `PATCH /users/notifications` - Update notification preferences
@@ -170,13 +175,14 @@ Tokens can be refreshed using the refresh endpoint:
 const { token: newToken } = await fetch('/auth/refresh', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ token: currentToken })
-}).then(res => res.json());
+  body: JSON.stringify({ token: currentToken }),
+}).then((res) => res.json());
 ```
 
 ## 🚦 Error Handling
 
 The system returns appropriate HTTP status codes:
+
 - `401 Unauthorized` - Invalid/missing token or signature
 - `403 Forbidden` - Insufficient permissions
 - `400 Bad Request` - Invalid input data

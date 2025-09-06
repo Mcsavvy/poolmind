@@ -1,6 +1,13 @@
 'use client';
 
-import { ReactNode, useState, useEffect, createContext, useCallback, useContext } from 'react';
+import {
+  ReactNode,
+  useState,
+  useEffect,
+  createContext,
+  useCallback,
+  useContext,
+} from 'react';
 import { z } from 'zod';
 
 export type Role = 'user' | 'moderator' | 'admin';
@@ -14,29 +21,30 @@ const clientSessionUserSchema = z.object({
   profilePicture: z.string().optional(),
   role: z.enum(['user', 'moderator', 'admin']),
   isEmailVerified: z.boolean(),
-  telegramAuth: z.object({
-    telegramId: z.number(),
-    firstName: z.string(),
-    lastName: z.string().optional(),
-    username: z.string().optional(),
-    photoUrl: z.string().optional(),
-    authDate: z.number(),
-    linkedAt: z.string(),
-  }).optional(),
+  telegramAuth: z
+    .object({
+      telegramId: z.number(),
+      firstName: z.string(),
+      lastName: z.string().optional(),
+      username: z.string().optional(),
+      photoUrl: z.string().optional(),
+      authDate: z.number(),
+      linkedAt: z.string(),
+    })
+    .optional(),
 });
 
 const clientSessionSchema = z.object({
   user: clientSessionUserSchema,
   token: z.string(),
   expiresAt: z.number(),
-  authMethod: z.enum(["telegram", "wallet"])
+  authMethod: z.enum(['telegram', 'wallet']),
 });
 
 export type ClientSessionUser = z.infer<typeof clientSessionUserSchema>;
 export type ClientSession = z.infer<typeof clientSessionSchema>;
 
 const STORAGE_KEY = 'pm_session';
-
 
 interface AuthSessionProviderProps {
   children: ReactNode;
@@ -49,12 +57,14 @@ interface AuthSessionProviderState {
   clearSession: () => void;
 }
 
-const AuthSessionContext = createContext<AuthSessionProviderState | undefined>(undefined);
-
+const AuthSessionContext = createContext<AuthSessionProviderState | undefined>(
+  undefined,
+);
 
 export function loadSession(): ClientSession | null {
   try {
-    const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+    const raw =
+      typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
     if (!raw) return null;
     const parsed = clientSessionSchema.safeParse(JSON.parse(raw));
     if (!parsed.success) {
@@ -80,15 +90,17 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
       }
     }
   }, [session, loading]);
-  
 
   const handleClearSession = useCallback(() => {
     setSession(null);
   }, [setSession]);
 
-  const handleSetSession = useCallback((s: ClientSession) => {
-    setSession(s);
-  }, [setSession]);
+  const handleSetSession = useCallback(
+    (s: ClientSession) => {
+      setSession(s);
+    },
+    [setSession],
+  );
 
   useEffect(() => {
     const s = loadSession();
@@ -101,7 +113,14 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
   }, [handleClearSession, loading]);
 
   return (
-    <AuthSessionContext.Provider value={{ session, loading, setSession: handleSetSession, clearSession: handleClearSession }}>
+    <AuthSessionContext.Provider
+      value={{
+        session,
+        loading,
+        setSession: handleSetSession,
+        clearSession: handleClearSession,
+      }}
+    >
       {children}
     </AuthSessionContext.Provider>
   );
@@ -110,16 +129,21 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
 export function useAuthSession() {
   const context = useContext(AuthSessionContext);
   if (!context) {
-    throw new Error('useAuthSession must be used within an AuthSessionProvider');
+    throw new Error(
+      'useAuthSession must be used within an AuthSessionProvider',
+    );
   }
   useEffect(() => {
-    if (typeof window !== 'undefined' && Object.prototype.hasOwnProperty.call(window, 'pmSession')) {
+    if (
+      typeof window !== 'undefined' &&
+      Object.prototype.hasOwnProperty.call(window, 'pmSession')
+    ) {
       // @ts-expect-error - window.pmSession is not typed
       delete window.pmSession;
     }
     Object.defineProperty(window, 'pmSession', {
       get: () => context.session,
-      set: (value) => context.setSession(value),
+      set: value => context.setSession(value),
       enumerable: true,
       configurable: true,
     });

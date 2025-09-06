@@ -84,7 +84,7 @@ export function useUserBalance() {
         }
 
         const userAddress = session.user.walletAddress;
-        
+
         const [stxBalance, plmdBalance, nav] = await Promise.all([
           contractService.getStxBalance(userAddress),
           contractService.getBalance(userAddress),
@@ -92,7 +92,9 @@ export function useUserBalance() {
         ]);
 
         // Calculate pool share value (PLMD balance * NAV)
-        const poolShareValue = Math.floor((plmdBalance.balance * nav.nav) / 1000000);
+        const poolShareValue = Math.floor(
+          (plmdBalance.balance * nav.nav) / 1000000,
+        );
 
         return {
           stxBalance: stxBalance.toString(),
@@ -101,7 +103,7 @@ export function useUserBalance() {
         };
       } catch (error) {
         console.error('Error fetching user balance:', error);
-        
+
         // Try to get wallet address from localStorage as fallback
         try {
           const userAddress = getCurrentUserAddress();
@@ -146,18 +148,22 @@ export function useUserStats() {
         // Use the transaction stats endpoint and map to UserStats format
         const response = await client.get('/transactions/stats/summary');
         const stats = response.data.data;
-        
+
         // Calculate derived values from transaction stats
         const totalDeposited = stats.totalDepositAmount || '0';
         const totalWithdrawn = stats.totalWithdrawalAmount || '0';
-        
+
         // For now, set current value equal to total deposited - totalWithdrawn
         // In a real implementation, this would factor in gains/losses
-        const currentValue = (parseFloat(totalDeposited) - parseFloat(totalWithdrawn)).toString();
-        
+        const currentValue = (
+          parseFloat(totalDeposited) - parseFloat(totalWithdrawn)
+        ).toString();
+
         // Calculate unrealized P&L (this would come from actual pool performance)
-        const unrealizedPnL = (parseFloat(currentValue) - parseFloat(totalDeposited)).toString();
-        
+        const unrealizedPnL = (
+          parseFloat(currentValue) - parseFloat(totalDeposited)
+        ).toString();
+
         return {
           totalDeposited,
           totalWithdrawn,

@@ -44,32 +44,32 @@ export const UserSchema = z.object({
   id: z.string(),
   walletAddress: z.string(),
   publicKey: z.string().optional(),
-  
+
   // Profile information
   username: z.string().optional(),
   email: z.email().optional(),
   displayName: z.string().optional(),
   profilePicture: z.url().optional(),
   bio: z.string().optional(),
-  
+
   // Authentication metadata
   lastLoginAt: z.date().optional(),
   loginCount: z.number(),
   isEmailVerified: z.boolean(),
-  
+
   // Telegram authentication (optional)
   telegramAuth: TelegramAuthSchema.optional(),
-  
+
   // Preferences and settings
   notificationPreferences: NotificationPreferencesSchema,
   socialLinks: SocialLinksSchema.optional(),
-  
+
   // Role and permissions
   role: z.enum(['user', 'admin', 'moderator']),
-  
+
   // Connection tracking
   connectionHistory: z.array(ConnectionHistorySchema),
-  
+
   // Base document fields
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -116,12 +116,16 @@ export const LinkTelegramSchema = z.object({
 
 // Type exports
 export type User = z.infer<typeof UserSchema>;
-export type NotificationPreferences = z.infer<typeof NotificationPreferencesSchema>;
+export type NotificationPreferences = z.infer<
+  typeof NotificationPreferencesSchema
+>;
 export type TelegramAuth = z.infer<typeof TelegramAuthSchema>;
 export type SocialLinks = z.infer<typeof SocialLinksSchema>;
 export type ConnectionHistory = z.infer<typeof ConnectionHistorySchema>;
 export type UpdateUserProfile = z.infer<typeof UpdateUserProfileSchema>;
-export type UpdateNotificationPreferences = z.infer<typeof UpdateNotificationPreferencesSchema>;
+export type UpdateNotificationPreferences = z.infer<
+  typeof UpdateNotificationPreferencesSchema
+>;
 export type UpdateSocialLinks = z.infer<typeof UpdateSocialLinksSchema>;
 export type TelegramLoginData = z.infer<typeof TelegramLoginDataSchema>;
 export type LinkTelegram = z.infer<typeof LinkTelegramSchema>;

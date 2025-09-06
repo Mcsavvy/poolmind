@@ -1,19 +1,17 @@
-import {
-  createModel,
-  IBaseDocument,
-  IBaseModel,
-  validators,
-} from '../schemas';
+import { createModel, IBaseDocument, IBaseModel, validators } from '../schemas';
 
 // Notification model interface with custom statics
 export interface INotificationModel extends IBaseModel<INotification> {
   findByType(type: string): Promise<INotification[]>;
   findRecent(limit?: number): Promise<INotification[]>;
-  findForUser(userId: string, options?: {
-    limit?: number;
-    unreadOnly?: boolean;
-    types?: string[];
-  }): Promise<Array<INotification & { userNotification: IUserNotification }>>;
+  findForUser(
+    userId: string,
+    options?: {
+      limit?: number;
+      unreadOnly?: boolean;
+      types?: string[];
+    },
+  ): Promise<Array<INotification & { userNotification: IUserNotification }>>;
   markAsReadForUser(notificationId: string, userId: string): Promise<boolean>;
   markAllAsReadForUser(userId: string, types?: string[]): Promise<number>;
   getUnreadCountForUser(userId: string, types?: string[]): Promise<number>;
@@ -23,11 +21,17 @@ export interface INotificationModel extends IBaseModel<INotification> {
 
 // User Notification model interface
 export interface IUserNotificationModel extends IBaseModel<IUserNotification> {
-  findByUser(userId: string, options?: {
-    limit?: number;
-    unreadOnly?: boolean;
-  }): Promise<IUserNotification[]>;
-  markAsRead(userId: string, notificationId: string): Promise<IUserNotification | null>;
+  findByUser(
+    userId: string,
+    options?: {
+      limit?: number;
+      unreadOnly?: boolean;
+    },
+  ): Promise<IUserNotification[]>;
+  markAsRead(
+    userId: string,
+    notificationId: string,
+  ): Promise<IUserNotification | null>;
   markAllAsRead(userId: string): Promise<number>;
   deleteByUser(userId: string, notificationId: string): Promise<boolean>;
   getUnreadCount(userId: string): Promise<number>;
@@ -56,7 +60,15 @@ const Notification = createModel<INotification>(
     type: {
       type: String,
       required: true,
-      enum: ['security', 'update', 'marketing', 'system', 'trading', 'arbitrage', 'transaction'],
+      enum: [
+        'security',
+        'update',
+        'marketing',
+        'system',
+        'trading',
+        'arbitrage',
+        'transaction',
+      ],
       index: true,
     },
 
@@ -116,7 +128,7 @@ const Notification = createModel<INotification>(
         type: String,
         index: true,
       },
-      
+
       // Action information
       actionUrl: {
         type: String,
@@ -126,7 +138,7 @@ const Notification = createModel<INotification>(
         type: String,
         maxlength: 50,
       },
-      
+
       // Additional data
       data: {
         type: Map,
@@ -181,13 +193,15 @@ const Notification = createModel<INotification>(
       // Get read percentage
       getReadPercentage(this: INotification): number {
         if (this.stats.totalRecipients === 0) return 0;
-        return Math.round((this.stats.totalRead / this.stats.totalRecipients) * 100);
+        return Math.round(
+          (this.stats.totalRead / this.stats.totalRecipients) * 100,
+        );
       },
 
       // Update statistics
       async updateStats(this: INotification): Promise<INotification> {
         const UserNotification = require('./user-notification').default;
-        
+
         const stats = await UserNotification.aggregate([
           { $match: { notificationId: this._id.toString() } },
           {
@@ -230,11 +244,16 @@ const Notification = createModel<INotification>(
       },
 
       // Find notifications for a specific user with read status
-      async findForUser(userId: string, options: {
-        limit?: number;
-        unreadOnly?: boolean;
-        types?: string[];
-      } = {}): Promise<Array<INotification & { userNotification: IUserNotification }>> {
+      async findForUser(
+        userId: string,
+        options: {
+          limit?: number;
+          unreadOnly?: boolean;
+          types?: string[];
+        } = {},
+      ): Promise<
+        Array<INotification & { userNotification: IUserNotification }>
+      > {
         const { limit = 50, unreadOnly = false, types } = options;
         const UserNotification = require('./user-notification').default;
 
@@ -285,24 +304,27 @@ const Notification = createModel<INotification>(
         pipeline.push(
           { $sort: { createdAt: -1 } } as any,
           { $limit: limit } as any,
-          { $unset: 'userNotifications' } as any
+          { $unset: 'userNotifications' } as any,
         );
 
         return this.aggregate(pipeline);
       },
 
       // Mark notification as read for user
-      async markAsReadForUser(notificationId: string, userId: string): Promise<boolean> {
+      async markAsReadForUser(
+        notificationId: string,
+        userId: string,
+      ): Promise<boolean> {
         const UserNotification = require('./user-notification').default;
-        
+
         const result = await UserNotification.findOneAndUpdate(
           { notificationId, userId },
-          { 
-            isRead: true, 
+          {
+            isRead: true,
             readAt: new Date(),
             $setOnInsert: { isDeleted: false },
           },
-          { upsert: true, new: true }
+          { upsert: true, new: true },
         );
 
         // Update notification stats
@@ -315,9 +337,12 @@ const Notification = createModel<INotification>(
       },
 
       // Mark all notifications as read for user
-      async markAllAsReadForUser(userId: string, types?: string[]): Promise<number> {
+      async markAllAsReadForUser(
+        userId: string,
+        types?: string[],
+      ): Promise<number> {
         const UserNotification = require('./user-notification').default;
-        
+
         // First, get all notification IDs for the user
         const matchConditions: any = {
           $or: [
@@ -332,15 +357,15 @@ const Notification = createModel<INotification>(
         }
 
         const notifications = await this.find(matchConditions, '_id');
-        const notificationIds = notifications.map(n => n._id.toString());
+        const notificationIds = notifications.map((n) => n._id.toString());
 
         if (notificationIds.length === 0) return 0;
 
         // Update or create UserNotification records
-        const operations = notificationIds.map(notificationId => ({
+        const operations = notificationIds.map((notificationId) => ({
           updateOne: {
             filter: { notificationId, userId },
-            update: { 
+            update: {
               $set: { isRead: true, readAt: new Date() },
               $setOnInsert: { isDeleted: false },
             },
@@ -353,7 +378,10 @@ const Notification = createModel<INotification>(
       },
 
       // Get unread count for user
-      async getUnreadCountForUser(userId: string, types?: string[]): Promise<number> {
+      async getUnreadCountForUser(
+        userId: string,
+        types?: string[],
+      ): Promise<number> {
         const matchConditions: any = {
           $or: [
             { 'targetDetails.userId': userId },
@@ -395,17 +423,20 @@ const Notification = createModel<INotification>(
       },
 
       // Delete notification for user (soft delete)
-      async deleteForUser(notificationId: string, userId: string): Promise<boolean> {
+      async deleteForUser(
+        notificationId: string,
+        userId: string,
+      ): Promise<boolean> {
         const UserNotification = require('./user-notification').default;
-        
+
         const result = await UserNotification.findOneAndUpdate(
           { notificationId, userId },
-          { 
-            isDeleted: true, 
+          {
+            isDeleted: true,
             deletedAt: new Date(),
             $setOnInsert: { isRead: false },
           },
-          { upsert: true, new: true }
+          { upsert: true, new: true },
         );
 
         return !!result;
@@ -417,11 +448,11 @@ const Notification = createModel<INotification>(
         cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
         const result = await this.updateMany(
-          { 
+          {
             createdAt: { $lt: cutoffDate },
             isActive: true,
           },
-          { isActive: false }
+          { isActive: false },
         );
 
         return result.modifiedCount || 0;
@@ -519,31 +550,35 @@ const UserNotification = createModel<IUserNotification>(
     // Additional static methods
     additionalStatics: {
       // Find notifications for a user
-      findByUser(userId: string, options: {
-        limit?: number;
-        unreadOnly?: boolean;
-      } = {}): Promise<IUserNotification[]> {
+      findByUser(
+        userId: string,
+        options: {
+          limit?: number;
+          unreadOnly?: boolean;
+        } = {},
+      ): Promise<IUserNotification[]> {
         const { limit = 50, unreadOnly = false } = options;
-        
+
         const query: any = { userId, isDeleted: false };
         if (unreadOnly) {
           query.isRead = false;
         }
 
-        return this.find(query)
-          .sort({ createdAt: -1 })
-          .limit(limit);
+        return this.find(query).sort({ createdAt: -1 }).limit(limit);
       },
 
       // Mark as read
-      async markAsRead(userId: string, notificationId: string): Promise<IUserNotification | null> {
+      async markAsRead(
+        userId: string,
+        notificationId: string,
+      ): Promise<IUserNotification | null> {
         return this.findOneAndUpdate(
           { userId, notificationId },
-          { 
-            isRead: true, 
+          {
+            isRead: true,
             readAt: new Date(),
           },
-          { new: true }
+          { new: true },
         );
       },
 
@@ -551,24 +586,27 @@ const UserNotification = createModel<IUserNotification>(
       async markAllAsRead(userId: string): Promise<number> {
         const result = await this.updateMany(
           { userId, isRead: false, isDeleted: false },
-          { 
-            isRead: true, 
+          {
+            isRead: true,
             readAt: new Date(),
-          }
+          },
         );
 
         return result.modifiedCount || 0;
       },
 
       // Delete notification for user
-      async deleteByUser(userId: string, notificationId: string): Promise<boolean> {
+      async deleteByUser(
+        userId: string,
+        notificationId: string,
+      ): Promise<boolean> {
         const result = await this.findOneAndUpdate(
           { userId, notificationId },
-          { 
-            isDeleted: true, 
+          {
+            isDeleted: true,
             deletedAt: new Date(),
           },
-          { new: true }
+          { new: true },
         );
 
         return !!result;
@@ -576,9 +614,9 @@ const UserNotification = createModel<IUserNotification>(
 
       // Get unread count for user
       async getUnreadCount(userId: string): Promise<number> {
-        return this.countDocuments({ 
-          userId, 
-          isRead: false, 
+        return this.countDocuments({
+          userId,
+          isRead: false,
           isDeleted: false,
         });
       },
@@ -596,17 +634,24 @@ const UserNotification = createModel<IUserNotification>(
 
 // Notification interface extending base document
 export interface INotification extends IBaseDocument {
-  type: 'security' | 'update' | 'marketing' | 'system' | 'trading' | 'arbitrage' | 'transaction';
+  type:
+    | 'security'
+    | 'update'
+    | 'marketing'
+    | 'system'
+    | 'trading'
+    | 'arbitrage'
+    | 'transaction';
   title: string;
   body: string;
   priority: NotificationPriority;
-  
+
   targetType: NotificationTargetType;
   targetDetails: {
     userId?: string;
     role?: 'user' | 'admin' | 'moderator';
   };
-  
+
   metadata?: {
     relatedEntityType?: 'transaction' | 'user' | 'system' | 'trading';
     relatedEntityId?: string;
@@ -614,14 +659,14 @@ export interface INotification extends IBaseDocument {
     actionText?: string;
     data?: Map<string, string>;
   };
-  
+
   sentBy?: {
     userId?: string;
     system: boolean;
   };
-  
+
   expiresAt?: Date;
-  
+
   stats: {
     totalRecipients: number;
     totalRead: number;
@@ -642,7 +687,7 @@ export interface IUserNotification extends IBaseDocument {
   readAt?: Date;
   isDeleted: boolean;
   deletedAt?: Date;
-  
+
   metadata: {
     starred: boolean;
     archived: boolean;

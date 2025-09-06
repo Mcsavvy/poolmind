@@ -1,8 +1,7 @@
-"use client";
-import { useEffect, useRef } from "react";
-import useAuth from "@/hooks/auth";
-import { useAuthSession } from "./session-provider";
-
+'use client';
+import { useEffect, useRef } from 'react';
+import useAuth from '@/hooks/auth';
+import { useAuthSession } from './session-provider';
 
 export function AuthRefresher() {
   const { session, clearSession } = useAuthSession();

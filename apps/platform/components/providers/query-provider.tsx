@@ -15,7 +15,11 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
             staleTime: 60 * 1000, // 1 minute
             retry: (failureCount, error: any) => {
               // Don't retry on 4xx errors except 429
-              if (error?.response?.status >= 400 && error?.response?.status < 500 && error?.response?.status !== 429) {
+              if (
+                error?.response?.status >= 400 &&
+                error?.response?.status < 500 &&
+                error?.response?.status !== 429
+              ) {
                 return false;
               }
               // Retry up to 3 times for other errors
@@ -27,7 +31,10 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
           mutations: {
             retry: (failureCount, error: any) => {
               // Don't retry mutations on client errors
-              if (error?.response?.status >= 400 && error?.response?.status < 500) {
+              if (
+                error?.response?.status >= 400 &&
+                error?.response?.status < 500
+              ) {
                 return false;
               }
               // Retry once for server errors

@@ -1,13 +1,13 @@
 'use client';
 
-import { 
-  LayoutDashboard, 
-  Wallet, 
-  History, 
-  Settings, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  Wallet,
+  History,
+  Settings,
+  BarChart3,
   HelpCircle,
-  User
+  User,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -36,7 +36,7 @@ const navigationItems = [
   },
   {
     title: 'Profile',
-    url: '/profile', 
+    url: '/profile',
     icon: User,
   },
   {
@@ -73,31 +73,31 @@ export default function DashboardSidebar() {
   const pathname = usePathname();
 
   return (
-    <Sidebar variant="inset">
+    <Sidebar variant='inset'>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-1 py-1.5">
+        <div className='flex items-center gap-2 px-1 py-1.5'>
           <Image
-            src="/logo.png"
-            alt="PoolMind Logo"
+            src='/logo.png'
+            alt='PoolMind Logo'
             width={32}
             height={32}
-            className="w-8 h-8"
+            className='w-8 h-8'
           />
-          <span className="text-lg font-bold gradient-text-premium">
+          <span className='text-lg font-bold gradient-text-premium'>
             PoolMind
           </span>
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) => (
+              {navigationItems.map(item => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={pathname === item.url}
                     tooltip={item.title}
                   >
@@ -111,15 +111,15 @@ export default function DashboardSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
+
         <SidebarGroup>
           <SidebarGroupLabel>Settings</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {settingsItems.map((item) => (
+              {settingsItems.map(item => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={pathname === item.url}
                     tooltip={item.title}
                   >
@@ -134,25 +134,21 @@ export default function DashboardSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      
+
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex flex-col gap-2 rounded-lg border p-3">
-              <div className="text-xs font-medium text-muted-foreground">
+            <div className='flex flex-col gap-2 rounded-lg border p-3'>
+              <div className='text-xs font-medium text-muted-foreground'>
                 Pool Performance
               </div>
-              <div className="text-lg font-bold text-green-500">
-                +15%
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Last 30 days
-              </div>
+              <div className='text-lg font-bold text-green-500'>+15%</div>
+              <div className='text-xs text-muted-foreground'>Last 30 days</div>
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      
+
       <SidebarRail />
     </Sidebar>
   );

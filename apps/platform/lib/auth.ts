@@ -9,5 +9,4 @@ type ApiUser = UserProfileResponse['user'];
 // Extend NextAuth types
 // NextAuth types removed
 
-
 export default {} as any;

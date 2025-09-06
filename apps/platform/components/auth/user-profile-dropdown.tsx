@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAuthSession } from '@/components/auth/session-provider';
 import { disconnect } from '@stacks/connect';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -14,15 +14,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { WalletAvatar } from '@/components/ui/wallet-avatar';
-import { 
-  User, 
-  Settings, 
-  LogOut, 
-  Shield, 
+import {
+  User,
+  Settings,
+  LogOut,
+  Shield,
   CreditCard,
   Bell,
   Loader2,
-  LayoutDashboard
+  LayoutDashboard,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -34,8 +34,8 @@ export default function UserProfileDropdown() {
 
   if (loading) {
     return (
-      <Button variant="ghost" size="sm" disabled>
-        <Loader2 className="h-4 w-4 text-primary-foreground animate-spin" />
+      <Button variant='ghost' size='sm' disabled>
+        <Loader2 className='h-4 w-4 text-primary-foreground animate-spin' />
       </Button>
     );
   }
@@ -62,7 +62,12 @@ export default function UserProfileDropdown() {
 
   const getInitials = (name?: string, walletAddress?: string) => {
     if (name) {
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
     }
     if (walletAddress) {
       return walletAddress.slice(0, 2).toUpperCase();
@@ -77,86 +82,89 @@ export default function UserProfileDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
           <WalletAvatar
             walletAddress={user.walletAddress}
             profilePicture={user.profilePicture || user.telegramAuth?.photoUrl}
             displayName={user.displayName}
             username={user.username}
-            size="lg"
-            className="h-12 w-12"
+            size='lg'
+            className='h-12 w-12'
           />
         </Button>
       </DropdownMenuTrigger>
-      
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
+
+      <DropdownMenuContent className='w-56' align='end' forceMount>
+        <DropdownMenuLabel className='font-normal'>
+          <div className='flex flex-col space-y-1'>
+            <p className='text-sm font-medium leading-none'>
               {user.displayName || user.username || 'Anonymous User'}
             </p>
-            <p className="text-xs leading-none text-muted-foreground">
+            <p className='text-xs leading-none text-muted-foreground'>
               {formatWalletAddress(user.walletAddress)}
             </p>
             {user.email && (
-              <p className="text-xs leading-none text-muted-foreground">
+              <p className='text-xs leading-none text-muted-foreground'>
                 {user.email}
               </p>
             )}
-            <div className="flex items-center gap-1 mt-1">
-              <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
+            <div className='flex items-center gap-1 mt-1'>
+              <Badge
+                variant={user.role === 'admin' ? 'default' : 'secondary'}
+                className='text-xs'
+              >
                 {user.role}
               </Badge>
               {user.isEmailVerified && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant='outline' className='text-xs'>
                   Verified
                 </Badge>
               )}
             </div>
           </div>
         </DropdownMenuLabel>
-        
+
         <DropdownMenuSeparator />
 
         <DropdownMenuItem asChild>
-          <Link href="/dashboard">
-            <LayoutDashboard className="mr-2 h-4 w-4" />
+          <Link href='/dashboard'>
+            <LayoutDashboard className='mr-2 h-4 w-4' />
             <span>Dashboard</span>
           </Link>
         </DropdownMenuItem>
-        
+
         <DropdownMenuItem asChild>
-          <Link href="/profile">
-            <User className="mr-2 h-4 w-4" />
+          <Link href='/profile'>
+            <User className='mr-2 h-4 w-4' />
             <span>Profile</span>
           </Link>
         </DropdownMenuItem>
-        
+
         <DropdownMenuItem asChild>
-          <Link href="/settings">
-            <Settings className="mr-2 h-4 w-4" />
+          <Link href='/settings'>
+            <Settings className='mr-2 h-4 w-4' />
             <span>Settings</span>
           </Link>
         </DropdownMenuItem>
-        
+
         {(user.role === 'admin' || user.role === 'moderator') && (
           <DropdownMenuItem>
-            <Shield className="mr-2 h-4 w-4" />
+            <Shield className='mr-2 h-4 w-4' />
             <span>Admin Panel</span>
           </DropdownMenuItem>
         )}
-        
+
         <DropdownMenuSeparator />
-        
-        <DropdownMenuItem 
+
+        <DropdownMenuItem
           onClick={handleSignOut}
           disabled={isSigningOut}
-          className="text-red-600 focus:text-red-600"
+          className='text-red-600 focus:text-red-600'
         >
           {isSigningOut ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className='mr-2 h-4 w-4 animate-spin' />
           ) : (
-            <LogOut className="mr-2 h-4 w-4" />
+            <LogOut className='mr-2 h-4 w-4' />
           )}
           <span>Sign out</span>
         </DropdownMenuItem>

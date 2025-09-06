@@ -7,31 +7,31 @@ import Image from 'next/image';
  * Logo component with Stacks branding
  */
 const FooterLogo = () => (
-  <div className="flex flex-col space-y-3">
+  <div className='flex flex-col space-y-3'>
     {/* PoolMind Logo */}
-    <div className="flex items-center space-x-2">
+    <div className='flex items-center space-x-2'>
       <Image
-        src="/logo.png"
-        alt="PoolMind Logo"
+        src='/logo.png'
+        alt='PoolMind Logo'
         width={32}
         height={32}
-        className="w-8 h-8"
+        className='w-8 h-8'
       />
-      <span className="text-foreground font-bold text-xl">PoolMind</span>
+      <span className='text-foreground font-bold text-xl'>PoolMind</span>
     </div>
-    
+
     {/* Powered by Stacks */}
-    <div className="flex items-center space-x-2 text-muted-foreground">
-      <span className="text-sm">Powered by</span>
-      <div className="flex items-center space-x-1">
+    <div className='flex items-center space-x-2 text-muted-foreground'>
+      <span className='text-sm'>Powered by</span>
+      <div className='flex items-center space-x-1'>
         <Image
-          src="/stx.png"
-          alt="Stacks Logo"
+          src='/stx.png'
+          alt='Stacks Logo'
           width={20}
           height={20}
-          className="w-5 h-5"
+          className='w-5 h-5'
         />
-        <span className="text-sm font-medium">Stacks</span>
+        <span className='text-sm font-medium'>Stacks</span>
       </div>
     </div>
   </div>
@@ -44,29 +44,43 @@ const NavigationLinks = () => {
   const links = [
     // { name: 'Docs', href: '#', external: false },
     // { name: 'Whitepaper', href: '#', external: true },
-    { name: 'GitHub', href: 'https://github.com/mcsavvy/poolmind', external: true },
+    {
+      name: 'GitHub',
+      href: 'https://github.com/mcsavvy/poolmind',
+      external: true,
+    },
     // { name: 'Terms', href: '#', external: false },
     // { name: 'Privacy', href: '#', external: false }
   ];
 
   return (
     <div>
-      <h3 className="text-foreground font-semibold text-sm uppercase tracking-wider mb-4">
+      <h3 className='text-foreground font-semibold text-sm uppercase tracking-wider mb-4'>
         Resources
       </h3>
-      <ul className="space-y-3">
-        {links.map((link) => (
+      <ul className='space-y-3'>
+        {links.map(link => (
           <li key={link.name}>
             <a
               href={link.href}
-              className="text-muted-foreground hover:text-foreground transition-colors duration-200 text-sm flex items-center space-x-1"
+              className='text-muted-foreground hover:text-foreground transition-colors duration-200 text-sm flex items-center space-x-1'
               target={link.external ? '_blank' : undefined}
               rel={link.external ? 'noopener noreferrer' : undefined}
             >
               <span>{link.name}</span>
               {link.external && (
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                <svg
+                  className='w-3 h-3'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
+                  />
                 </svg>
               )}
             </a>
@@ -86,19 +100,19 @@ const SocialIcons = () => {
       name: 'Telegram',
       href: config.telegramChannelLink,
       icon: (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+        <svg className='w-5 h-5' fill='currentColor' viewBox='0 0 24 24'>
+          <path d='M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z' />
         </svg>
-      )
+      ),
     },
     {
       name: 'Twitter',
       href: 'https://x.com/poolmindarb',
       icon: (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        <svg className='w-5 h-5' fill='currentColor' viewBox='0 0 24 24'>
+          <path d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z' />
         </svg>
-      )
+      ),
     },
     // {
     //   name: 'Discord',
@@ -113,17 +127,17 @@ const SocialIcons = () => {
 
   return (
     <div>
-      <h3 className="text-foreground font-semibold text-sm uppercase tracking-wider mb-4">
+      <h3 className='text-foreground font-semibold text-sm uppercase tracking-wider mb-4'>
         Community
       </h3>
-      <div className="flex space-x-4">
-        {socials.map((social) => (
+      <div className='flex space-x-4'>
+        {socials.map(social => (
           <a
             key={social.name}
             href={social.href}
-            className="text-muted-foreground hover:text-foreground transition-colors duration-200 p-2 hover:bg-accent/50 rounded-lg"
-            target="_blank"
-            rel="noopener noreferrer"
+            className='text-muted-foreground hover:text-foreground transition-colors duration-200 p-2 hover:bg-accent/50 rounded-lg'
+            target='_blank'
+            rel='noopener noreferrer'
             aria-label={social.name}
           >
             {social.icon}
@@ -139,24 +153,24 @@ const SocialIcons = () => {
  */
 const ContactInfo = () => (
   <div>
-    <h3 className="text-foreground font-semibold text-sm uppercase tracking-wider mb-4">
+    <h3 className='text-foreground font-semibold text-sm uppercase tracking-wider mb-4'>
       Contact
     </h3>
-    <div className="space-y-3">
-      <div className="text-muted-foreground text-sm">
+    <div className='space-y-3'>
+      <div className='text-muted-foreground text-sm'>
         <p>Questions or support?</p>
-        <a 
+        <a
           href={`mailto:${config.supportEmail}`}
-          className="text-primary hover:text-primary-foreground transition-colors duration-200"
+          className='text-primary hover:text-primary-foreground transition-colors duration-200'
         >
           {config.supportEmail}
         </a>
       </div>
-      <div className="text-muted-foreground text-sm">
+      <div className='text-muted-foreground text-sm'>
         <p>Join our community for updates</p>
-        <a 
+        <a
           href={config.telegramGroupLink}
-          className="text-primary hover:text-primary-foreground transition-colors duration-200"
+          className='text-primary hover:text-primary-foreground transition-colors duration-200'
         >
           {config.telegramGroupLink}
         </a>
@@ -172,58 +186,62 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-muted/80 dark:bg-muted/60 text-foreground">
+    <footer className='bg-muted/80 dark:bg-muted/60 text-foreground'>
       {/* Main footer content */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          
+      <div className='container mx-auto px-4 py-16'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'>
           {/* Logo and branding */}
-          <div className="lg:col-span-1">
+          <div className='lg:col-span-1'>
             <FooterLogo />
-            <p className="text-muted-foreground text-sm mt-4 leading-relaxed">
-              Automated crypto arbitrage platform built on Stacks blockchain. 
+            <p className='text-muted-foreground text-sm mt-4 leading-relaxed'>
+              Automated crypto arbitrage platform built on Stacks blockchain.
               Earn passive income through smart contract-secured trading.
             </p>
           </div>
-          
+
           {/* Navigation links */}
-          <div className="lg:col-span-1">
+          <div className='lg:col-span-1'>
             <NavigationLinks />
           </div>
-          
+
           {/* Social media */}
-          <div className="lg:col-span-1">
+          <div className='lg:col-span-1'>
             <SocialIcons />
           </div>
-          
+
           {/* Contact info */}
-          <div className="lg:col-span-1">
+          <div className='lg:col-span-1'>
             <ContactInfo />
           </div>
         </div>
       </div>
-      
+
       {/* Bottom bar */}
-      <div className="border-t border-border">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            
+      <div className='border-t border-border'>
+        <div className='container mx-auto px-4 py-6'>
+          <div className='flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0'>
             {/* Copyright */}
-            <div className="text-muted-foreground text-sm">
+            <div className='text-muted-foreground text-sm'>
               © {currentYear} PoolMind. All rights reserved.
             </div>
-            
+
             {/* Additional links */}
-            <div className="flex items-center space-x-6 text-sm">
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors duration-200">
+            <div className='flex items-center space-x-6 text-sm'>
+              <a
+                href='#'
+                className='text-muted-foreground hover:text-foreground transition-colors duration-200'
+              >
                 Security
               </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors duration-200">
+              <a
+                href='#'
+                className='text-muted-foreground hover:text-foreground transition-colors duration-200'
+              >
                 Status
               </a>
-              <div className="flex items-center space-x-2 text-muted-foreground">
-                <div className="w-2 h-2 bg-primary rounded-full"></div>
-                <span className="text-xs">All systems operational</span>
+              <div className='flex items-center space-x-2 text-muted-foreground'>
+                <div className='w-2 h-2 bg-primary rounded-full'></div>
+                <span className='text-xs'>All systems operational</span>
               </div>
             </div>
           </div>

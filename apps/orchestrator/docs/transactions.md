@@ -9,23 +9,27 @@ The Transaction Service is a comprehensive system for managing cryptocurrency tr
 The transaction system consists of four main components:
 
 ### 1. Shared Types (`@poolmind/shared-types`)
+
 - **Transaction schemas**: Zod validation schemas for all transaction types
 - **Type definitions**: TypeScript interfaces for type safety
 - **API contracts**: Request/response schemas for consistent API communication
 
 ### 2. Transaction Service (`TransactionsService`)
+
 - **Core business logic**: Handle deposit and withdrawal creation
 - **Transaction management**: CRUD operations for transactions
 - **Status updates**: Process transaction state changes
 - **Notifications**: Send user notifications for transaction events
 
 ### 3. Stacks Polling Service (`StacksPollingService`)
+
 - **Background monitoring**: Continuously poll Stacks blockchain for transaction updates
 - **Queue management**: Redis-based job queue for reliable processing
 - **Confirmation tracking**: Monitor transaction confirmations and finality
 - **Error handling**: Retry failed polling attempts with exponential backoff
 
 ### 4. Transaction Controller (`TransactionsController`)
+
 - **REST API endpoints**: Expose transaction functionality via HTTP
 - **Authentication**: Secure endpoints with JWT authentication
 - **Authorization**: Role-based access control for admin functions
@@ -38,56 +42,56 @@ The transaction system consists of four main components:
 ```typescript
 interface ITransaction {
   // Basic fields
-  userId: string;                    // User who initiated the transaction
-  type: 'deposit' | 'withdrawal';   // Transaction type
-  status: TransactionStatus;        // Current status
-  
+  userId: string; // User who initiated the transaction
+  type: 'deposit' | 'withdrawal'; // Transaction type
+  status: TransactionStatus; // Current status
+
   // Core metadata
   metadata: {
     network: 'mainnet' | 'testnet';
-    txId?: string;                  // Stacks transaction ID (when broadcast)
-    blockHeight?: number;           // Block where transaction was included
-    amount: string;                 // STX amount (as string for precision)
-    fee?: string;                   // Transaction fee
-    contractAddress?: string;       // Smart contract address
-    functionName?: string;          // Contract function called
-    functionArgs?: any[];           // Function arguments
-    confirmations: number;          // Current confirmation count
-    requiredConfirmations: number;  // Required confirmations for finality
-    errorMessage?: string;          // Error details if failed
-    errorCode?: string;             // Machine-readable error code
-    retryCount: number;             // Polling retry attempts
-    lastCheckedAt?: Date;           // Last polling check
-    broadcastAt?: Date;             // When transaction was broadcast
-    confirmedAt?: Date;             // When transaction was confirmed
+    txId?: string; // Stacks transaction ID (when broadcast)
+    blockHeight?: number; // Block where transaction was included
+    amount: string; // STX amount (as string for precision)
+    fee?: string; // Transaction fee
+    contractAddress?: string; // Smart contract address
+    functionName?: string; // Contract function called
+    functionArgs?: any[]; // Function arguments
+    confirmations: number; // Current confirmation count
+    requiredConfirmations: number; // Required confirmations for finality
+    errorMessage?: string; // Error details if failed
+    errorCode?: string; // Machine-readable error code
+    retryCount: number; // Polling retry attempts
+    lastCheckedAt?: Date; // Last polling check
+    broadcastAt?: Date; // When transaction was broadcast
+    confirmedAt?: Date; // When transaction was confirmed
   };
-  
+
   // Type-specific metadata
   depositMetadata?: {
-    sourceAddress: string;          // Sending wallet address
-    destinationAddress: string;     // Pool contract address
-    poolSharesExpected?: string;    // Expected shares to receive
-    poolSharesActual?: string;      // Actual shares received
-    expectedPrice?: string;         // Expected STX price
-    actualPrice?: string;           // Actual price when processed
-    slippage?: string;              // Price slippage percentage
+    sourceAddress: string; // Sending wallet address
+    destinationAddress: string; // Pool contract address
+    poolSharesExpected?: string; // Expected shares to receive
+    poolSharesActual?: string; // Actual shares received
+    expectedPrice?: string; // Expected STX price
+    actualPrice?: string; // Actual price when processed
+    slippage?: string; // Price slippage percentage
   };
-  
+
   withdrawalMetadata?: {
-    destinationAddress: string;     // Receiving wallet address
-    sourceAddress: string;          // Pool contract address
-    poolSharesBurned?: string;      // Pool shares being burned
-    minimumAmount?: string;         // Minimum STX to receive
+    destinationAddress: string; // Receiving wallet address
+    sourceAddress: string; // Pool contract address
+    poolSharesBurned?: string; // Pool shares being burned
+    minimumAmount?: string; // Minimum STX to receive
     isEmergencyWithdrawal: boolean; // Emergency withdrawal flag
-    approvedBy?: string;            // Admin who approved (if required)
-    approvedAt?: Date;              // Approval timestamp
+    approvedBy?: string; // Admin who approved (if required)
+    approvedAt?: Date; // Approval timestamp
   };
-  
+
   // Additional fields
-  notes?: string;                   // User notes
-  tags?: string[];                  // Categorization tags
-  createdAt: Date;                  // Creation timestamp
-  updatedAt: Date;                  // Last update timestamp
+  notes?: string; // User notes
+  tags?: string[]; // Categorization tags
+  createdAt: Date; // Creation timestamp
+  updatedAt: Date; // Last update timestamp
 }
 ```
 
@@ -100,6 +104,7 @@ cancelled  failed     failed
 ```
 
 **Status Definitions:**
+
 - `pending`: Transaction created but not yet broadcast to network
 - `broadcast`: Transaction sent to Stacks mempool
 - `confirming`: Transaction included in block but awaiting confirmations
@@ -112,6 +117,7 @@ cancelled  failed     failed
 ### User Endpoints
 
 #### Create Deposit
+
 ```http
 POST /transactions/deposits
 Authorization: Bearer <jwt_token>
@@ -127,6 +133,7 @@ Content-Type: application/json
 ```
 
 #### Create Withdrawal
+
 ```http
 POST /transactions/withdrawals
 Authorization: Bearer <jwt_token>
@@ -143,12 +150,14 @@ Content-Type: application/json
 ```
 
 #### Get User Transactions
+
 ```http
 GET /transactions?page=1&limit=20&type=deposit&status=confirmed&sortBy=createdAt&sortOrder=desc
 Authorization: Bearer <jwt_token>
 ```
 
 **Query Parameters:**
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (1-100, default: 20)
 - `type`: Filter by transaction type (`deposit`, `withdrawal`)
@@ -160,12 +169,14 @@ Authorization: Bearer <jwt_token>
 - `toDate`: End date filter (ISO string)
 
 #### Get Transaction by ID
+
 ```http
 GET /transactions/{transactionId}
 Authorization: Bearer <jwt_token>
 ```
 
 #### Get User Statistics
+
 ```http
 GET /transactions/stats/summary
 Authorization: Bearer <jwt_token>
@@ -174,24 +185,28 @@ Authorization: Bearer <jwt_token>
 ### Admin Endpoints
 
 #### Get All Transactions (Admin)
+
 ```http
 GET /transactions/admin/all?page=1&limit=50&userId={userId}
 Authorization: Bearer <admin_jwt_token>
 ```
 
 #### Get Global Statistics (Admin)
+
 ```http
 GET /transactions/admin/stats
 Authorization: Bearer <admin_jwt_token>
 ```
 
 #### Trigger Manual Polling (Admin)
+
 ```http
 POST /transactions/{transactionId}/poll
 Authorization: Bearer <admin_jwt_token>
 ```
 
 #### Update Transaction Status (Admin)
+
 ```http
 PATCH /transactions/{transactionId}/status
 Authorization: Bearer <admin_jwt_token>
@@ -206,6 +221,7 @@ Content-Type: application/json
 ```
 
 #### Get Queue Statistics (Admin)
+
 ```http
 GET /transactions/admin/queue-stats
 Authorization: Bearer <admin_jwt_token>
@@ -227,9 +243,9 @@ The `StacksPollingService` continuously monitors pending transactions:
 ### Polling Configuration
 
 ```typescript
-const POLL_INTERVAL = 30000;        // 30 seconds between polls
-const MAX_RETRIES = 50;             // Maximum polling attempts
-const CONFIRMATION_THRESHOLD = 6;   // Required confirmations
+const POLL_INTERVAL = 30000; // 30 seconds between polls
+const MAX_RETRIES = 50; // Maximum polling attempts
+const CONFIRMATION_THRESHOLD = 6; // Required confirmations
 ```
 
 ### Queue Configuration

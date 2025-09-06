@@ -8,7 +8,10 @@
  * @param decimals - Number of decimal places to show (default: 6)
  * @returns Formatted STX amount as string
  */
-export function formatSTX(microSTX: string | number, decimals: number = 6): string {
+export function formatSTX(
+  microSTX: string | number,
+  decimals: number = 6,
+): string {
   const stx = Number(microSTX) / 1_000_000;
   return stx.toLocaleString('en-US', {
     minimumFractionDigits: 0,
@@ -22,7 +25,10 @@ export function formatSTX(microSTX: string | number, decimals: number = 6): stri
  * @param decimals - Number of decimal places to show (default: 6)
  * @returns Formatted PLMD amount as string
  */
-export function formatPLMD(microPLMD: string | number, decimals: number = 6): string {
+export function formatPLMD(
+  microPLMD: string | number,
+  decimals: number = 6,
+): string {
   const plmd = Number(microPLMD) / 1_000_000;
   return plmd.toLocaleString('en-US', {
     minimumFractionDigits: 0,
@@ -36,7 +42,10 @@ export function formatPLMD(microPLMD: string | number, decimals: number = 6): st
  * @param currency - Currency code (default: 'USD')
  * @returns Formatted currency string
  */
-export function formatCurrency(amount: string | number, currency: string = 'USD'): string {
+export function formatCurrency(
+  amount: string | number,
+  currency: string = 'USD',
+): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
@@ -51,11 +60,14 @@ export function formatCurrency(amount: string | number, currency: string = 'USD'
  * @param decimals - Number of decimal places (default: 2)
  * @returns Object with formatted percentage and color class
  */
-export function formatPercentage(percentage: string | number, decimals: number = 2) {
+export function formatPercentage(
+  percentage: string | number,
+  decimals: number = 2,
+) {
   const pct = Number(percentage) * 100;
   const formatted = `${pct >= 0 ? '+' : ''}${pct.toFixed(decimals)}%`;
   const colorClass = pct >= 0 ? 'text-green-600' : 'text-red-600';
-  
+
   return {
     formatted,
     colorClass,
@@ -69,9 +81,12 @@ export function formatPercentage(percentage: string | number, decimals: number =
  * @param decimals - Number of decimal places (default: 1)
  * @returns Formatted string with suffix
  */
-export function formatLargeNumber(num: string | number, decimals: number = 1): string {
+export function formatLargeNumber(
+  num: string | number,
+  decimals: number = 1,
+): string {
   const n = Number(num);
-  
+
   if (n >= 1_000_000_000) {
     return (n / 1_000_000_000).toFixed(decimals) + 'B';
   }
@@ -81,7 +96,7 @@ export function formatLargeNumber(num: string | number, decimals: number = 1): s
   if (n >= 1_000) {
     return (n / 1_000).toFixed(decimals) + 'K';
   }
-  
+
   return n.toLocaleString('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: decimals,
@@ -95,11 +110,15 @@ export function formatLargeNumber(num: string | number, decimals: number = 1): s
  * @param endChars - Characters to show at end (default: 6)
  * @returns Truncated hash with ellipsis
  */
-export function formatTxHash(hash: string, startChars: number = 6, endChars: number = 6): string {
+export function formatTxHash(
+  hash: string,
+  startChars: number = 6,
+  endChars: number = 6,
+): string {
   if (hash.length <= startChars + endChars) {
     return hash;
   }
-  
+
   return `${hash.slice(0, startChars)}...${hash.slice(-endChars)}`;
 }
 
@@ -110,11 +129,15 @@ export function formatTxHash(hash: string, startChars: number = 6, endChars: num
  * @param endChars - Characters to show at end (default: 4)
  * @returns Truncated address with ellipsis
  */
-export function formatAddress(address: string, startChars: number = 6, endChars: number = 4): string {
+export function formatAddress(
+  address: string,
+  startChars: number = 6,
+  endChars: number = 4,
+): string {
   if (address.length <= startChars + endChars) {
     return address;
   }
-  
+
   return `${address.slice(0, startChars)}...${address.slice(-endChars)}`;
 }
 
@@ -124,9 +147,12 @@ export function formatAddress(address: string, startChars: number = 6, endChars:
  * @param options - Intl.DateTimeFormatOptions
  * @returns Formatted date string
  */
-export function formatDate(date: string | Date, options?: Intl.DateTimeFormatOptions): string {
+export function formatDate(
+  date: string | Date,
+  options?: Intl.DateTimeFormatOptions,
+): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
+
   return dateObj.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -149,7 +175,7 @@ export function formatRelativeTime(date: string | Date): string {
   const diffMins = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
-  
+
   if (diffMins < 1) {
     return 'just now';
   } else if (diffMins < 60) {
@@ -171,12 +197,12 @@ export function formatRelativeTime(date: string | Date): string {
 export function calculateDepositShares(
   stxAmount: number,
   nav: number,
-  entryFeeRate: number = 0.5
+  entryFeeRate: number = 0.5,
 ) {
   const fee = (stxAmount * entryFeeRate) / 100;
   const netAmount = stxAmount - fee;
   const shares = netAmount / nav;
-  
+
   return {
     fee,
     netAmount,
@@ -197,12 +223,12 @@ export function calculateDepositShares(
 export function calculateWithdrawalAmount(
   plmdAmount: number,
   nav: number,
-  exitFeeRate: number = 0.5
+  exitFeeRate: number = 0.5,
 ) {
   const grossAmount = plmdAmount * nav;
   const fee = (grossAmount * exitFeeRate) / 100;
   const netAmount = grossAmount - fee;
-  
+
   return {
     grossAmount,
     fee,

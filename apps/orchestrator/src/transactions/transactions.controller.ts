@@ -22,7 +22,7 @@ import {
   ApiBearerAuth,
   ApiBody,
 } from '@nestjs/swagger';
-import type { 
+import type {
   CreateDepositRequest,
   CreateWithdrawalRequest,
   TransactionQuery,
@@ -57,7 +57,8 @@ export class TransactionsController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Create a deposit transaction',
-    description: 'Creates a new deposit transaction for the authenticated user. The transaction will be set to pending status and monitored for confirmation.',
+    description:
+      'Creates a new deposit transaction for the authenticated user. The transaction will be set to pending status and monitored for confirmation.',
   })
   @ApiResponse({
     status: 201,
@@ -75,7 +76,10 @@ export class TransactionsController {
             },
           },
         },
-        message: { type: 'string', example: 'Deposit transaction created successfully' },
+        message: {
+          type: 'string',
+          example: 'Deposit transaction created successfully',
+        },
       },
     },
   })
@@ -98,7 +102,8 @@ export class TransactionsController {
       properties: {
         amount: {
           type: 'string',
-          description: 'Amount of STX to deposit (as string to preserve precision)',
+          description:
+            'Amount of STX to deposit (as string to preserve precision)',
           example: '100.000000',
         },
         sourceAddress: {
@@ -133,22 +138,35 @@ export class TransactionsController {
   })
   async createDeposit(
     @CurrentUser() user: IUser,
-    @Body(new ValidationPipe({ transform: true })) createDepositDto: CreateDepositRequest,
+    @Body(new ValidationPipe({ transform: true }))
+    createDepositDto: CreateDepositRequest,
   ): Promise<SharedApiResponse<TransactionResponse>> {
     try {
-      this.logger.log(`Creating deposit for user ${user.id}: ${createDepositDto.amount} STX`);
+      this.logger.log(
+        `Creating deposit for user ${user.id}: ${createDepositDto.amount} STX`,
+      );
 
-      const result = await this.transactionsService.createDeposit(user.id, createDepositDto);
+      const result = await this.transactionsService.createDeposit(
+        user.id,
+        createDepositDto,
+      );
 
       // Queue the transaction for immediate polling
       try {
-        await this.stacksPollingService.queueTransactionForPolling(result.transaction, 10);
+        await this.stacksPollingService.queueTransactionForPolling(
+          result.transaction,
+          10,
+        );
       } catch (pollingError) {
-        this.logger.warn(`Failed to queue deposit for polling: ${pollingError.message}`);
+        this.logger.warn(
+          `Failed to queue deposit for polling: ${pollingError.message}`,
+        );
         // Don't fail the request if polling queue fails
       }
 
-      this.logger.log(`✓ Deposit created successfully: ${result.transaction._id}`);
+      this.logger.log(
+        `✓ Deposit created successfully: ${result.transaction._id}`,
+      );
 
       return {
         success: true,
@@ -159,10 +177,9 @@ export class TransactionsController {
         },
         message: result.message,
       };
-
     } catch (error) {
       this.logger.error(`Failed to create deposit for user ${user.id}:`, error);
-      
+
       return {
         success: false,
         error: error.message || 'Failed to create deposit',
@@ -178,7 +195,8 @@ export class TransactionsController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Create a withdrawal transaction',
-    description: 'Creates a new withdrawal transaction for the authenticated user. The transaction will be set to pending status and monitored for confirmation.',
+    description:
+      'Creates a new withdrawal transaction for the authenticated user. The transaction will be set to pending status and monitored for confirmation.',
   })
   @ApiResponse({
     status: 201,
@@ -196,7 +214,10 @@ export class TransactionsController {
             },
           },
         },
-        message: { type: 'string', example: 'Withdrawal transaction created successfully' },
+        message: {
+          type: 'string',
+          example: 'Withdrawal transaction created successfully',
+        },
       },
     },
   })
@@ -219,7 +240,8 @@ export class TransactionsController {
       properties: {
         amount: {
           type: 'string',
-          description: 'Amount of STX to withdraw (as string to preserve precision)',
+          description:
+            'Amount of STX to withdraw (as string to preserve precision)',
           example: '50.000000',
         },
         destinationAddress: {
@@ -269,22 +291,35 @@ export class TransactionsController {
   })
   async createWithdrawal(
     @CurrentUser() user: IUser,
-    @Body(new ValidationPipe({ transform: true })) createWithdrawalDto: CreateWithdrawalRequest,
+    @Body(new ValidationPipe({ transform: true }))
+    createWithdrawalDto: CreateWithdrawalRequest,
   ): Promise<SharedApiResponse<TransactionResponse>> {
     try {
-      this.logger.log(`Creating withdrawal for user ${user.id}: ${createWithdrawalDto.amount} STX`);
+      this.logger.log(
+        `Creating withdrawal for user ${user.id}: ${createWithdrawalDto.amount} STX`,
+      );
 
-      const result = await this.transactionsService.createWithdrawal(user.id, createWithdrawalDto);
+      const result = await this.transactionsService.createWithdrawal(
+        user.id,
+        createWithdrawalDto,
+      );
 
       // Queue the transaction for immediate polling
       try {
-        await this.stacksPollingService.queueTransactionForPolling(result.transaction, 10);
+        await this.stacksPollingService.queueTransactionForPolling(
+          result.transaction,
+          10,
+        );
       } catch (pollingError) {
-        this.logger.warn(`Failed to queue withdrawal for polling: ${pollingError.message}`);
+        this.logger.warn(
+          `Failed to queue withdrawal for polling: ${pollingError.message}`,
+        );
         // Don't fail the request if polling queue fails
       }
 
-      this.logger.log(`✓ Withdrawal created successfully: ${result.transaction._id}`);
+      this.logger.log(
+        `✓ Withdrawal created successfully: ${result.transaction._id}`,
+      );
 
       return {
         success: true,
@@ -295,10 +330,12 @@ export class TransactionsController {
         },
         message: result.message,
       };
-
     } catch (error) {
-      this.logger.error(`Failed to create withdrawal for user ${user.id}:`, error);
-      
+      this.logger.error(
+        `Failed to create withdrawal for user ${user.id}:`,
+        error,
+      );
+
       return {
         success: false,
         error: error.message || 'Failed to create withdrawal',
@@ -313,7 +350,8 @@ export class TransactionsController {
   @Get(':id')
   @ApiOperation({
     summary: 'Get transaction by ID',
-    description: 'Retrieves a specific transaction by its ID. Users can only access their own transactions unless they are admin/moderator.',
+    description:
+      'Retrieves a specific transaction by its ID. Users can only access their own transactions unless they are admin/moderator.',
   })
   @ApiParam({
     name: 'id',
@@ -350,23 +388,32 @@ export class TransactionsController {
     @CurrentUser() user: IUser,
   ): Promise<SharedApiResponse> {
     try {
-      this.logger.debug(`Getting transaction ${transactionId} for user ${user.id}`);
+      this.logger.debug(
+        `Getting transaction ${transactionId} for user ${user.id}`,
+      );
 
       // Allow admin/moderator to view any transaction, others only their own
-      const userId = user.role === 'admin' || user.role === 'moderator' ? undefined : user.id;
-      
-      const transaction = await this.transactionsService.getTransactionById(transactionId, userId);
+      const userId =
+        user.role === 'admin' || user.role === 'moderator'
+          ? undefined
+          : user.id;
 
-      this.logger.debug(`✓ Transaction ${transactionId} retrieved successfully`);
+      const transaction = await this.transactionsService.getTransactionById(
+        transactionId,
+        userId,
+      );
+
+      this.logger.debug(
+        `✓ Transaction ${transactionId} retrieved successfully`,
+      );
 
       return {
         success: true,
         data: transaction,
       };
-
     } catch (error) {
       this.logger.error(`Failed to get transaction ${transactionId}:`, error);
-      
+
       return {
         success: false,
         error: error.message || 'Failed to retrieve transaction',
@@ -377,17 +424,74 @@ export class TransactionsController {
   @Get()
   @ApiOperation({
     summary: 'Get user transactions',
-    description: 'Retrieves transactions for the authenticated user with pagination and filtering options.',
+    description:
+      'Retrieves transactions for the authenticated user with pagination and filtering options.',
   })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (1-based)', example: 1 })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (1-100)', example: 20 })
-  @ApiQuery({ name: 'type', required: false, enum: ['deposit', 'withdrawal'], description: 'Filter by transaction type' })
-  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'broadcast', 'confirming', 'confirmed', 'failed', 'cancelled'], description: 'Filter by transaction status' })
-  @ApiQuery({ name: 'sortBy', required: false, enum: ['createdAt', 'updatedAt', 'amount'], description: 'Sort field', example: 'createdAt' })
-  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'], description: 'Sort order', example: 'desc' })
-  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search in notes, txId, addresses' })
-  @ApiQuery({ name: 'fromDate', required: false, type: String, description: 'Filter from date (ISO string)' })
-  @ApiQuery({ name: 'toDate', required: false, type: String, description: 'Filter to date (ISO string)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (1-based)',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (1-100)',
+    example: 20,
+  })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: ['deposit', 'withdrawal'],
+    description: 'Filter by transaction type',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: [
+      'pending',
+      'broadcast',
+      'confirming',
+      'confirmed',
+      'failed',
+      'cancelled',
+    ],
+    description: 'Filter by transaction status',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    enum: ['createdAt', 'updatedAt', 'amount'],
+    description: 'Sort field',
+    example: 'createdAt',
+  })
+  @ApiQuery({
+    name: 'sortOrder',
+    required: false,
+    enum: ['asc', 'desc'],
+    description: 'Sort order',
+    example: 'desc',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search in notes, txId, addresses',
+  })
+  @ApiQuery({
+    name: 'fromDate',
+    required: false,
+    type: String,
+    description: 'Filter from date (ISO string)',
+  })
+  @ApiQuery({
+    name: 'toDate',
+    required: false,
+    type: String,
+    description: 'Filter to date (ISO string)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Transactions retrieved successfully',
@@ -422,11 +526,18 @@ export class TransactionsController {
     @CurrentUser() user: IUser,
   ): Promise<SharedApiResponse<TransactionListResponse>> {
     try {
-      this.logger.debug(`Getting transactions for user ${user.id} - Page: ${query.page}, Limit: ${query.limit}`);
+      this.logger.debug(
+        `Getting transactions for user ${user.id} - Page: ${query.page}, Limit: ${query.limit}`,
+      );
 
-      const result = await this.transactionsService.getUserTransactions(user.id, query);
+      const result = await this.transactionsService.getUserTransactions(
+        user.id,
+        query,
+      );
 
-      this.logger.debug(`✓ Retrieved ${result.transactions.length} transactions for user ${user.id}`);
+      this.logger.debug(
+        `✓ Retrieved ${result.transactions.length} transactions for user ${user.id}`,
+      );
 
       return {
         success: true,
@@ -436,10 +547,12 @@ export class TransactionsController {
           success: true,
         },
       };
-
     } catch (error) {
-      this.logger.error(`Failed to get transactions for user ${user.id}:`, error);
-      
+      this.logger.error(
+        `Failed to get transactions for user ${user.id}:`,
+        error,
+      );
+
       return {
         success: false,
         error: error.message || 'Failed to retrieve transactions',
@@ -450,7 +563,8 @@ export class TransactionsController {
   @Get('stats/summary')
   @ApiOperation({
     summary: 'Get user transaction statistics',
-    description: 'Retrieves transaction statistics and summary for the authenticated user.',
+    description:
+      'Retrieves transaction statistics and summary for the authenticated user.',
   })
   @ApiResponse({
     status: 200,
@@ -481,18 +595,24 @@ export class TransactionsController {
     try {
       this.logger.debug(`Getting transaction statistics for user ${user.id}`);
 
-      const stats = await this.transactionsService.getUserTransactionStats(user.id);
+      const stats = await this.transactionsService.getUserTransactionStats(
+        user.id,
+      );
 
-      this.logger.debug(`✓ Transaction statistics retrieved for user ${user.id}`);
+      this.logger.debug(
+        `✓ Transaction statistics retrieved for user ${user.id}`,
+      );
 
       return {
         success: true,
         data: stats,
       };
-
     } catch (error) {
-      this.logger.error(`Failed to get transaction statistics for user ${user.id}:`, error);
-      
+      this.logger.error(
+        `Failed to get transaction statistics for user ${user.id}:`,
+        error,
+      );
+
       return {
         success: false,
         error: error.message || 'Failed to retrieve transaction statistics',
@@ -509,18 +629,80 @@ export class TransactionsController {
   @Roles('admin', 'moderator')
   @ApiOperation({
     summary: 'Get all transactions (Admin)',
-    description: 'Retrieves all transactions in the system with pagination and filtering. Admin/moderator access only.',
+    description:
+      'Retrieves all transactions in the system with pagination and filtering. Admin/moderator access only.',
   })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (1-based)', example: 1 })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (1-100)', example: 20 })
-  @ApiQuery({ name: 'type', required: false, enum: ['deposit', 'withdrawal'], description: 'Filter by transaction type' })
-  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'broadcast', 'confirming', 'confirmed', 'failed', 'cancelled'], description: 'Filter by transaction status' })
-  @ApiQuery({ name: 'userId', required: false, type: String, description: 'Filter by user ID' })
-  @ApiQuery({ name: 'sortBy', required: false, enum: ['createdAt', 'updatedAt', 'amount'], description: 'Sort field', example: 'createdAt' })
-  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'], description: 'Sort order', example: 'desc' })
-  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search in notes, txId, addresses' })
-  @ApiQuery({ name: 'fromDate', required: false, type: String, description: 'Filter from date (ISO string)' })
-  @ApiQuery({ name: 'toDate', required: false, type: String, description: 'Filter to date (ISO string)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (1-based)',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (1-100)',
+    example: 20,
+  })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: ['deposit', 'withdrawal'],
+    description: 'Filter by transaction type',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: [
+      'pending',
+      'broadcast',
+      'confirming',
+      'confirmed',
+      'failed',
+      'cancelled',
+    ],
+    description: 'Filter by transaction status',
+  })
+  @ApiQuery({
+    name: 'userId',
+    required: false,
+    type: String,
+    description: 'Filter by user ID',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    enum: ['createdAt', 'updatedAt', 'amount'],
+    description: 'Sort field',
+    example: 'createdAt',
+  })
+  @ApiQuery({
+    name: 'sortOrder',
+    required: false,
+    enum: ['asc', 'desc'],
+    description: 'Sort order',
+    example: 'desc',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search in notes, txId, addresses',
+  })
+  @ApiQuery({
+    name: 'fromDate',
+    required: false,
+    type: String,
+    description: 'Filter from date (ISO string)',
+  })
+  @ApiQuery({
+    name: 'toDate',
+    required: false,
+    type: String,
+    description: 'Filter to date (ISO string)',
+  })
   @ApiResponse({
     status: 200,
     description: 'All transactions retrieved successfully',
@@ -534,11 +716,15 @@ export class TransactionsController {
     @CurrentUser() user: IUser,
   ): Promise<SharedApiResponse<TransactionListResponse>> {
     try {
-      this.logger.log(`Admin ${user.id} requesting all transactions - Page: ${query.page}, Limit: ${query.limit}`);
+      this.logger.log(
+        `Admin ${user.id} requesting all transactions - Page: ${query.page}, Limit: ${query.limit}`,
+      );
 
       const result = await this.transactionsService.getAllTransactions(query);
 
-      this.logger.log(`✓ Retrieved ${result.transactions.length} transactions for admin ${user.id}`);
+      this.logger.log(
+        `✓ Retrieved ${result.transactions.length} transactions for admin ${user.id}`,
+      );
 
       return {
         success: true,
@@ -548,10 +734,12 @@ export class TransactionsController {
           success: true,
         },
       };
-
     } catch (error) {
-      this.logger.error(`Failed to get all transactions for admin ${user.id}:`, error);
-      
+      this.logger.error(
+        `Failed to get all transactions for admin ${user.id}:`,
+        error,
+      );
+
       return {
         success: false,
         error: error.message || 'Failed to retrieve transactions',
@@ -564,7 +752,8 @@ export class TransactionsController {
   @Roles('admin', 'moderator')
   @ApiOperation({
     summary: 'Get global transaction statistics (Admin)',
-    description: 'Retrieves global transaction statistics for the entire system. Admin/moderator access only.',
+    description:
+      'Retrieves global transaction statistics for the entire system. Admin/moderator access only.',
   })
   @ApiResponse({
     status: 200,
@@ -578,20 +767,26 @@ export class TransactionsController {
     @CurrentUser() user: IUser,
   ): Promise<SharedApiResponse> {
     try {
-      this.logger.log(`Admin ${user.id} requesting global transaction statistics`);
+      this.logger.log(
+        `Admin ${user.id} requesting global transaction statistics`,
+      );
 
       const stats = await this.transactionsService.getGlobalTransactionStats();
 
-      this.logger.log(`✓ Global transaction statistics retrieved for admin ${user.id}`);
+      this.logger.log(
+        `✓ Global transaction statistics retrieved for admin ${user.id}`,
+      );
 
       return {
         success: true,
         data: stats,
       };
-
     } catch (error) {
-      this.logger.error(`Failed to get global transaction statistics for admin ${user.id}:`, error);
-      
+      this.logger.error(
+        `Failed to get global transaction statistics for admin ${user.id}:`,
+        error,
+      );
+
       return {
         success: false,
         error: error.message || 'Failed to retrieve global statistics',
@@ -608,7 +803,8 @@ export class TransactionsController {
   @Roles('admin', 'moderator')
   @ApiOperation({
     summary: 'Trigger manual polling (Admin)',
-    description: 'Manually triggers polling for a specific transaction. Admin/moderator access only.',
+    description:
+      'Manually triggers polling for a specific transaction. Admin/moderator access only.',
   })
   @ApiParam({
     name: 'id',
@@ -639,20 +835,29 @@ export class TransactionsController {
     @CurrentUser() user: IUser,
   ): Promise<SharedApiResponse> {
     try {
-      this.logger.log(`Admin ${user.id} triggering polling for transaction ${transactionId}`);
+      this.logger.log(
+        `Admin ${user.id} triggering polling for transaction ${transactionId}`,
+      );
 
-      await this.stacksPollingService.triggerTransactionPolling(transactionId, 20);
+      await this.stacksPollingService.triggerTransactionPolling(
+        transactionId,
+        20,
+      );
 
-      this.logger.log(`✓ Polling triggered for transaction ${transactionId} by admin ${user.id}`);
+      this.logger.log(
+        `✓ Polling triggered for transaction ${transactionId} by admin ${user.id}`,
+      );
 
       return {
         success: true,
         message: 'Polling triggered successfully',
       };
-
     } catch (error) {
-      this.logger.error(`Failed to trigger polling for transaction ${transactionId}:`, error);
-      
+      this.logger.error(
+        `Failed to trigger polling for transaction ${transactionId}:`,
+        error,
+      );
+
       return {
         success: false,
         error: error.message || 'Failed to trigger polling',
@@ -665,7 +870,8 @@ export class TransactionsController {
   @Roles('admin', 'moderator')
   @ApiOperation({
     summary: 'Get polling queue statistics (Admin)',
-    description: 'Retrieves statistics about the polling queue. Admin/moderator access only.',
+    description:
+      'Retrieves statistics about the polling queue. Admin/moderator access only.',
   })
   @ApiResponse({
     status: 200,
@@ -692,9 +898,7 @@ export class TransactionsController {
     status: 403,
     description: 'Insufficient permissions',
   })
-  async getQueueStats(
-    @CurrentUser() user: IUser,
-  ): Promise<SharedApiResponse> {
+  async getQueueStats(@CurrentUser() user: IUser): Promise<SharedApiResponse> {
     try {
       this.logger.debug(`Admin ${user.id} requesting queue statistics`);
 
@@ -706,10 +910,12 @@ export class TransactionsController {
         success: true,
         data: stats,
       };
-
     } catch (error) {
-      this.logger.error(`Failed to get queue statistics for admin ${user.id}:`, error);
-      
+      this.logger.error(
+        `Failed to get queue statistics for admin ${user.id}:`,
+        error,
+      );
+
       return {
         success: false,
         error: error.message || 'Failed to retrieve queue statistics',
@@ -726,7 +932,8 @@ export class TransactionsController {
   @Roles('admin')
   @ApiOperation({
     summary: 'Update transaction status (Internal)',
-    description: 'Updates the status of a transaction. This endpoint is primarily for internal use by the polling service. Admin access only.',
+    description:
+      'Updates the status of a transaction. This endpoint is primarily for internal use by the polling service. Admin access only.',
   })
   @ApiParam({
     name: 'id',
@@ -741,13 +948,21 @@ export class TransactionsController {
       properties: {
         status: {
           type: 'string',
-          enum: ['pending', 'broadcast', 'confirming', 'confirmed', 'failed', 'cancelled'],
+          enum: [
+            'pending',
+            'broadcast',
+            'confirming',
+            'confirmed',
+            'failed',
+            'cancelled',
+          ],
           description: 'New transaction status',
         },
         txId: {
           type: 'string',
           description: 'Stacks transaction ID',
-          example: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+          example:
+            '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         },
         blockHeight: {
           type: 'number',
@@ -784,30 +999,36 @@ export class TransactionsController {
   })
   async updateTransactionStatus(
     @Param('id') transactionId: string,
-    @Body(new ValidationPipe({ transform: true })) updateData: UpdateTransactionStatusRequest,
+    @Body(new ValidationPipe({ transform: true }))
+    updateData: UpdateTransactionStatusRequest,
     @CurrentUser() user: IUser,
   ): Promise<SharedApiResponse> {
     try {
       this.logger.log(
-        `Admin ${user.id} updating transaction ${transactionId} status to ${updateData.status}`
+        `Admin ${user.id} updating transaction ${transactionId} status to ${updateData.status}`,
       );
 
-      const transaction = await this.transactionsService.updateTransactionStatus(
-        transactionId,
-        updateData
-      );
+      const transaction =
+        await this.transactionsService.updateTransactionStatus(
+          transactionId,
+          updateData,
+        );
 
-      this.logger.log(`✓ Transaction ${transactionId} status updated by admin ${user.id}`);
+      this.logger.log(
+        `✓ Transaction ${transactionId} status updated by admin ${user.id}`,
+      );
 
       return {
         success: true,
         data: transaction,
         message: 'Transaction status updated successfully',
       };
-
     } catch (error) {
-      this.logger.error(`Failed to update transaction ${transactionId} status:`, error);
-      
+      this.logger.error(
+        `Failed to update transaction ${transactionId} status:`,
+        error,
+      );
+
       return {
         success: false,
         error: error.message || 'Failed to update transaction status',

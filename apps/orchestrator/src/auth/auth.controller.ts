@@ -68,20 +68,27 @@ export class AuthController {
   })
   generateNonce(@Body() generateNonceDto: GenerateNonceDto) {
     const { walletAddress } = generateNonceDto;
-    
-    this.logger.log(`🔢 Generating nonce for wallet: ${walletAddress.substring(0, 8)}...`);
-    
+
+    this.logger.log(
+      `🔢 Generating nonce for wallet: ${walletAddress.substring(0, 8)}...`,
+    );
+
     try {
       const message = this.authService.generateAuthMessage(walletAddress);
 
-      this.logger.debug(`✓ Nonce generated successfully for wallet: ${walletAddress.substring(0, 8)}...`);
-      
+      this.logger.debug(
+        `✓ Nonce generated successfully for wallet: ${walletAddress.substring(0, 8)}...`,
+      );
+
       return {
         message,
         success: true,
       };
     } catch (error) {
-      this.logger.error(`✗ Failed to generate nonce for wallet: ${walletAddress.substring(0, 8)}...`, error);
+      this.logger.error(
+        `✗ Failed to generate nonce for wallet: ${walletAddress.substring(0, 8)}...`,
+        error,
+      );
       throw error;
     }
   }
@@ -136,7 +143,9 @@ export class AuthController {
     const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip;
     const walletAddress = walletLoginDto.walletAddress;
 
-    this.logger.log(`🔐 Wallet login attempt from ${walletAddress.substring(0, 8)}... (IP: ${ipAddress})`);
+    this.logger.log(
+      `🔐 Wallet login attempt from ${walletAddress.substring(0, 8)}... (IP: ${ipAddress})`,
+    );
 
     try {
       const { user, token, expiresAt } =
@@ -154,7 +163,9 @@ export class AuthController {
         isEmailVerified: user.isEmailVerified,
       };
 
-      this.logger.log(`✓ Wallet login successful for user ${user._id} (${walletAddress.substring(0, 8)}...) from IP: ${ipAddress}`);
+      this.logger.log(
+        `✓ Wallet login successful for user ${user._id} (${walletAddress.substring(0, 8)}...) from IP: ${ipAddress}`,
+      );
 
       return {
         token,
@@ -163,7 +174,9 @@ export class AuthController {
         success: true,
       };
     } catch (error) {
-      this.logger.warn(`✗ Wallet login failed for ${walletAddress.substring(0, 8)}... (IP: ${ipAddress}): ${error.message}`);
+      this.logger.warn(
+        `✗ Wallet login failed for ${walletAddress.substring(0, 8)}... (IP: ${ipAddress}): ${error.message}`,
+      );
       throw error;
     }
   }
@@ -203,7 +216,7 @@ export class AuthController {
   })
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
     const { token: oldToken } = refreshTokenDto;
-    
+
     this.logger.log('🔄 Token refresh attempt');
 
     try {
@@ -268,7 +281,9 @@ export class AuthController {
     description: 'Unauthorized',
   })
   getCurrentUser(@CurrentUser() user: IUser) {
-    this.logger.debug(`👤 Get current user request from user ${user._id} (${user.walletAddress.substring(0, 8)}...)`);
+    this.logger.debug(
+      `👤 Get current user request from user ${user._id} (${user.walletAddress.substring(0, 8)}...)`,
+    );
 
     // Return user data without sensitive information
     const userResponse = {
@@ -340,11 +355,16 @@ export class AuthController {
     const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip;
     const telegramId = telegramLoginDto.id;
 
-    this.logger.log(`📱 Telegram login attempt from user ${telegramId} (IP: ${ipAddress})`);
+    this.logger.log(
+      `📱 Telegram login attempt from user ${telegramId} (IP: ${ipAddress})`,
+    );
 
     try {
       const { user, token, expiresAt } =
-        await this.authService.authenticateTelegram(telegramLoginDto, ipAddress);
+        await this.authService.authenticateTelegram(
+          telegramLoginDto,
+          ipAddress,
+        );
 
       // Return user data without sensitive information
       const userResponse = {
@@ -359,7 +379,9 @@ export class AuthController {
         telegramAuth: user.telegramAuth,
       };
 
-      this.logger.log(`✓ Telegram login successful for user ${user._id} (Telegram ID: ${telegramId}) from IP: ${ipAddress}`);
+      this.logger.log(
+        `✓ Telegram login successful for user ${user._id} (Telegram ID: ${telegramId}) from IP: ${ipAddress}`,
+      );
 
       return {
         token,
@@ -368,7 +390,9 @@ export class AuthController {
         success: true,
       };
     } catch (error) {
-      this.logger.warn(`✗ Telegram login failed for Telegram ID ${telegramId} (IP: ${ipAddress}): ${error.message}`);
+      this.logger.warn(
+        `✗ Telegram login failed for Telegram ID ${telegramId} (IP: ${ipAddress}): ${error.message}`,
+      );
       throw error;
     }
   }
@@ -412,8 +436,10 @@ export class AuthController {
     @CurrentUser() user: IUser,
   ) {
     const telegramId = linkTelegramDto.telegramData.id;
-    
-    this.logger.log(`🔗 Telegram linking attempt - User ${user._id} attempting to link Telegram ID ${telegramId}`);
+
+    this.logger.log(
+      `🔗 Telegram linking attempt - User ${user._id} attempting to link Telegram ID ${telegramId}`,
+    );
 
     try {
       const updatedUser = await this.authService.linkTelegramAccount(
@@ -440,14 +466,18 @@ export class AuthController {
         loginCount: updatedUser.loginCount,
       };
 
-      this.logger.log(`✓ Telegram account linked successfully - User ${user._id} linked to Telegram ID ${telegramId}`);
+      this.logger.log(
+        `✓ Telegram account linked successfully - User ${user._id} linked to Telegram ID ${telegramId}`,
+      );
 
       return {
         user: userResponse,
         success: true,
       };
     } catch (error) {
-      this.logger.warn(`✗ Telegram linking failed - User ${user._id} could not link Telegram ID ${telegramId}: ${error.message}`);
+      this.logger.warn(
+        `✗ Telegram linking failed - User ${user._id} could not link Telegram ID ${telegramId}: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -483,8 +513,10 @@ export class AuthController {
   })
   async unlinkTelegram(@CurrentUser() user: IUser) {
     const currentTelegramId = user.telegramAuth?.telegramId;
-    
-    this.logger.log(`🔓 Telegram unlinking attempt - User ${user._id} attempting to unlink Telegram ID ${currentTelegramId || 'unknown'}`);
+
+    this.logger.log(
+      `🔓 Telegram unlinking attempt - User ${user._id} attempting to unlink Telegram ID ${currentTelegramId || 'unknown'}`,
+    );
 
     try {
       const updatedUser = await this.authService.unlinkTelegramAccount(
@@ -510,14 +542,18 @@ export class AuthController {
         loginCount: updatedUser.loginCount,
       };
 
-      this.logger.log(`✓ Telegram account unlinked successfully - User ${user._id} unlinked from Telegram ID ${currentTelegramId || 'unknown'}`);
+      this.logger.log(
+        `✓ Telegram account unlinked successfully - User ${user._id} unlinked from Telegram ID ${currentTelegramId || 'unknown'}`,
+      );
 
       return {
         user: userResponse,
         success: true,
       };
     } catch (error) {
-      this.logger.warn(`✗ Telegram unlinking failed - User ${user._id}: ${error.message}`);
+      this.logger.warn(
+        `✗ Telegram unlinking failed - User ${user._id}: ${error.message}`,
+      );
       throw error;
     }
   }

@@ -17,17 +17,12 @@ import Notification, { UserNotification } from '../lib/models/notification';
       { name: 'UserNotification', schema: UserNotification.schema },
     ]),
   ],
-  controllers: [
-    NotificationsController,
-  ],
+  controllers: [NotificationsController],
   providers: [
     NotificationQueueService,
     NotificationProcessorService,
     NotificationsService,
   ],
-  exports: [
-    NotificationsService,
-    NotificationQueueService,
-  ],
+  exports: [NotificationsService, NotificationQueueService],
 })
 export class NotificationsModule {}

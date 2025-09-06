@@ -1,4 +1,7 @@
-export function formatWalletAddress(address: string, length: number = 6): string {
+export function formatWalletAddress(
+  address: string,
+  length: number = 6,
+): string {
   if (address.length <= length * 2) {
     return address;
   }

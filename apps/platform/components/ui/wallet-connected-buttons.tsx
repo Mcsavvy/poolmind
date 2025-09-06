@@ -12,18 +12,24 @@ interface WalletConnectedDepositButtonProps {
   walletAddress?: string;
   publicKey?: string;
   connectWallet?: () => Promise<[string, string]>;
-  variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive';
+  variant?:
+    | 'default'
+    | 'outline'
+    | 'secondary'
+    | 'ghost'
+    | 'link'
+    | 'destructive';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
 }
 
-const DepositButton = ({ 
-  isConnected, 
-  walletAddress, 
+const DepositButton = ({
+  isConnected,
+  walletAddress,
   connectWallet,
   variant = 'default',
   size = 'default',
-  className = ''
+  className = '',
 }: WalletConnectedDepositButtonProps) => {
   const [showDepositModal, setShowDepositModal] = useState(false);
 
@@ -43,19 +49,19 @@ const DepositButton = ({
 
   return (
     <>
-      <Button 
+      <Button
         onClick={handleClick}
         variant={variant}
         size={size}
         className={`flex items-center space-x-2 ${className}`}
       >
-        <Plus className="h-4 w-4" />
+        <Plus className='h-4 w-4' />
         <span>Contribute</span>
       </Button>
-      
-      <DepositModal 
-        open={showDepositModal} 
-        onOpenChange={setShowDepositModal} 
+
+      <DepositModal
+        open={showDepositModal}
+        onOpenChange={setShowDepositModal}
       />
     </>
   );
@@ -66,18 +72,24 @@ interface WalletConnectedWithdrawalButtonProps {
   walletAddress?: string;
   publicKey?: string;
   connectWallet?: () => Promise<[string, string]>;
-  variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive';
+  variant?:
+    | 'default'
+    | 'outline'
+    | 'secondary'
+    | 'ghost'
+    | 'link'
+    | 'destructive';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
 }
 
-const WithdrawalButton = ({ 
-  isConnected, 
-  walletAddress, 
+const WithdrawalButton = ({
+  isConnected,
+  walletAddress,
   connectWallet,
   variant = 'outline',
   size = 'default',
-  className = ''
+  className = '',
 }: WalletConnectedWithdrawalButtonProps) => {
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
 
@@ -96,19 +108,19 @@ const WithdrawalButton = ({
 
   return (
     <>
-      <Button 
+      <Button
         onClick={handleClick}
         variant={variant}
         size={size}
         className={`flex items-center space-x-2 ${className}`}
       >
-        <Minus className="h-4 w-4" />
+        <Minus className='h-4 w-4' />
         <span>Burn & Withdraw</span>
       </Button>
-      
-      <WithdrawalModal 
-        open={showWithdrawalModal} 
-        onOpenChange={setShowWithdrawalModal} 
+
+      <WithdrawalModal
+        open={showWithdrawalModal}
+        onOpenChange={setShowWithdrawalModal}
       />
     </>
   );

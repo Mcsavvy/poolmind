@@ -1,8 +1,16 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Queue from 'bull';
 import { AppConfig } from '../config/env.schema';
-import { NotificationMessage, NotificationResult } from './notifications.service';
+import {
+  NotificationMessage,
+  NotificationResult,
+} from './notifications.service';
 
 // Job data interfaces
 export interface UserNotificationJob {
@@ -60,7 +68,7 @@ export interface InAppNotificationJob {
   };
 }
 
-export type NotificationJobData = 
+export type NotificationJobData =
   | UserNotificationJob
   | TelegramUserNotificationJob
   | RoleNotificationJob
@@ -79,27 +87,25 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(NotificationQueueService.name);
   private notificationQueue: Queue.Queue<NotificationJobData>;
 
-  constructor(
-    private readonly configService: ConfigService<AppConfig>,
-  ) {}
+  constructor(private readonly configService: ConfigService<AppConfig>) {}
 
   async onModuleInit() {
     const redisUrl = this.configService.get<string>('redis.url');
-    
+
     // Initialize the notification queue
     this.notificationQueue = new Queue('notification-queue', redisUrl!, {
       defaultJobOptions: {
         removeOnComplete: 50, // Keep last 50 completed jobs
-        removeOnFail: 20,     // Keep last 20 failed jobs
-        attempts: 3,          // Retry failed jobs up to 3 times
+        removeOnFail: 20, // Keep last 20 failed jobs
+        attempts: 3, // Retry failed jobs up to 3 times
         backoff: {
           type: 'exponential',
-          delay: 2000,        // Start with 2s delay, exponentially increase
+          delay: 2000, // Start with 2s delay, exponentially increase
         },
       },
       settings: {
-        stalledInterval: 30 * 1000,    // Check for stalled jobs every 30 seconds
-        maxStalledCount: 1,             // Maximum number of times a job can be stalled
+        stalledInterval: 30 * 1000, // Check for stalled jobs every 30 seconds
+        maxStalledCount: 1, // Maximum number of times a job can be stalled
       },
     });
 
@@ -120,13 +126,20 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
       this.logger.debug(`Job ${job.id} started processing`);
     });
 
-    this.notificationQueue.on('completed', (job, result: NotificationJobResult) => {
-      if (result.success) {
-        this.logger.log(`Job ${job.id} completed successfully. Sent: ${result.result?.sentCount}, Failed: ${result.result?.failedCount}`);
-      } else {
-        this.logger.warn(`Job ${job.id} completed with issues: ${result.error}`);
-      }
-    });
+    this.notificationQueue.on(
+      'completed',
+      (job, result: NotificationJobResult) => {
+        if (result.success) {
+          this.logger.log(
+            `Job ${job.id} completed successfully. Sent: ${result.result?.sentCount}, Failed: ${result.result?.failedCount}`,
+          );
+        } else {
+          this.logger.warn(
+            `Job ${job.id} completed with issues: ${result.error}`,
+          );
+        }
+      },
+    );
 
     this.notificationQueue.on('failed', (job, err) => {
       this.logger.error(`Job ${job.id} failed:`, err);
@@ -154,7 +167,7 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
       priority?: number;
       delay?: number;
       attempts?: number;
-    }
+    },
   ): Promise<Queue.Job<NotificationJobData>> {
     try {
       const jobData: UserNotificationJob = {
@@ -171,11 +184,14 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
 
       this.logger.debug(
         `Queued user notification job ${job.id} for user ${userId}: ${message.title} ` +
-        `(priority: ${options?.priority || 'default'}, delay: ${options?.delay || 0}ms)`
+          `(priority: ${options?.priority || 'default'}, delay: ${options?.delay || 0}ms)`,
       );
       return job;
     } catch (error) {
-      this.logger.error(`Failed to queue user notification for ${userId}:`, error);
+      this.logger.error(
+        `Failed to queue user notification for ${userId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -190,7 +206,7 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
       priority?: number;
       delay?: number;
       attempts?: number;
-    }
+    },
   ): Promise<Queue.Job<NotificationJobData>> {
     const jobData: TelegramUserNotificationJob = {
       type: 'telegram-user',
@@ -204,7 +220,9 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
       attempts: options?.attempts,
     });
 
-    this.logger.debug(`Queued Telegram user notification job ${job.id} for user ${telegramId}: ${message.title}`);
+    this.logger.debug(
+      `Queued Telegram user notification job ${job.id} for user ${telegramId}: ${message.title}`,
+    );
     return job;
   }
 
@@ -218,7 +236,7 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
       priority?: number;
       delay?: number;
       attempts?: number;
-    }
+    },
   ): Promise<Queue.Job<NotificationJobData>> {
     const jobData: RoleNotificationJob = {
       type: 'role',
@@ -232,7 +250,9 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
       attempts: options?.attempts,
     });
 
-    this.logger.debug(`Queued role notification job ${job.id} for role ${role}: ${message.title}`);
+    this.logger.debug(
+      `Queued role notification job ${job.id} for role ${role}: ${message.title}`,
+    );
     return job;
   }
 
@@ -245,7 +265,7 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
       priority?: number;
       delay?: number;
       attempts?: number;
-    }
+    },
   ): Promise<Queue.Job<NotificationJobData>> {
     const jobData: BroadcastNotificationJob = {
       type: 'broadcast',
@@ -258,7 +278,9 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
       attempts: options?.attempts,
     });
 
-    this.logger.debug(`Queued broadcast notification job ${job.id}: ${message.title}`);
+    this.logger.debug(
+      `Queued broadcast notification job ${job.id}: ${message.title}`,
+    );
     return job;
   }
 
@@ -271,7 +293,7 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
       priority?: number;
       delay?: number;
       attempts?: number;
-    }
+    },
   ): Promise<Queue.Job<NotificationJobData>> {
     const jobData: ChannelNotificationJob = {
       type: 'channel',
@@ -284,7 +306,9 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
       attempts: options?.attempts,
     });
 
-    this.logger.debug(`Queued channel notification job ${job.id}: ${message.title}`);
+    this.logger.debug(
+      `Queued channel notification job ${job.id}: ${message.title}`,
+    );
     return job;
   }
 
@@ -305,7 +329,12 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
         completed: completed.length,
         failed: failed.length,
         delayed: delayed.length,
-        total: waiting.length + active.length + completed.length + failed.length + delayed.length,
+        total:
+          waiting.length +
+          active.length +
+          completed.length +
+          failed.length +
+          delayed.length,
       };
 
       this.logger.debug(`Queue stats: ${JSON.stringify(stats)}`);
@@ -323,7 +352,9 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
     try {
       const stats = await this.getQueueStats();
       await this.notificationQueue.empty();
-      this.logger.warn(`Notification queue cleared - Removed ${stats.waiting} waiting and ${stats.delayed} delayed jobs`);
+      this.logger.warn(
+        `Notification queue cleared - Removed ${stats.waiting} waiting and ${stats.delayed} delayed jobs`,
+      );
     } catch (error) {
       this.logger.error('Failed to clear notification queue:', error);
       throw error;
@@ -377,7 +408,7 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
       priority?: number;
       delay?: number;
       attempts?: number;
-    }
+    },
   ): Promise<Queue.Job<NotificationJobData>> {
     const jobData: InAppNotificationJob = {
       type: 'in-app',
@@ -390,7 +421,9 @@ export class NotificationQueueService implements OnModuleInit, OnModuleDestroy {
       attempts: options?.attempts,
     });
 
-    this.logger.debug(`Queued in-app notification job ${job.id}: ${notificationData.title}`);
+    this.logger.debug(
+      `Queued in-app notification job ${job.id}: ${notificationData.title}`,
+    );
     return job;
   }
 

@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useClient } from "./api";
-import { useAuthSession } from "@/components/auth/session-provider";
-import { useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useClient } from './api';
+import { useAuthSession } from '@/components/auth/session-provider';
+import { useEffect } from 'react';
 
 // Transaction API types based on OpenAPI schema
 export interface CreateDepositRequest {
   amount: string;
   sourceAddress: string;
   txId: string;
-  network?: "mainnet" | "testnet";
+  network?: 'mainnet' | 'testnet';
   notes?: string;
   tags?: string[];
 }
@@ -22,7 +22,7 @@ export interface CreateWithdrawalRequest {
   minimumAmount?: string;
   isEmergencyWithdrawal?: boolean;
   txId: string;
-  network?: "mainnet" | "testnet";
+  network?: 'mainnet' | 'testnet';
   notes?: string;
   tags?: string[];
 }
@@ -30,16 +30,16 @@ export interface CreateWithdrawalRequest {
 export interface TransactionQuery {
   page?: number;
   limit?: number;
-  type?: "deposit" | "withdrawal";
+  type?: 'deposit' | 'withdrawal';
   status?:
-    | "pending"
-    | "broadcast"
-    | "confirming"
-    | "confirmed"
-    | "failed"
-    | "cancelled";
-  sortBy?: "createdAt" | "updatedAt" | "amount";
-  sortOrder?: "asc" | "desc";
+    | 'pending'
+    | 'broadcast'
+    | 'confirming'
+    | 'confirmed'
+    | 'failed'
+    | 'cancelled';
+  sortBy?: 'createdAt' | 'updatedAt' | 'amount';
+  sortOrder?: 'asc' | 'desc';
   search?: string;
   fromDate?: string;
   toDate?: string;
@@ -48,21 +48,21 @@ export interface TransactionQuery {
 export interface Transaction {
   id: string;
   userId: string;
-  type: "deposit" | "withdrawal";
+  type: 'deposit' | 'withdrawal';
   status:
-    | "pending"
-    | "broadcast"
-    | "confirming"
-    | "confirmed"
-    | "failed"
-    | "cancelled";
+    | 'pending'
+    | 'broadcast'
+    | 'confirming'
+    | 'confirmed'
+    | 'failed'
+    | 'cancelled';
   notes?: string;
   tags?: string[];
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
   version: number;
-  
+
   // Nested metadata structure
   metadata: {
     network: string;
@@ -84,7 +84,7 @@ export interface Transaction {
     poolTotalValue?: string;
     poolTotalShares?: string;
   };
-  
+
   // Deposit-specific metadata
   depositMetadata?: {
     sourceAddress: string;
@@ -95,7 +95,7 @@ export interface Transaction {
     entryFeeRate?: string;
     entryFeeAmount?: string;
   };
-  
+
   // Withdrawal-specific metadata
   withdrawalMetadata?: {
     destinationAddress: string;
@@ -155,18 +155,18 @@ export function useTransactions(query?: Partial<TransactionQuery>) {
   const { session } = useAuthSession();
 
   return useQuery({
-    queryKey: ["transactions", query],
+    queryKey: ['transactions', query],
     queryFn: async (): Promise<TransactionListResponse> => {
       const params = new URLSearchParams();
-      if (query?.page) params.append("page", query.page.toString());
-      if (query?.limit) params.append("limit", query.limit.toString());
-      if (query?.type) params.append("type", query.type);
-      if (query?.status) params.append("status", query.status);
-      if (query?.sortBy) params.append("sortBy", query.sortBy);
-      if (query?.sortOrder) params.append("sortOrder", query.sortOrder);
-      if (query?.search) params.append("search", query.search);
-      if (query?.fromDate) params.append("fromDate", query.fromDate);
-      if (query?.toDate) params.append("toDate", query.toDate);
+      if (query?.page) params.append('page', query.page.toString());
+      if (query?.limit) params.append('limit', query.limit.toString());
+      if (query?.type) params.append('type', query.type);
+      if (query?.status) params.append('status', query.status);
+      if (query?.sortBy) params.append('sortBy', query.sortBy);
+      if (query?.sortOrder) params.append('sortOrder', query.sortOrder);
+      if (query?.search) params.append('search', query.search);
+      if (query?.fromDate) params.append('fromDate', query.fromDate);
+      if (query?.toDate) params.append('toDate', query.toDate);
 
       const response = await client.get(`/transactions?${params.toString()}`);
       return response.data;
@@ -184,7 +184,7 @@ export function useTransaction(transactionId: string) {
   const { session } = useAuthSession();
 
   return useQuery({
-    queryKey: ["transaction", transactionId],
+    queryKey: ['transaction', transactionId],
     queryFn: async (): Promise<TransactionResponse> => {
       const response = await client.get(`/transactions/${transactionId}`);
       return response.data;
@@ -201,9 +201,9 @@ export function useTransactionStats() {
   const { session } = useAuthSession();
 
   return useQuery({
-    queryKey: ["transaction-stats"],
+    queryKey: ['transaction-stats'],
     queryFn: async (): Promise<TransactionStatsResponse> => {
-      const response = await client.get("/transactions/stats/summary");
+      const response = await client.get('/transactions/stats/summary');
       return response.data;
     },
     enabled: !!session?.token,
@@ -220,17 +220,17 @@ export function useCreateDeposit() {
 
   return useMutation({
     mutationFn: async (
-      request: CreateDepositRequest
+      request: CreateDepositRequest,
     ): Promise<TransactionResponse> => {
-      const response = await client.post("/transactions/deposits", request);
+      const response = await client.post('/transactions/deposits', request);
       return response.data;
     },
     onSuccess: () => {
       // Invalidate related queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["transaction-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["user-balance"] });
-      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['transaction-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['user-balance'] });
+      queryClient.invalidateQueries({ queryKey: ['user-stats'] });
     },
   });
 }
@@ -244,17 +244,17 @@ export function useCreateWithdrawal() {
 
   return useMutation({
     mutationFn: async (
-      request: CreateWithdrawalRequest
+      request: CreateWithdrawalRequest,
     ): Promise<TransactionResponse> => {
-      const response = await client.post("/transactions/withdrawals", request);
+      const response = await client.post('/transactions/withdrawals', request);
       return response.data;
     },
     onSuccess: () => {
       // Invalidate related queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["transaction-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["user-balance"] });
-      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['transaction-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['user-balance'] });
+      queryClient.invalidateQueries({ queryKey: ['user-stats'] });
     },
   });
 }
@@ -265,13 +265,13 @@ export function useCreateWithdrawal() {
  */
 export function useTransactionPolling(
   transactionId: string,
-  enabled: boolean = true
+  enabled: boolean = true,
 ) {
   const client = useClient();
   const { session } = useAuthSession();
 
   return useQuery({
-    queryKey: ["transaction-poll", transactionId],
+    queryKey: ['transaction-poll', transactionId],
     queryFn: async (): Promise<TransactionResponse> => {
       const response = await client.get(`/transactions/${transactionId}`);
       return response.data;
@@ -294,28 +294,28 @@ export function useTransactionTracker(transactionId: string | null) {
     data: transactionData,
     isLoading,
     error,
-  } = useTransactionPolling(transactionId || "", !!transactionId);
+  } = useTransactionPolling(transactionId || '', !!transactionId);
 
   const transaction = transactionData?.data?.transaction;
 
   // Check if transaction is in final state
   const isCompleted =
-    transaction?.status === "confirmed" ||
-    transaction?.status === "failed" ||
-    transaction?.status === "cancelled";
+    transaction?.status === 'confirmed' ||
+    transaction?.status === 'failed' ||
+    transaction?.status === 'cancelled';
 
   // Stop polling when transaction reaches final state
   useEffect(() => {
     if (isCompleted && transactionId) {
       // Invalidate relevant queries to update UI
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["user-balance"] });
-      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['user-balance'] });
+      queryClient.invalidateQueries({ queryKey: ['user-stats'] });
 
       // Stop polling this specific transaction after a delay to allow final state to be captured
       setTimeout(() => {
         queryClient.removeQueries({
-          queryKey: ["transaction-poll", transactionId],
+          queryKey: ['transaction-poll', transactionId],
         });
       }, 5000);
     }
@@ -325,7 +325,7 @@ export function useTransactionTracker(transactionId: string | null) {
   const stopTracking = () => {
     if (transactionId) {
       queryClient.removeQueries({
-        queryKey: ["transaction-poll", transactionId],
+        queryKey: ['transaction-poll', transactionId],
       });
     }
   };

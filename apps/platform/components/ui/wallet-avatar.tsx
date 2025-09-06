@@ -12,17 +12,22 @@ interface WalletAvatarProps {
   className?: string;
 }
 
-export function WalletAvatar({ 
-  walletAddress, 
-  profilePicture, 
-  displayName, 
-  username, 
+export function WalletAvatar({
+  walletAddress,
+  profilePicture,
+  displayName,
+  username,
   size = 'md',
-  className 
+  className,
 }: WalletAvatarProps) {
   const getInitials = (name?: string) => {
     if (name) {
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
     }
     return getWalletInitials(walletAddress);
   };
@@ -30,18 +35,16 @@ export function WalletAvatar({
   const sizeClasses = {
     sm: 'h-6 w-6',
     md: 'h-8 w-8',
-    lg: 'h-12 w-12'
+    lg: 'h-12 w-12',
   };
 
   return (
     <Avatar className={`${sizeClasses[size]} ${className || ''}`}>
-      <AvatarImage 
-        src={profilePicture || generateWalletAvatar(walletAddress)} 
-        alt={displayName || username || 'User'} 
+      <AvatarImage
+        src={profilePicture || generateWalletAvatar(walletAddress)}
+        alt={displayName || username || 'User'}
       />
-      <AvatarFallback>
-        {getInitials(displayName || username)}
-      </AvatarFallback>
+      <AvatarFallback>{getInitials(displayName || username)}</AvatarFallback>
     </Avatar>
   );
-} 
+}

@@ -43,6 +43,7 @@ When a user successfully links their Telegram account, they automatically receiv
 - 💡 Instructions on managing notification preferences
 
 **Example Welcome Message:**
+
 ```
 🔗 Telegram Connected Successfully!
 
@@ -74,6 +75,7 @@ When a user unlinks their Telegram account, they receive:
 - 🔄 Instructions on how to re-link if desired
 
 **Example Goodbye Message:**
+
 ```
 🔗 Telegram Disconnected
 
@@ -94,16 +96,19 @@ Thank you for being part of PoolMind! 💙
 ## Features
 
 ### Error Handling
+
 - Messages are sent asynchronously to avoid blocking the linking/unlinking process
 - If a notification fails to send, the core functionality (linking/unlinking) still succeeds
 - Errors are logged for debugging but don't interfere with user experience
 
 ### Personalization
+
 - Messages use the user's display name, username, or wallet address (with fallback logic)
 - Dynamic content based on available configuration (group/channel links)
 - Consistent branding with emojis and formatting
 
 ### Notification Preferences
+
 - Respects user's existing notification preferences
 - Users must have Telegram notifications enabled to receive these messages
 - Links are only included if the corresponding environment variables are set
@@ -153,6 +158,7 @@ To test the integration:
 ### Logs
 
 Check application logs for notification-related errors:
+
 ```bash
 # Look for these log patterns
 Failed to send Telegram welcome message: [error details]

@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Queue from 'bull';
 import { AppConfig } from '../config/env.schema';
@@ -20,13 +25,13 @@ export interface StacksPollingJobResult {
 }
 
 @Injectable()
-export class StacksPollingQueueService implements OnModuleInit, OnModuleDestroy {
+export class StacksPollingQueueService
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly logger = new Logger(StacksPollingQueueService.name);
   private pollingQueue: Queue.Queue<StacksPollingJobData>;
 
-  constructor(
-    private readonly configService: ConfigService<AppConfig>,
-  ) {}
+  constructor(private readonly configService: ConfigService<AppConfig>) {}
 
   async onModuleInit() {
     // Initialize queue without waiting for Redis connection
@@ -45,7 +50,9 @@ export class StacksPollingQueueService implements OnModuleInit, OnModuleDestroy 
   private initializeQueueAsync() {
     try {
       const redisUrl = this.configService.get<string>('redis.url');
-      this.logger.log(`🔍 Initializing Stacks polling queue with Redis URL: ${redisUrl}`);
+      this.logger.log(
+        `🔍 Initializing Stacks polling queue with Redis URL: ${redisUrl}`,
+      );
 
       this.pollingQueue = new Queue('stacks-polling-queue', redisUrl!, {
         defaultJobOptions: {
@@ -65,18 +72,19 @@ export class StacksPollingQueueService implements OnModuleInit, OnModuleDestroy 
 
       // Set up event handlers immediately
       this.setupQueueEventHandlers();
-      
-      this.logger.log('✓ Stacks polling queue initialized (Redis connection will be established asynchronously)');
-      
+
+      this.logger.log(
+        '✓ Stacks polling queue initialized (Redis connection will be established asynchronously)',
+      );
+
       // Handle Redis connection asynchronously
       this.pollingQueue.on('ready', () => {
         this.logger.log('✅ Redis connection established');
       });
-      
+
       this.pollingQueue.on('error', (error) => {
         this.logger.error('❌ Redis connection error:', error);
       });
-      
     } catch (error) {
       this.logger.error('Failed to initialize polling queue:', error);
       throw error;
@@ -100,29 +108,38 @@ export class StacksPollingQueueService implements OnModuleInit, OnModuleDestroy 
     });
 
     this.pollingQueue.on('active', (job) => {
-      this.logger.debug(`Polling job ${job.id} started processing transaction ${job.data.transactionId}`);
+      this.logger.debug(
+        `Polling job ${job.id} started processing transaction ${job.data.transactionId}`,
+      );
     });
 
     this.pollingQueue.on('completed', (job, result: StacksPollingJobResult) => {
       if (result.success) {
         this.logger.log(
           `Polling job ${job.id} completed successfully for transaction ${result.transactionId}` +
-          (result.newStatus ? ` - Status: ${result.newStatus}` : '') +
-          (result.confirmations !== undefined ? ` - Confirmations: ${result.confirmations}` : '')
+            (result.newStatus ? ` - Status: ${result.newStatus}` : '') +
+            (result.confirmations !== undefined
+              ? ` - Confirmations: ${result.confirmations}`
+              : ''),
         );
       } else {
         this.logger.warn(
-          `Polling job ${job.id} completed with issues for transaction ${result.transactionId}: ${result.error}`
+          `Polling job ${job.id} completed with issues for transaction ${result.transactionId}: ${result.error}`,
         );
       }
     });
 
     this.pollingQueue.on('failed', (job, err) => {
-      this.logger.error(`Polling job ${job.id} failed for transaction ${job.data.transactionId}:`, err);
+      this.logger.error(
+        `Polling job ${job.id} failed for transaction ${job.data.transactionId}:`,
+        err,
+      );
     });
 
     this.pollingQueue.on('stalled', (job) => {
-      this.logger.warn(`Polling job ${job.id} stalled for transaction ${job.data.transactionId}`);
+      this.logger.warn(
+        `Polling job ${job.id} stalled for transaction ${job.data.transactionId}`,
+      );
     });
   }
 
@@ -136,7 +153,10 @@ export class StacksPollingQueueService implements OnModuleInit, OnModuleDestroy 
   /**
    * Add a job to the queue
    */
-  async addJob(data: StacksPollingJobData, options?: any): Promise<Queue.Job<StacksPollingJobData>> {
+  async addJob(
+    data: StacksPollingJobData,
+    options?: any,
+  ): Promise<Queue.Job<StacksPollingJobData>> {
     return this.pollingQueue.add('poll-transaction', data, options);
   }
 }

@@ -12,7 +12,10 @@ import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
 import { AppConfig } from '../config/env.schema';
 import { IUser, type IUserModel } from '../lib/models/user';
-import { NotificationsService, NotificationType } from '../notifications/notifications.service';
+import {
+  NotificationsService,
+  NotificationType,
+} from '../notifications/notifications.service';
 
 export interface WalletCredentials {
   walletAddress: string;
@@ -69,20 +72,22 @@ export class AuthService {
     publicKey: string,
   ): Promise<boolean> {
     try {
-      this.logger.debug(`Verifying Stacks signature for public key: ${publicKey.substring(0, 20)}...`);
-      
+      this.logger.debug(
+        `Verifying Stacks signature for public key: ${publicKey.substring(0, 20)}...`,
+      );
+
       const isValid = verifyMessageSignatureRsv({
         message,
         signature,
         publicKey,
       });
-      
+
       if (isValid) {
         this.logger.debug(`✓ Stacks signature verification successful`);
       } else {
         this.logger.warn(`✗ Stacks signature verification failed`);
       }
-      
+
       return isValid;
     } catch (error) {
       this.logger.error(`Error verifying Stacks signature:`, error);
@@ -96,14 +101,16 @@ export class AuthService {
   parseAuthMessage(message: string): AuthMessage | null {
     try {
       this.logger.debug(`Parsing authentication message`);
-      
+
       const walletAddressMatch = message.match(/Wallet Address: (.+)/);
       const timestampMatch = message.match(/Timestamp: (.+)/);
       const nonceMatch = message.match(/Nonce: (.+)/);
       const domainMatch = message.match(/Domain: (.+)/);
 
       if (!walletAddressMatch || !timestampMatch || !nonceMatch) {
-        this.logger.warn(`✗ Invalid authentication message format - missing required fields`);
+        this.logger.warn(
+          `✗ Invalid authentication message format - missing required fields`,
+        );
         return null;
       }
 
@@ -114,7 +121,9 @@ export class AuthService {
         domain: domainMatch?.[1],
       };
 
-      this.logger.debug(`✓ Authentication message parsed successfully for wallet: ${authMessage.walletAddress.substring(0, 8)}...`);
+      this.logger.debug(
+        `✓ Authentication message parsed successfully for wallet: ${authMessage.walletAddress.substring(0, 8)}...`,
+      );
       return authMessage;
     } catch (error) {
       this.logger.error(`Error parsing auth message:`, error);
@@ -126,8 +135,10 @@ export class AuthService {
    * Generate authentication message for wallet signing
    */
   generateAuthMessage(walletAddress: string, nonce?: string): string {
-    this.logger.debug(`Generating authentication message for wallet: ${walletAddress.substring(0, 8)}...`);
-    
+    this.logger.debug(
+      `Generating authentication message for wallet: ${walletAddress.substring(0, 8)}...`,
+    );
+
     const timestamp = new Date().toISOString();
     const randomNonce = nonce || Math.random().toString(36).substring(2);
     let message = 'Sign this message to authenticate with PoolMind\n';
@@ -136,8 +147,10 @@ export class AuthService {
     message += `\nTimestamp: ${timestamp}`;
     message += `\nNonce: ${randomNonce}`;
     message += `\n\nBy signing this message, you confirm that you are the owner of this wallet address and agree to authenticate with PoolMind.`;
-    
-    this.logger.debug(`✓ Authentication message generated with nonce: ${randomNonce}`);
+
+    this.logger.debug(
+      `✓ Authentication message generated with nonce: ${randomNonce}`,
+    );
     return message;
   }
 
@@ -157,7 +170,9 @@ export class AuthService {
       // network = 'testnet',
     } = credentials;
 
-    this.logger.log(`🔐 Starting wallet authentication for: ${walletAddress.substring(0, 8)}... (IP: ${ipAddress})`);
+    this.logger.log(
+      `🔐 Starting wallet authentication for: ${walletAddress.substring(0, 8)}... (IP: ${ipAddress})`,
+    );
 
     // Verify the message signature
     const isValidSignature = await this.verifyStacksSignature(
@@ -167,20 +182,26 @@ export class AuthService {
     );
 
     if (!isValidSignature) {
-      this.logger.warn(`✗ Invalid wallet signature for: ${walletAddress.substring(0, 8)}...`);
+      this.logger.warn(
+        `✗ Invalid wallet signature for: ${walletAddress.substring(0, 8)}...`,
+      );
       throw new UnauthorizedException('Invalid wallet signature');
     }
 
     // Parse and validate the auth message
     const messageData = this.parseAuthMessage(message);
     if (!messageData) {
-      this.logger.warn(`✗ Invalid message format for: ${walletAddress.substring(0, 8)}...`);
+      this.logger.warn(
+        `✗ Invalid message format for: ${walletAddress.substring(0, 8)}...`,
+      );
       throw new UnauthorizedException('Invalid message format');
     }
 
     // Validate wallet address
     if (messageData.walletAddress !== walletAddress) {
-      this.logger.warn(`✗ Wallet address mismatch for: ${walletAddress.substring(0, 8)}... (expected: ${messageData.walletAddress.substring(0, 8)}...)`);
+      this.logger.warn(
+        `✗ Wallet address mismatch for: ${walletAddress.substring(0, 8)}... (expected: ${messageData.walletAddress.substring(0, 8)}...)`,
+      );
       throw new UnauthorizedException('Wallet address mismatch');
     }
 
@@ -190,7 +211,9 @@ export class AuthService {
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
     if (signedAt < fiveMinutesAgo) {
-      this.logger.warn(`✗ Signature expired for: ${walletAddress.substring(0, 8)}... (signed at: ${signedAt.toISOString()})`);
+      this.logger.warn(
+        `✗ Signature expired for: ${walletAddress.substring(0, 8)}... (signed at: ${signedAt.toISOString()})`,
+      );
       throw new UnauthorizedException('Signature expired');
     }
 
@@ -199,7 +222,9 @@ export class AuthService {
 
     if (!user) {
       // Create new user
-      this.logger.log(`👤 Creating new user for wallet: ${walletAddress.substring(0, 8)}...`);
+      this.logger.log(
+        `👤 Creating new user for wallet: ${walletAddress.substring(0, 8)}...`,
+      );
       user = new this.userModel({
         walletAddress,
         publicKey,
@@ -215,7 +240,9 @@ export class AuthService {
       this.logger.log(`✓ New user created with ID: ${user._id}`);
     } else {
       // Update existing user
-      this.logger.debug(`👤 Updating existing user ${user._id} login info (login count: ${user.loginCount + 1})`);
+      this.logger.debug(
+        `👤 Updating existing user ${user._id} login info (login count: ${user.loginCount + 1})`,
+      );
       user.lastLoginAt = new Date();
       user.loginCount += 1;
       user.connectionHistory.unshift({
@@ -235,7 +262,9 @@ export class AuthService {
     // Generate JWT token
     const { token, expiresAt } = await this.generateToken(user);
 
-    this.logger.log(`✓ Wallet authentication successful for user ${user._id} (${walletAddress.substring(0, 8)}...)`);
+    this.logger.log(
+      `✓ Wallet authentication successful for user ${user._id} (${walletAddress.substring(0, 8)}...)`,
+    );
     return { user, token, expiresAt };
   }
 
@@ -244,7 +273,7 @@ export class AuthService {
    */
   verifyTelegramAuth(data: TelegramCredentials): boolean {
     this.logger.debug(`Verifying Telegram auth data for user ${data.id}`);
-    
+
     const botToken = this.configService.get<string>('telegram.botToken');
     if (!botToken) {
       this.logger.error('Telegram bot token not configured');
@@ -279,11 +308,15 @@ export class AuthService {
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
     if (authDate < fiveMinutesAgo) {
-      this.logger.warn(`✗ Telegram auth data expired for user ${data.id} (auth date: ${authDate.toISOString()})`);
+      this.logger.warn(
+        `✗ Telegram auth data expired for user ${data.id} (auth date: ${authDate.toISOString()})`,
+      );
       return false;
     }
 
-    this.logger.debug(`✓ Telegram auth verification successful for user ${data.id}`);
+    this.logger.debug(
+      `✓ Telegram auth verification successful for user ${data.id}`,
+    );
     return true;
   }
 
@@ -294,18 +327,24 @@ export class AuthService {
     userId: string,
     telegramData: TelegramCredentials,
   ): Promise<IUser> {
-    this.logger.log(`🔗 Linking Telegram account ${telegramData.id} to user ${userId}`);
+    this.logger.log(
+      `🔗 Linking Telegram account ${telegramData.id} to user ${userId}`,
+    );
 
     // Verify Telegram data
     if (!this.verifyTelegramAuth(telegramData)) {
-      this.logger.warn(`✗ Invalid Telegram authentication data for user ${telegramData.id}`);
+      this.logger.warn(
+        `✗ Invalid Telegram authentication data for user ${telegramData.id}`,
+      );
       throw new UnauthorizedException('Invalid Telegram authentication data');
     }
 
     // Check if Telegram ID is already linked to another account
     const existingUser = await this.userModel.findByTelegramId(telegramData.id);
     if (existingUser && existingUser._id.toString() !== userId) {
-      this.logger.warn(`✗ Telegram ID ${telegramData.id} already linked to user ${existingUser._id}`);
+      this.logger.warn(
+        `✗ Telegram ID ${telegramData.id} already linked to user ${existingUser._id}`,
+      );
       throw new BadRequestException(
         'Telegram account is already linked to another user',
       );
@@ -314,7 +353,9 @@ export class AuthService {
     // Find the user to link to
     const user = await this.userModel.findById(userId);
     if (!user || !user.isActive) {
-      this.logger.warn(`✗ User ${userId} not found or inactive for Telegram linking`);
+      this.logger.warn(
+        `✗ User ${userId} not found or inactive for Telegram linking`,
+      );
       throw new UnauthorizedException('User not found');
     }
 
@@ -330,8 +371,10 @@ export class AuthService {
     };
 
     await user.save();
-    this.logger.log(`✓ Telegram account ${telegramData.id} successfully linked to user ${userId}`);
-    
+    this.logger.log(
+      `✓ Telegram account ${telegramData.id} successfully linked to user ${userId}`,
+    );
+
     // Queue welcome notification (non-blocking)
     try {
       await this.queueTelegramWelcomeMessage(user);
@@ -339,7 +382,7 @@ export class AuthService {
       // Log error but don't fail the linking process
       this.logger.error('Failed to queue Telegram welcome message:', error);
     }
-    
+
     return user;
   }
 
@@ -351,7 +394,9 @@ export class AuthService {
 
     const user = await this.userModel.findById(userId);
     if (!user || !user.isActive) {
-      this.logger.warn(`✗ User ${userId} not found or inactive for Telegram unlinking`);
+      this.logger.warn(
+        `✗ User ${userId} not found or inactive for Telegram unlinking`,
+      );
       throw new UnauthorizedException('User not found');
     }
 
@@ -364,11 +409,13 @@ export class AuthService {
       // Log error but don't fail the unlinking process
       this.logger.error('Failed to queue Telegram goodbye message:', error);
     }
-    
+
     user.telegramAuth = undefined;
     await user.save();
-    
-    this.logger.log(`✓ Telegram account ${telegramId || 'unknown'} successfully unlinked from user ${userId}`);
+
+    this.logger.log(
+      `✓ Telegram account ${telegramId || 'unknown'} successfully unlinked from user ${userId}`,
+    );
     return user;
   }
 
@@ -379,25 +426,33 @@ export class AuthService {
     credentials: TelegramCredentials,
     ipAddress?: string,
   ): Promise<{ user: IUser; token: string; expiresAt: number }> {
-    this.logger.log(`📱 Starting Telegram authentication for user ${credentials.id} (IP: ${ipAddress})`);
+    this.logger.log(
+      `📱 Starting Telegram authentication for user ${credentials.id} (IP: ${ipAddress})`,
+    );
 
     // Verify Telegram auth data
     if (!this.verifyTelegramAuth(credentials)) {
-      this.logger.warn(`✗ Invalid Telegram authentication data for user ${credentials.id}`);
+      this.logger.warn(
+        `✗ Invalid Telegram authentication data for user ${credentials.id}`,
+      );
       throw new UnauthorizedException('Invalid Telegram authentication data');
     }
 
     // Find user by Telegram ID
     const user = await this.userModel.findByTelegramId(credentials.id);
     if (!user || !user.isActive) {
-      this.logger.warn(`✗ Telegram ID ${credentials.id} not linked to any active user`);
+      this.logger.warn(
+        `✗ Telegram ID ${credentials.id} not linked to any active user`,
+      );
       throw new UnauthorizedException(
         'Telegram account not linked to any user',
       );
     }
 
     // Update login info
-    this.logger.debug(`👤 Updating login info for user ${user._id} (login count: ${user.loginCount + 1})`);
+    this.logger.debug(
+      `👤 Updating login info for user ${user._id} (login count: ${user.loginCount + 1})`,
+    );
     user.lastLoginAt = new Date();
     user.loginCount += 1;
     user.connectionHistory.unshift({
@@ -416,7 +471,9 @@ export class AuthService {
     // Generate JWT token
     const { token, expiresAt } = await this.generateToken(user);
 
-    this.logger.log(`✓ Telegram authentication successful for user ${user._id} (Telegram ID: ${credentials.id})`);
+    this.logger.log(
+      `✓ Telegram authentication successful for user ${user._id} (Telegram ID: ${credentials.id})`,
+    );
     return { user, token, expiresAt };
   }
 
@@ -450,7 +507,9 @@ export class AuthService {
 
       const user = await this.userModel.findById(payload.sub);
       if (!user || !user.isActive) {
-        this.logger.debug(`Token valid but user ${payload.sub} not found or inactive`);
+        this.logger.debug(
+          `Token valid but user ${payload.sub} not found or inactive`,
+        );
         return null;
       }
 
@@ -479,17 +538,17 @@ export class AuthService {
     try {
       this.logger.debug(`Getting user by ID: ${userId}`);
       const user = await this.userModel.findById(userId);
-      
+
       if (!user) {
         this.logger.debug(`User ${userId} not found`);
         return null;
       }
-      
+
       if (!user.isActive) {
         this.logger.debug(`User ${userId} is inactive`);
         return null;
       }
-      
+
       return user;
     } catch (error) {
       this.logger.error(`Error getting user by ID ${userId}:`, error);
@@ -504,7 +563,7 @@ export class AuthService {
     oldToken: string,
   ): Promise<{ token: string; expiresAt: number } | null> {
     this.logger.debug('Processing token refresh request');
-    
+
     const user = await this.verifyToken(oldToken);
     if (!user) {
       this.logger.debug('Token refresh failed - invalid token or user');
@@ -523,7 +582,7 @@ export class AuthService {
     const displayName = user.getDisplayName();
     const groupLink = this.configService.get<string>('telegram.groupLink');
     const channelLink = this.configService.get<string>('telegram.channelLink');
-    
+
     let body = `Welcome to PoolMind, ${displayName}! 🎉\n\n`;
     body += `Your Telegram account has been successfully linked to your PoolMind wallet.\n\n`;
     body += `📊 You'll now receive important updates about:\n`;
@@ -531,7 +590,7 @@ export class AuthService {
     body += `• Trading performance\n`;
     body += `• System announcements\n`;
     body += `• Security alerts\n\n`;
-    
+
     if (groupLink || channelLink) {
       body += `📢 Stay connected with our community:\n`;
       if (groupLink) {
@@ -542,23 +601,27 @@ export class AuthService {
       }
       body += `\n`;
     }
-    
+
     body += `💡 You can manage your notification preferences in your profile settings anytime.\n\n`;
     body += `Happy trading! 🚀`;
 
-    await this.notificationsService.queueToUser(user._id.toString(), {
-      type: NotificationType.SYSTEM,
-      title: '🔗 Telegram Connected Successfully!',
-      body,
-      options: {
-        parseMode: 'Markdown',
-        disablePreview: false,
-        silent: false,
-        includeIcon: false
+    await this.notificationsService.queueToUser(
+      user._id.toString(),
+      {
+        type: NotificationType.SYSTEM,
+        title: '🔗 Telegram Connected Successfully!',
+        body,
+        options: {
+          parseMode: 'Markdown',
+          disablePreview: false,
+          silent: false,
+          includeIcon: false,
+        },
       },
-    }, {
-      priority: 2, // High priority for welcome messages
-    });
+      {
+        priority: 2, // High priority for welcome messages
+      },
+    );
   }
 
   /**
@@ -566,7 +629,7 @@ export class AuthService {
    */
   private async queueTelegramGoodbyeMessage(user: IUser): Promise<void> {
     const displayName = user.getDisplayName();
-    
+
     let body = `Goodbye, ${displayName}! 👋\n\n`;
     body += `Your Telegram account has been unlinked from PoolMind.\n\n`;
     body += `📱 You will no longer receive:\n`;
@@ -576,17 +639,21 @@ export class AuthService {
     body += `🔄 You can always link your Telegram account again through your profile settings.\n\n`;
     body += `Thank you for being part of PoolMind! 💙`;
 
-    await this.notificationsService.queueToTelegramUser(user.telegramAuth!.telegramId, {
-      type: NotificationType.SYSTEM,
-      title: '🔗 Telegram Disconnected',
-      body,
-      options: {
-        parseMode: 'Markdown',
-        silent: false,
-        includeIcon: false
+    await this.notificationsService.queueToTelegramUser(
+      user.telegramAuth!.telegramId,
+      {
+        type: NotificationType.SYSTEM,
+        title: '🔗 Telegram Disconnected',
+        body,
+        options: {
+          parseMode: 'Markdown',
+          silent: false,
+          includeIcon: false,
+        },
       },
-    }, {
-      priority: 2, // High priority for goodbye messages
-    });
+      {
+        priority: 2, // High priority for goodbye messages
+      },
+    );
   }
 }

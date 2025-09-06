@@ -5,6 +5,7 @@ The NotificationsService provides a comprehensive way to send both Telegram and 
 ## Features
 
 ### Telegram Notifications
+
 - ✅ Send notifications to specific users by ID or Telegram ID
 - ✅ Send notifications to users by role (admin, moderator, user)
 - ✅ Broadcast notifications to all eligible users
@@ -15,6 +16,7 @@ The NotificationsService provides a comprehensive way to send both Telegram and 
 - ✅ Multiple notification types with custom emojis
 
 ### In-App Notifications
+
 - ✅ Create notifications stored in database with read/unread tracking
 - ✅ Flexible targeting: user-specific, role-based, or broadcast
 - ✅ Rich metadata support (action URLs, related entities, custom data)
@@ -62,13 +64,13 @@ export class SomeService {
 
 ```typescript
 enum NotificationType {
-  SECURITY = 'security',     // 🔒 Security alerts
-  UPDATE = 'update',         // 📢 System updates
-  MARKETING = 'marketing',   // 🎯 Marketing messages
-  SYSTEM = 'system',         // ⚙️ System notifications
-  TRADING = 'trading',       // 📈 Trading updates
-  ARBITRAGE = 'arbitrage',   // ⚡ Arbitrage notifications
-  TRANSACTION = 'transaction' // 💰 Transaction updates
+  SECURITY = 'security', // 🔒 Security alerts
+  UPDATE = 'update', // 📢 System updates
+  MARKETING = 'marketing', // 🎯 Marketing messages
+  SYSTEM = 'system', // ⚙️ System notifications
+  TRADING = 'trading', // 📈 Trading updates
+  ARBITRAGE = 'arbitrage', // ⚡ Arbitrage notifications
+  TRANSACTION = 'transaction', // 💰 Transaction updates
 }
 ```
 
@@ -76,10 +78,10 @@ enum NotificationType {
 
 ```typescript
 enum NotificationPriority {
-  LOW = 'low',           // 📝 Low priority notifications
-  NORMAL = 'normal',     // 📋 Standard notifications
-  HIGH = 'high',         // ⚠️ Important notifications
-  URGENT = 'urgent'      // 🚨 Critical notifications
+  LOW = 'low', // 📝 Low priority notifications
+  NORMAL = 'normal', // 📋 Standard notifications
+  HIGH = 'high', // ⚠️ Important notifications
+  URGENT = 'urgent', // 🚨 Critical notifications
 }
 ```
 
@@ -87,9 +89,9 @@ enum NotificationPriority {
 
 ```typescript
 enum NotificationTargetType {
-  USER = 'user',         // Send to specific user
-  ROLE = 'role',         // Send to users with specific role
-  BROADCAST = 'broadcast' // Send to all eligible users
+  USER = 'user', // Send to specific user
+  ROLE = 'role', // Send to users with specific role
+  BROADCAST = 'broadcast', // Send to all eligible users
 }
 ```
 
@@ -127,8 +129,8 @@ await notificationsService.createInAppNotification({
     relatedEntityType: 'transaction',
     relatedEntityId: 'tx123',
     actionUrl: '/transactions/tx123',
-    actionText: 'View Transaction'
-  }
+    actionText: 'View Transaction',
+  },
 });
 
 // Queue in-app notification for specific user
@@ -139,8 +141,8 @@ await notificationsService.queueInAppNotificationForUser(
   NotificationType.SYSTEM,
   {
     actionUrl: '/profile',
-    actionText: 'Complete Profile'
-  }
+    actionText: 'Complete Profile',
+  },
 );
 
 // Queue in-app notification for role
@@ -149,14 +151,14 @@ await notificationsService.queueInAppNotificationForRole(
   'Security Alert',
   'Unusual activity detected',
   NotificationType.SECURITY,
-  { priority: NotificationPriority.URGENT }
+  { priority: NotificationPriority.URGENT },
 );
 
 // Queue broadcast notification
 await notificationsService.queueInAppBroadcastNotification(
   'System Update',
   'New features are now available',
-  NotificationType.UPDATE
+  NotificationType.UPDATE,
 );
 
 // Queue transaction notification with metadata
@@ -167,8 +169,8 @@ await notificationsService.queueTransactionNotification(
   'tx456',
   {
     actionUrl: '/transactions/tx456',
-    actionText: 'Track Progress'
-  }
+    actionText: 'Track Progress',
+  },
 );
 ```
 
@@ -180,26 +182,26 @@ await notificationsService.sendSimpleMessage(
   'userId',
   'Title',
   'Body text',
-  NotificationType.SYSTEM
+  NotificationType.SYSTEM,
 );
 
 // Security alert to admins
 await notificationsService.sendSecurityAlert(
   'Security Breach',
-  'Unusual activity detected on user account.'
+  'Unusual activity detected on user account.',
 );
 
 // System update to all users
 await notificationsService.sendSystemUpdate(
   'Maintenance Window',
-  'System will be down for maintenance from 2-4 AM UTC.'
+  'System will be down for maintenance from 2-4 AM UTC.',
 );
 
 // Trading update
 await notificationsService.sendTradingUpdate(
   'New Arbitrage Opportunity',
   'High-yield opportunity detected in BTC/STX pair.',
-  'admin' // Optional: target specific role
+  'admin', // Optional: target specific role
 );
 ```
 
@@ -214,7 +216,7 @@ const message = {
     parseMode: 'Markdown' as const,
     disablePreview: true,
     silent: false, // Don't silence security alerts
-  }
+  },
 };
 ```
 
@@ -224,10 +226,11 @@ All methods return a `NotificationResult`:
 
 ```typescript
 interface NotificationResult {
-  success: boolean;        // Overall success status
-  sentCount: number;       // Number of successfully sent notifications
-  failedCount: number;     // Number of failed notifications
-  errors: Array<{          // Details of any errors
+  success: boolean; // Overall success status
+  sentCount: number; // Number of successfully sent notifications
+  failedCount: number; // Number of failed notifications
+  errors: Array<{
+    // Details of any errors
     userId?: string;
     telegramId?: number;
     error: string;
@@ -238,13 +241,17 @@ interface NotificationResult {
 ## User Eligibility
 
 ### Telegram Notifications
+
 Users receive Telegram notifications only if:
+
 1. User account is active (`isActive: true`)
 2. User has Telegram linked (`telegramAuth.telegramId` exists)
 3. User has Telegram notifications enabled (`notificationPreferences.telegram: true`)
 
 ### In-App Notifications
+
 Users receive in-app notifications only if:
+
 1. User account is active (`isActive: true`)
 2. User has in-app notifications enabled (`notificationPreferences.inApp.enabled: true`)
 
@@ -254,10 +261,10 @@ Users receive in-app notifications only if:
 
 ```typescript
 interface UserNotificationPreferences {
-  email: boolean;           // Email notifications
-  telegram: boolean;        // Telegram notifications
+  email: boolean; // Email notifications
+  telegram: boolean; // Telegram notifications
   inApp: {
-    enabled: boolean;       // In-app notifications on/off
+    enabled: boolean; // In-app notifications on/off
     digestFrequency: 'immediate' | 'hourly' | 'daily' | 'weekly' | 'never';
   };
 }
@@ -266,6 +273,7 @@ interface UserNotificationPreferences {
 ## Rate Limiting
 
 The service automatically handles Telegram rate limits:
+
 - Sends notifications in batches of 30 (Telegram's ~30 messages/second limit)
 - Adds 1-second delays between batches
 - Uses `Promise.allSettled()` to handle individual failures gracefully
@@ -282,12 +290,14 @@ The service automatically handles Telegram rate limits:
 ### User Endpoints
 
 #### Get In-App Notifications
+
 ```http
 GET /notifications/in-app
 Authorization: Bearer <jwt_token>
 ```
 
 **Query Parameters:**
+
 - `limit` (optional): Number of notifications to return (max 100, default: 50)
 - `offset` (optional): Number of notifications to skip (default: 0)
 - `unreadOnly` (optional): Only return unread notifications (default: false)
@@ -295,6 +305,7 @@ Authorization: Bearer <jwt_token>
 - `priority` (optional): Filter by priority level
 
 **Response:**
+
 ```json
 {
   "notifications": [
@@ -327,15 +338,18 @@ Authorization: Bearer <jwt_token>
 ```
 
 #### Get Unread Count
+
 ```http
 GET /notifications/unread-count
 Authorization: Bearer <jwt_token>
 ```
 
 **Query Parameters:**
+
 - `types` (optional): Filter by notification types (array)
 
 **Response:**
+
 ```json
 {
   "unreadCount": 25
@@ -343,12 +357,14 @@ Authorization: Bearer <jwt_token>
 ```
 
 #### Mark Notification as Read
+
 ```http
 PUT /notifications/{notificationId}/read
 Authorization: Bearer <jwt_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -357,19 +373,22 @@ Authorization: Bearer <jwt_token>
 ```
 
 #### Mark All Notifications as Read
+
 ```http
 PUT /notifications/mark-all-read
 Authorization: Bearer <jwt_token>
 ```
 
 **Request Body:**
+
 ```json
 {
-  "types": ["transaction", "trading"]  // Optional: filter by types
+  "types": ["transaction", "trading"] // Optional: filter by types
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -379,12 +398,14 @@ Authorization: Bearer <jwt_token>
 ```
 
 #### Delete Notification
+
 ```http
 DELETE /notifications/{notificationId}
 Authorization: Bearer <jwt_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -393,20 +414,23 @@ Authorization: Bearer <jwt_token>
 ```
 
 #### Bulk Actions
+
 ```http
 PUT /notifications/bulk-action
 Authorization: Bearer <jwt_token>
 ```
 
 **Request Body:**
+
 ```json
 {
-  "action": "markRead",  // markRead, delete, star, unstar, archive, unarchive
+  "action": "markRead", // markRead, delete, star, unstar, archive, unarchive
   "notificationIds": ["id1", "id2", "id3"]
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -416,12 +440,14 @@ Authorization: Bearer <jwt_token>
 ```
 
 #### Get Notification Preferences
+
 ```http
 GET /notifications/preferences
 Authorization: Bearer <jwt_token>
 ```
 
 **Response:**
+
 ```json
 {
   "preferences": {
@@ -432,20 +458,23 @@ Authorization: Bearer <jwt_token>
 ```
 
 #### Update Notification Preferences
+
 ```http
 PUT /notifications/preferences
 Authorization: Bearer <jwt_token>
 ```
 
 **Request Body:**
+
 ```json
 {
   "enabled": true,
-  "digestFrequency": "daily"  // immediate, hourly, daily, weekly, never
+  "digestFrequency": "daily" // immediate, hourly, daily, weekly, never
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -460,6 +489,7 @@ Authorization: Bearer <jwt_token>
 ### Admin Endpoints
 
 #### Create In-App Notification
+
 ```http
 POST /notifications/in-app
 Authorization: Bearer <jwt_token>
@@ -467,26 +497,28 @@ Roles: admin, moderator
 ```
 
 **Request Body:**
+
 ```json
 {
   "type": "transaction",
   "title": "System Maintenance",
   "body": "Scheduled maintenance will occur tonight",
-  "targetType": "broadcast",  // user, role, broadcast
+  "targetType": "broadcast", // user, role, broadcast
   "targetDetails": {
-    "role": "admin"  // Required if targetType is "role"
+    "role": "admin" // Required if targetType is "role"
   },
-  "priority": "normal",  // low, normal, high, urgent
+  "priority": "normal", // low, normal, high, urgent
   "metadata": {
     "relatedEntityType": "system",
     "actionUrl": "https://status.poolmind.com",
     "actionText": "View Status"
   },
-  "expiresAt": "2024-01-20T00:00:00Z"  // Optional
+  "expiresAt": "2024-01-20T00:00:00Z" // Optional
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -496,6 +528,7 @@ Roles: admin, moderator
 ```
 
 #### Queue In-App Notification
+
 ```http
 POST /notifications/queue
 Authorization: Bearer <jwt_token>
@@ -503,6 +536,7 @@ Roles: admin, moderator
 ```
 
 **Request Body:** Same as create, plus optional queue options:
+
 ```json
 {
   "type": "security",
@@ -512,14 +546,15 @@ Roles: admin, moderator
   "targetDetails": { "role": "admin" },
   "priority": "urgent",
   "options": {
-    "priority": 1,      // Queue priority (1 = highest)
-    "delay": 5000,      // Delay in milliseconds
-    "attempts": 5       // Retry attempts
+    "priority": 1, // Queue priority (1 = highest)
+    "delay": 5000, // Delay in milliseconds
+    "attempts": 5 // Retry attempts
   }
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -529,6 +564,7 @@ Roles: admin, moderator
 ```
 
 #### Get Notification Statistics
+
 ```http
 GET /notifications/stats
 Authorization: Bearer <jwt_token>
@@ -536,6 +572,7 @@ Roles: admin
 ```
 
 **Response:**
+
 ```json
 {
   "total": 1250,
@@ -562,6 +599,7 @@ Roles: admin
 ```
 
 #### Cleanup Old Notifications
+
 ```http
 DELETE /notifications/cleanup
 Authorization: Bearer <jwt_token>
@@ -569,9 +607,11 @@ Roles: admin
 ```
 
 **Query Parameters:**
+
 - `daysOld` (optional): Number of days old to cleanup (default: 30)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -582,6 +622,7 @@ Roles: admin
 ```
 
 #### Get Queue Statistics
+
 ```http
 GET /notifications/queue/stats
 Authorization: Bearer <jwt_token>
@@ -589,6 +630,7 @@ Roles: admin
 ```
 
 **Response:**
+
 ```json
 {
   "waiting": 5,
@@ -609,13 +651,13 @@ export class UserService {
 
   async createUser(userData) {
     const user = await this.create(userData);
-    
+
     // Welcome notification via Telegram
     await this.notificationsService.sendSimpleMessage(
       user._id.toString(),
       'Welcome to PoolMind!',
       'Your account has been created successfully.',
-      NotificationType.SYSTEM
+      NotificationType.SYSTEM,
     );
 
     // Welcome notification in-app
@@ -626,8 +668,8 @@ export class UserService {
       NotificationType.SYSTEM,
       {
         actionUrl: '/profile',
-        actionText: 'Complete Profile'
-      }
+        actionText: 'Complete Profile',
+      },
     );
 
     return user;

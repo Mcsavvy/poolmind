@@ -16,8 +16,12 @@ const appConfigSchema = z.object({
     .min(32, 'JWT secret must be at least 32 characters long'),
   JWT_EXPIRES_IN: z.string().default('7d'),
   STACKS_NETWORK: z.enum(['mainnet', 'testnet', 'devnet']).default('testnet'),
-  POOLMIND_CONTRACT_ADDRESS: z.string().min(1, 'Stacks pool contract address is required'),
-  POOLMIND_CONTRACT_NAME: z.string().min(1, 'Stacks pool contract name is required'),
+  POOLMIND_CONTRACT_ADDRESS: z
+    .string()
+    .min(1, 'Stacks pool contract address is required'),
+  POOLMIND_CONTRACT_NAME: z
+    .string()
+    .min(1, 'Stacks pool contract name is required'),
   TELEGRAM_BOT_TOKEN: z.string().min(1, 'Telegram bot token is required'),
   TELEGRAM_BOT_USERNAME: z.string().min(1, 'Telegram bot username is required'),
   TELEGRAM_CHANNEL_ID: z.string(),
@@ -37,12 +41,12 @@ export type AppConfig = {
   'auth.jwtSecret': string;
   'auth.jwtExpiresIn': string;
   'auth.stacksNetwork': 'mainnet' | 'testnet' | 'devnet';
-  
+
   // Stacks configuration
   'stacks.network': 'mainnet' | 'testnet' | 'devnet';
   'stacks.poolContractAddress': string;
   'stacks.poolContractName': string;
-  
+
   // Telegram
   'telegram.botToken': string;
   'telegram.botUsername': string;

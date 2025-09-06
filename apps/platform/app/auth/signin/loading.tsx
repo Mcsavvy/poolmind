@@ -1,7 +1,5 @@
 import FullPageLoader from '@/components/ui/full-page-loader';
 
 export default function Loading() {
-  return <FullPageLoader text="Trust The Pool" />;
+  return <FullPageLoader text='Trust The Pool' />;
 }
-
-

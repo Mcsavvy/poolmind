@@ -389,14 +389,14 @@ Smart Contract Event → Transaction Polling → Database Update
 ### Quick Setup
 
 1. **Clone the repository**
-   
+
    ```bash
    git clone <repository-url>
    cd poolmind
    ```
 
 2. **Smart Contract Setup**
-   
+
    ```bash
    cd contracts
    npm install
@@ -405,7 +405,7 @@ Smart Contract Event → Transaction Polling → Database Update
    ```
 
 3. **Orchestrator API Setup**
-   
+
    ```bash
    cd orchestrator
    npm install
@@ -415,7 +415,7 @@ Smart Contract Event → Transaction Polling → Database Update
    ```
 
 4. **Telegram Bot Setup**
-   
+
    ```bash
    cd telegram-app
    npm install
@@ -629,4 +629,4 @@ npm run lint                    # Code quality checks
 
 ---
 
-**PoolMind** - Democratizing access to sophisticated arbitrage trading through blockchain technology and AI-powered automation. 
+**PoolMind** - Democratizing access to sophisticated arbitrage trading through blockchain technology and AI-powered automation.

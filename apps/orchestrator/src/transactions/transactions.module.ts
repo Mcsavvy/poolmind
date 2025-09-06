@@ -18,25 +18,21 @@ import { NotificationsModule } from '../notifications/notifications.module';
       { name: Transaction.name, schema: Transaction.schema },
       { name: User.name, schema: User.schema },
     ]),
-    
+
     // Import configuration module
     ConfigModule,
-    
+
     // Import notifications module for sending transaction notifications
     NotificationsModule,
   ],
   controllers: [TransactionsController],
-          providers: [
-          TransactionsService,
-          StacksPollingQueueService,
-          StacksPollingService,
-          StacksPollingProcessorService,
-          PoolMindContractService,
-        ],
-  exports: [
+  providers: [
     TransactionsService,
+    StacksPollingQueueService,
     StacksPollingService,
+    StacksPollingProcessorService,
     PoolMindContractService,
   ],
+  exports: [TransactionsService, StacksPollingService, PoolMindContractService],
 })
 export class TransactionsModule {}

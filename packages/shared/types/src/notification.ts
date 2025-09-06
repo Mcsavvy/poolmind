@@ -1,20 +1,29 @@
 import { z } from 'zod';
 
 // Notification priority levels
-export const NotificationPrioritySchema = z.enum(['low', 'normal', 'high', 'urgent']);
+export const NotificationPrioritySchema = z.enum([
+  'low',
+  'normal',
+  'high',
+  'urgent',
+]);
 
 // Notification target types
-export const NotificationTargetTypeSchema = z.enum(['user', 'role', 'broadcast']);
+export const NotificationTargetTypeSchema = z.enum([
+  'user',
+  'role',
+  'broadcast',
+]);
 
 // Notification types (aligned with existing NotificationType enum)
 export const NotificationTypeSchema = z.enum([
   'security',
-  'update', 
+  'update',
   'marketing',
   'system',
   'trading',
   'arbitrage',
-  'transaction'
+  'transaction',
 ]);
 
 // Target details schema
@@ -25,7 +34,9 @@ export const NotificationTargetDetailsSchema = z.object({
 
 // Notification metadata schema
 export const NotificationMetadataSchema = z.object({
-  relatedEntityType: z.enum(['transaction', 'user', 'system', 'trading']).optional(),
+  relatedEntityType: z
+    .enum(['transaction', 'user', 'system', 'trading'])
+    .optional(),
   relatedEntityId: z.string().optional(),
   actionUrl: z.url().optional(),
   actionText: z.string().max(50).optional(),
@@ -52,16 +63,16 @@ export const NotificationSchema = z.object({
   title: z.string().min(1).max(200),
   body: z.string().min(1).max(1000),
   priority: NotificationPrioritySchema.default('normal'),
-  
+
   targetType: NotificationTargetTypeSchema,
   targetDetails: NotificationTargetDetailsSchema,
-  
+
   metadata: NotificationMetadataSchema.optional(),
   sentBy: NotificationSentBySchema.optional(),
-  
+
   expiresAt: z.date().optional(),
   stats: NotificationStatsSchema,
-  
+
   // Base document fields
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -79,15 +90,15 @@ export const UserNotificationSchema = z.object({
   id: z.string(),
   notificationId: z.string(),
   userId: z.string(),
-  
+
   isRead: z.boolean().default(false),
   readAt: z.date().optional(),
-  
+
   isDeleted: z.boolean().default(false),
   deletedAt: z.date().optional(),
-  
+
   metadata: UserNotificationMetadataSchema,
-  
+
   // Base document fields
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -105,10 +116,10 @@ export const CreateNotificationSchema = z.object({
   title: z.string().min(1).max(200),
   body: z.string().min(1).max(1000),
   priority: NotificationPrioritySchema.optional(),
-  
+
   targetType: NotificationTargetTypeSchema,
   targetDetails: NotificationTargetDetailsSchema,
-  
+
   metadata: NotificationMetadataSchema.optional(),
   expiresAt: z.date().optional(),
 });
@@ -136,7 +147,9 @@ export const MarkNotificationsReadSchema = z.object({
 // Notification preferences schema (extension to existing user preferences)
 export const InAppNotificationPreferencesSchema = z.object({
   enabled: z.boolean().default(true),
-  digestFrequency: z.enum(['immediate', 'hourly', 'daily', 'weekly', 'never']).default('immediate'),
+  digestFrequency: z
+    .enum(['immediate', 'hourly', 'daily', 'weekly', 'never'])
+    .default('immediate'),
 });
 
 // API Response schemas
@@ -166,34 +179,58 @@ export const NotificationStatsResponseSchema = z.object({
 
 // Bulk operations
 export const BulkNotificationActionSchema = z.object({
-  action: z.enum(['markRead', 'markUnread', 'delete', 'star', 'unstar', 'archive', 'unarchive']),
+  action: z.enum([
+    'markRead',
+    'markUnread',
+    'delete',
+    'star',
+    'unstar',
+    'archive',
+    'unarchive',
+  ]),
   notificationIds: z.array(z.string()),
 });
 
 // Type exports
 export type Notification = z.infer<typeof NotificationSchema>;
 export type NotificationPriority = z.infer<typeof NotificationPrioritySchema>;
-export type NotificationTargetType = z.infer<typeof NotificationTargetTypeSchema>;
+export type NotificationTargetType = z.infer<
+  typeof NotificationTargetTypeSchema
+>;
 export type NotificationType = z.infer<typeof NotificationTypeSchema>;
-export type NotificationTargetDetails = z.infer<typeof NotificationTargetDetailsSchema>;
+export type NotificationTargetDetails = z.infer<
+  typeof NotificationTargetDetailsSchema
+>;
 export type NotificationMetadata = z.infer<typeof NotificationMetadataSchema>;
 export type NotificationSentBy = z.infer<typeof NotificationSentBySchema>;
 export type NotificationStats = z.infer<typeof NotificationStatsSchema>;
 
 export type UserNotification = z.infer<typeof UserNotificationSchema>;
-export type UserNotificationMetadata = z.infer<typeof UserNotificationMetadataSchema>;
-export type UserNotificationWithDetails = z.infer<typeof UserNotificationWithDetailsSchema>;
+export type UserNotificationMetadata = z.infer<
+  typeof UserNotificationMetadataSchema
+>;
+export type UserNotificationWithDetails = z.infer<
+  typeof UserNotificationWithDetailsSchema
+>;
 
 export type CreateNotification = z.infer<typeof CreateNotificationSchema>;
 export type UpdateNotification = z.infer<typeof UpdateNotificationSchema>;
 export type GetNotificationsQuery = z.infer<typeof GetNotificationsQuerySchema>;
 export type MarkNotificationsRead = z.infer<typeof MarkNotificationsReadSchema>;
-export type InAppNotificationPreferences = z.infer<typeof InAppNotificationPreferencesSchema>;
+export type InAppNotificationPreferences = z.infer<
+  typeof InAppNotificationPreferencesSchema
+>;
 
 export type NotificationResponse = z.infer<typeof NotificationResponseSchema>;
-export type NotificationListResponse = z.infer<typeof NotificationListResponseSchema>;
-export type NotificationStatsResponse = z.infer<typeof NotificationStatsResponseSchema>;
-export type BulkNotificationAction = z.infer<typeof BulkNotificationActionSchema>;
+export type NotificationListResponse = z.infer<
+  typeof NotificationListResponseSchema
+>;
+export type NotificationStatsResponse = z.infer<
+  typeof NotificationStatsResponseSchema
+>;
+export type BulkNotificationAction = z.infer<
+  typeof BulkNotificationActionSchema
+>;
 
 // Helper type for notification creation in services
 export interface CreateInAppNotificationData {

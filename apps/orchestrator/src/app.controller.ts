@@ -60,12 +60,14 @@ export class AppController {
   })
   async getDatabaseHealth() {
     this.logger.debug('Database health check requested');
-    
+
     try {
       const readyState = this.connection.readyState;
       const status = this.getConnectionStatus(readyState);
 
-      this.logger.debug(`Database connection status: ${status} (readyState: ${readyState})`);
+      this.logger.debug(
+        `Database connection status: ${status} (readyState: ${readyState})`,
+      );
 
       let collections: string[] = [];
       let operationTest: {
@@ -115,7 +117,9 @@ export class AppController {
             status: 'success',
           };
 
-          this.logger.debug(`✓ Database operations successful: ${collections.length} collections, ping: ${pingTime}ms`);
+          this.logger.debug(
+            `✓ Database operations successful: ${collections.length} collections, ping: ${pingTime}ms`,
+          );
         } catch (error) {
           this.logger.warn(`✗ Database operation failed: ${error.message}`);
           operationTest = {

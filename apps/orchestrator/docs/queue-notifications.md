@@ -40,14 +40,18 @@ export class SomeService {
 
   // ✅ Non-blocking (recommended for user-facing operations)
   async sendWelcomeMessage(userId: string) {
-    const job = await this.notificationsService.queueToUser(userId, {
-      type: NotificationType.SYSTEM,
-      title: 'Welcome!',
-      body: 'Thanks for joining PoolMind.',
-    }, {
-      priority: 2, // High priority
-    });
-    
+    const job = await this.notificationsService.queueToUser(
+      userId,
+      {
+        type: NotificationType.SYSTEM,
+        title: 'Welcome!',
+        body: 'Thanks for joining PoolMind.',
+      },
+      {
+        priority: 2, // High priority
+      },
+    );
+
     console.log(`Welcome queued with job ID: ${job.id}`);
     return job; // Returns immediately
   }
@@ -59,7 +63,7 @@ export class SomeService {
       title: 'Security Alert',
       body: 'Immediate action required.',
     });
-    
+
     return result; // Waits for actual delivery
   }
 }
@@ -70,23 +74,23 @@ export class SomeService {
 ```typescript
 // Priority levels (lower number = higher priority)
 const priorities = {
-  EMERGENCY: 1,        // Security alerts, channel broadcasts
-  HIGH: 2,             // Welcome/goodbye messages, critical notifications
-  MEDIUM: 5,           // Trading updates, arbitrage notifications (default)
-  LOW: 10,             // System updates, marketing messages
+  EMERGENCY: 1, // Security alerts, channel broadcasts
+  HIGH: 2, // Welcome/goodbye messages, critical notifications
+  MEDIUM: 5, // Trading updates, arbitrage notifications (default)
+  LOW: 10, // System updates, marketing messages
 };
 
 // Emergency security alert (highest priority)
 await notificationsService.queueSecurityAlert(
   'Platform Breach',
-  'Immediate security issue detected.'
+  'Immediate security issue detected.',
 );
 
 // Scheduled maintenance (low priority, delayed)
 await notificationsService.queueSystemUpdate(
   'Maintenance Tonight',
   'System will be down 2-4 AM UTC.',
-  { delay: 3600000 } // 1 hour delay
+  { delay: 3600000 }, // 1 hour delay
 );
 ```
 
@@ -102,14 +106,14 @@ async sendBulkNotifications() {
       title: 'Platform Update',
       body: 'New features available!',
     }, { priority: 1 }),
-    
+
     // Admin notifications (high priority)
     this.notificationsService.queueToRole('admin', {
       type: NotificationType.TRADING,
       title: 'Trading Alert',
       body: 'High volume detected.',
     }, { priority: 2 }),
-    
+
     // All users (low priority)
     this.notificationsService.queueToAllUsers({
       type: NotificationType.MARKETING,
@@ -117,7 +121,7 @@ async sendBulkNotifications() {
       body: 'Your trading summary is ready.',
     }, { priority: 10 }),
   ]);
-  
+
   return jobs; // All queued immediately
 }
 ```
@@ -129,9 +133,9 @@ async sendBulkNotifications() {
 async scheduleReminder() {
   const reminderTime = new Date();
   reminderTime.setHours(reminderTime.getHours() + 1); // 1 hour from now
-  
+
   const delay = reminderTime.getTime() - Date.now();
-  
+
   return await this.notificationsService.queueToUser('user-id', {
     type: NotificationType.SYSTEM,
     title: 'Reminder',
@@ -153,7 +157,7 @@ await authService.linkTelegramAccount(userId, telegramData);
 // ✅ Welcome message is queued with priority 2 (high)
 // ✅ API response is immediate
 
-// When user unlinks Telegram account (non-blocking)  
+// When user unlinks Telegram account (non-blocking)
 await authService.unlinkTelegramAccount(userId);
 // ✅ Goodbye message is queued with priority 2 (high)
 // ✅ API response is immediate
@@ -169,7 +173,7 @@ const stats = await notificationsService.getQueueStats();
 console.log(stats);
 // {
 //   waiting: 5,     // Jobs waiting to be processed
-//   active: 2,      // Jobs currently being processed  
+//   active: 2,      // Jobs currently being processed
 //   completed: 120, // Successfully completed jobs
 //   failed: 3,      // Failed jobs
 //   delayed: 1,     // Scheduled jobs
@@ -197,8 +201,8 @@ await notificationsService.clearQueue();
 ```typescript
 // Custom retry configuration
 await notificationsService.queueToUser(userId, message, {
-  attempts: 5,        // Retry up to 5 times
-  priority: 1,        // High priority
+  attempts: 5, // Retry up to 5 times
+  priority: 1, // High priority
 });
 
 // Default retry policy:
@@ -211,16 +215,16 @@ await notificationsService.queueToUser(userId, message, {
 
 ```typescript
 interface QueueOptions {
-  priority?: number;   // 1 (highest) to 10 (lowest)
-  delay?: number;      // Delay in milliseconds
-  attempts?: number;   // Number of retry attempts
+  priority?: number; // 1 (highest) to 10 (lowest)
+  delay?: number; // Delay in milliseconds
+  attempts?: number; // Number of retry attempts
 }
 
 // Example with all options
 await notificationsService.queueToUser(userId, message, {
-  priority: 2,         // High priority
-  delay: 60000,        // 1 minute delay
-  attempts: 5,         // 5 retry attempts
+  priority: 2, // High priority
+  delay: 60000, // 1 minute delay
+  attempts: 5, // 5 retry attempts
 });
 ```
 
@@ -273,28 +277,28 @@ The notification processor handles 5 concurrent jobs by default:
 // ✅ Good: Non-blocking user registration
 async registerUser(userData) {
   const user = await this.createUser(userData);
-  
+
   // Queue welcome message (doesn't block response)
   await this.notificationsService.queueSimpleMessage(
     user.id,
     'Welcome!',
     'Account created successfully.'
   );
-  
+
   return user; // Immediate response
 }
 
 // ❌ Bad: Blocking user registration
 async registerUser(userData) {
   const user = await this.createUser(userData);
-  
+
   // This blocks the response for 1-3 seconds
   await this.notificationsService.sendSimpleMessage(
     user.id,
     'Welcome!',
     'Account created successfully.'
   );
-  
+
   return user; // Delayed response
 }
 ```
@@ -306,8 +310,13 @@ async registerUser(userData) {
 await notificationsService.queueSecurityAlert('Security Issue', 'Details...');
 
 // User interactions: Priority 2 (high)
-await notificationsService.queueSimpleMessage(userId, 'Welcome!', 'Details...', 
-  NotificationType.SYSTEM, { priority: 2 });
+await notificationsService.queueSimpleMessage(
+  userId,
+  'Welcome!',
+  'Details...',
+  NotificationType.SYSTEM,
+  { priority: 2 },
+);
 
 // Trading updates: Priority 5 (medium/default)
 await notificationsService.queueTradingUpdate('Market Update', 'Details...');
@@ -322,12 +331,12 @@ await notificationsService.queueToAllUsers(marketingMessage, { priority: 10 });
 // Regular health checks
 setInterval(async () => {
   const stats = await notificationsService.getQueueStats();
-  
+
   if (stats.failed > 50) {
     console.warn('High failure rate detected');
     // Alert administrators
   }
-  
+
   if (stats.waiting > 1000) {
     console.warn('Queue backlog detected');
     // Consider scaling or pausing low-priority jobs
@@ -340,20 +349,23 @@ setInterval(async () => {
 To migrate existing code:
 
 1. **Replace `send*` methods with `queue*` methods**:
+
    ```typescript
    // Before
    await notificationsService.sendToUser(userId, message);
-   
-   // After  
+
+   // After
    await notificationsService.queueToUser(userId, message);
    ```
 
 2. **Add priority for important notifications**:
+
    ```typescript
    await notificationsService.queueToUser(userId, message, { priority: 2 });
    ```
 
 3. **Remove try/catch blocks around notification sending** (unless you need to handle queue failures):
+
    ```typescript
    // Before: Had to handle notification failures
    try {
@@ -361,7 +373,7 @@ To migrate existing code:
    } catch (error) {
      // Handle notification failure
    }
-   
+
    // After: Queue handles retries automatically
    await notificationsService.queueToUser(userId, message);
    ```

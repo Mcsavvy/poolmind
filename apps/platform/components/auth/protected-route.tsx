@@ -43,17 +43,13 @@ export default function ProtectedRoute({
 
   if (loading) {
     return (
-      loadingFallback ?? (
-        <FullPageLoader text="Securing your session..." />
-      )
+      loadingFallback ?? <FullPageLoader text='Securing your session...' />
     );
   }
 
   if (!session) {
     return (
-      signingInFallback ?? (
-        <FullPageLoader text="Redirecting to sign in..." />
-      )
+      signingInFallback ?? <FullPageLoader text='Redirecting to sign in...' />
     );
   }
 
@@ -65,7 +61,7 @@ export default function ProtectedRoute({
   if (userLevel < requiredLevel) {
     return (
       unauthorizedFallback ?? (
-        <FullPageLoader text="Access denied. Redirecting..." />
+        <FullPageLoader text='Access denied. Redirecting...' />
       )
     );
   }

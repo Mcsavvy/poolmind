@@ -19,10 +19,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "amount",
-                  "sourceAddress"
-                ],
+                "required": ["amount", "sourceAddress"],
                 "properties": {
                   "amount": {
                     "type": "string",
@@ -36,10 +33,7 @@
                   },
                   "network": {
                     "type": "string",
-                    "enum": [
-                      "mainnet",
-                      "testnet"
-                    ],
+                    "enum": ["mainnet", "testnet"],
                     "description": "Network to use for the transaction",
                     "example": "mainnet"
                   },
@@ -54,10 +48,7 @@
                       "type": "string"
                     },
                     "description": "Optional tags for categorization",
-                    "example": [
-                      "initial",
-                      "large"
-                    ]
+                    "example": ["initial", "large"]
                   }
                 },
                 "description": "Reference not found: #/components/schemas/",
@@ -123,9 +114,7 @@
           }
         ],
         "summary": "Create a deposit transaction",
-        "tags": [
-          "Transactions"
-        ]
+        "tags": ["Transactions"]
       }
     },
     "/transactions/withdrawals": {
@@ -139,10 +128,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "amount",
-                  "destinationAddress"
-                ],
+                "required": ["amount", "destinationAddress"],
                 "properties": {
                   "amount": {
                     "type": "string",
@@ -171,10 +157,7 @@
                   },
                   "network": {
                     "type": "string",
-                    "enum": [
-                      "mainnet",
-                      "testnet"
-                    ],
+                    "enum": ["mainnet", "testnet"],
                     "description": "Network to use for the transaction",
                     "example": "mainnet"
                   },
@@ -189,10 +172,7 @@
                       "type": "string"
                     },
                     "description": "Optional tags for categorization",
-                    "example": [
-                      "partial",
-                      "expenses"
-                    ]
+                    "example": ["partial", "expenses"]
                   }
                 },
                 "description": "Reference not found: #/components/schemas/",
@@ -258,9 +238,7 @@
           }
         ],
         "summary": "Create a withdrawal transaction",
-        "tags": [
-          "Transactions"
-        ]
+        "tags": ["Transactions"]
       }
     },
     "/transactions/{id}": {
@@ -327,9 +305,7 @@
           }
         ],
         "summary": "Get transaction by ID",
-        "tags": [
-          "Transactions"
-        ]
+        "tags": ["Transactions"]
       }
     },
     "/transactions": {
@@ -370,10 +346,7 @@
             "in": "query",
             "description": "Sort order",
             "schema": {
-              "enum": [
-                "asc",
-                "desc"
-              ],
+              "enum": ["asc", "desc"],
               "type": "string"
             }
           },
@@ -383,11 +356,7 @@
             "in": "query",
             "description": "Sort field",
             "schema": {
-              "enum": [
-                "createdAt",
-                "updatedAt",
-                "amount"
-              ],
+              "enum": ["createdAt", "updatedAt", "amount"],
               "type": "string"
             }
           },
@@ -414,10 +383,7 @@
             "in": "query",
             "description": "Filter by transaction type",
             "schema": {
-              "enum": [
-                "deposit",
-                "withdrawal"
-              ],
+              "enum": ["deposit", "withdrawal"],
               "type": "string"
             }
           },
@@ -499,9 +465,7 @@
           }
         ],
         "summary": "Get user transactions",
-        "tags": [
-          "Transactions"
-        ]
+        "tags": ["Transactions"]
       }
     },
     "/transactions/stats/summary": {
@@ -570,9 +534,7 @@
           }
         ],
         "summary": "Get user transaction statistics",
-        "tags": [
-          "Transactions"
-        ]
+        "tags": ["Transactions"]
       }
     }
   }

@@ -13,19 +13,20 @@ db.createCollection('users', {
       properties: {
         stacksAddress: {
           bsonType: 'string',
-          description: 'Stacks blockchain address must be a string and is required'
+          description:
+            'Stacks blockchain address must be a string and is required',
         },
         telegramId: {
           bsonType: 'string',
-          description: 'Telegram user ID must be a string and is required'
+          description: 'Telegram user ID must be a string and is required',
         },
         createdAt: {
           bsonType: 'date',
-          description: 'Creation date must be a date and is required'
-        }
-      }
-    }
-  }
+          description: 'Creation date must be a date and is required',
+        },
+      },
+    },
+  },
 });
 
 db.createCollection('transactions', {
@@ -36,29 +37,30 @@ db.createCollection('transactions', {
       properties: {
         txId: {
           bsonType: 'string',
-          description: 'Transaction ID must be a string and is required'
+          description: 'Transaction ID must be a string and is required',
         },
         type: {
           bsonType: 'string',
           enum: ['deposit', 'withdrawal', 'arbitrage'],
-          description: 'Transaction type must be one of: deposit, withdrawal, arbitrage'
+          description:
+            'Transaction type must be one of: deposit, withdrawal, arbitrage',
         },
         amount: {
           bsonType: 'number',
-          description: 'Amount must be a number and is required'
+          description: 'Amount must be a number and is required',
         },
         status: {
           bsonType: 'string',
           enum: ['pending', 'confirmed', 'failed'],
-          description: 'Status must be one of: pending, confirmed, failed'
+          description: 'Status must be one of: pending, confirmed, failed',
         },
         createdAt: {
           bsonType: 'date',
-          description: 'Creation date must be a date and is required'
-        }
-      }
-    }
-  }
+          description: 'Creation date must be a date and is required',
+        },
+      },
+    },
+  },
 });
 
 db.createCollection('notifications', {
@@ -69,24 +71,25 @@ db.createCollection('notifications', {
       properties: {
         userId: {
           bsonType: 'string',
-          description: 'User ID must be a string and is required'
+          description: 'User ID must be a string and is required',
         },
         type: {
           bsonType: 'string',
           enum: ['transaction', 'arbitrage', 'system'],
-          description: 'Notification type must be one of: transaction, arbitrage, system'
+          description:
+            'Notification type must be one of: transaction, arbitrage, system',
         },
         message: {
           bsonType: 'string',
-          description: 'Message must be a string and is required'
+          description: 'Message must be a string and is required',
         },
         createdAt: {
           bsonType: 'date',
-          description: 'Creation date must be a date and is required'
-        }
-      }
-    }
-  }
+          description: 'Creation date must be a date and is required',
+        },
+      },
+    },
+  },
 });
 
 // Create indexes for better performance

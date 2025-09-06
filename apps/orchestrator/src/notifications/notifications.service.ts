@@ -5,13 +5,17 @@ import { Telegraf } from 'telegraf';
 import { AppConfig } from '../config/env.schema';
 import { IUser, type IUserModel } from '../lib/models/user';
 import { NotificationQueueService } from './notification-queue.service';
-import Notification, { 
-  type INotificationModel, 
+import Notification, {
+  type INotificationModel,
   type INotification,
   NotificationPriority,
   NotificationTargetType,
 } from '../lib/models/notification';
-import { UserNotification, type IUserNotificationModel, type IUserNotification } from '../lib/models/notification';
+import {
+  UserNotification,
+  type IUserNotificationModel,
+  type IUserNotification,
+} from '../lib/models/notification';
 
 export interface NotificationOptions {
   disablePreview?: boolean;
@@ -54,8 +58,10 @@ export class NotificationsService {
   constructor(
     private readonly configService: ConfigService<AppConfig>,
     @InjectModel('User') private readonly userModel: IUserModel,
-    @InjectModel('Notification') private readonly notificationModel: INotificationModel,
-    @InjectModel('UserNotification') private readonly userNotificationModel: IUserNotificationModel,
+    @InjectModel('Notification')
+    private readonly notificationModel: INotificationModel,
+    @InjectModel('UserNotification')
+    private readonly userNotificationModel: IUserNotificationModel,
     private readonly notificationQueueService: NotificationQueueService,
   ) {
     const botToken = this.configService.get<string>('telegram.botToken');
@@ -66,9 +72,11 @@ export class NotificationsService {
 
     this.bot = new Telegraf(botToken);
     this.channelId = this.configService.get<string>('telegram.channelId') || '';
-    
+
     this.logger.log('NotificationsService initialized successfully');
-    this.logger.debug(`Channel ID configured: ${this.channelId ? 'Yes' : 'No'}`);
+    this.logger.debug(
+      `Channel ID configured: ${this.channelId ? 'Yes' : 'No'}`,
+    );
   }
 
   /**
@@ -78,12 +86,16 @@ export class NotificationsService {
     userId: string,
     message: NotificationMessage,
   ): Promise<NotificationResult> {
-    this.logger.debug(`Sending notification to user ${userId}: ${message.title}`);
-    
+    this.logger.debug(
+      `Sending notification to user ${userId}: ${message.title}`,
+    );
+
     try {
       const user = await this.userModel.findById(userId);
       if (!user || !user.isActive) {
-        this.logger.warn(`Failed to send notification - User not found or inactive: ${userId}`);
+        this.logger.warn(
+          `Failed to send notification - User not found or inactive: ${userId}`,
+        );
         return {
           success: false,
           sentCount: 0,
@@ -92,7 +104,9 @@ export class NotificationsService {
         };
       }
 
-      this.logger.debug(`User found for notification: ${userId}, telegram linked: ${!!user.telegramAuth?.telegramId}`);
+      this.logger.debug(
+        `User found for notification: ${userId}, telegram linked: ${!!user.telegramAuth?.telegramId}`,
+      );
       return this.sendToUsers([user], message);
     } catch (error) {
       this.logger.error(`Error in sendToUser for ${userId}:`, error);
@@ -112,16 +126,19 @@ export class NotificationsService {
     telegramId: number,
     message: NotificationMessage,
   ): Promise<NotificationResult> {
-    this.logger.debug(`Sending notification to Telegram user ${telegramId}: ${message.title}`);
-    
-    
+    this.logger.debug(
+      `Sending notification to Telegram user ${telegramId}: ${message.title}`,
+    );
+
     try {
       const user = await this.userModel.findByTelegramId(telegramId);
       if (!user || !user.isActive) {
         // maybe user's telegram account is unlinked
         const formattedMessage = this.formatMessage(message);
         const telegramOptions = this.buildTelegramOptions(message.options);
-        this.logger.debug(`Formatted message preview: ${formattedMessage.substring(0, 100)}...`);
+        this.logger.debug(
+          `Formatted message preview: ${formattedMessage.substring(0, 100)}...`,
+        );
         this.bot.telegram.sendMessage(
           telegramId,
           formattedMessage,
@@ -134,10 +151,15 @@ export class NotificationsService {
           errors: [],
         };
       }
-      this.logger.debug(`Telegram user found for notification: ${telegramId} -> userId: ${user._id}`);
+      this.logger.debug(
+        `Telegram user found for notification: ${telegramId} -> userId: ${user._id}`,
+      );
       return this.sendToUsers([user], message);
     } catch (error) {
-      this.logger.error(`Error in sendToTelegramUser for ${telegramId}:`, error);
+      this.logger.error(
+        `Error in sendToTelegramUser for ${telegramId}:`,
+        error,
+      );
       return {
         success: false,
         sentCount: 0,
@@ -154,16 +176,22 @@ export class NotificationsService {
     role: 'user' | 'admin' | 'moderator',
     message: NotificationMessage,
   ): Promise<NotificationResult> {
-    this.logger.debug(`Sending notification to role '${role}': ${message.title}`);
-    
+    this.logger.debug(
+      `Sending notification to role '${role}': ${message.title}`,
+    );
+
     try {
       const users = await this.userModel.findByRole(role);
-      this.logger.log(`Found ${users.length} users with role '${role}' for notification: ${message.title}`);
-      
+      this.logger.log(
+        `Found ${users.length} users with role '${role}' for notification: ${message.title}`,
+      );
+
       if (users.length === 0) {
-        this.logger.warn(`No users found with role '${role}' for notification: ${message.title}`);
+        this.logger.warn(
+          `No users found with role '${role}' for notification: ${message.title}`,
+        );
       }
-      
+
       return this.sendToUsers(users, message);
     } catch (error) {
       this.logger.error(`Error in sendToRole for role '${role}':`, error);
@@ -171,7 +199,11 @@ export class NotificationsService {
         success: false,
         sentCount: 0,
         failedCount: 1,
-        errors: [{ error: `Failed to query users with role '${role}': ${error.message}` }],
+        errors: [
+          {
+            error: `Failed to query users with role '${role}': ${error.message}`,
+          },
+        ],
       };
     }
   }
@@ -182,16 +214,22 @@ export class NotificationsService {
   async sendToAllUsers(
     message: NotificationMessage,
   ): Promise<NotificationResult> {
-    this.logger.debug(`Broadcasting notification to all users: ${message.title}`);
-    
+    this.logger.debug(
+      `Broadcasting notification to all users: ${message.title}`,
+    );
+
     try {
       const users = await this.userModel.findWithTelegramNotifications();
-      this.logger.log(`Found ${users.length} users eligible for broadcast notification: ${message.title}`);
-      
+      this.logger.log(
+        `Found ${users.length} users eligible for broadcast notification: ${message.title}`,
+      );
+
       if (users.length === 0) {
-        this.logger.warn(`No users eligible for broadcast notification: ${message.title}`);
+        this.logger.warn(
+          `No users eligible for broadcast notification: ${message.title}`,
+        );
       }
-      
+
       return this.sendToUsers(users, message);
     } catch (error) {
       this.logger.error('Error in sendToAllUsers:', error);
@@ -211,9 +249,11 @@ export class NotificationsService {
     message: NotificationMessage,
   ): Promise<NotificationResult> {
     this.logger.debug(`Sending notification to channel: ${message.title}`);
-    
+
     if (!this.channelId) {
-      this.logger.error('Cannot send channel notification - Channel ID not configured');
+      this.logger.error(
+        'Cannot send channel notification - Channel ID not configured',
+      );
       return {
         success: false,
         sentCount: 0,
@@ -224,15 +264,19 @@ export class NotificationsService {
 
     try {
       const formattedMessage = this.formatMessage(message);
-      this.logger.debug(`Sending to channel ${this.channelId}: ${formattedMessage.substring(0, 100)}...`);
-      
+      this.logger.debug(
+        `Sending to channel ${this.channelId}: ${formattedMessage.substring(0, 100)}...`,
+      );
+
       await this.bot.telegram.sendMessage(
         this.channelId,
         formattedMessage,
         this.buildTelegramOptions(message.options),
       );
 
-      this.logger.log(`Successfully sent notification to channel ${this.channelId}: ${message.title}`);
+      this.logger.log(
+        `Successfully sent notification to channel ${this.channelId}: ${message.title}`,
+      );
       return {
         success: true,
         sentCount: 1,
@@ -240,7 +284,10 @@ export class NotificationsService {
         errors: [],
       };
     } catch (error) {
-      this.logger.error(`Failed to send notification to channel ${this.channelId}:`, error);
+      this.logger.error(
+        `Failed to send notification to channel ${this.channelId}:`,
+        error,
+      );
       return {
         success: false,
         sentCount: 0,
@@ -257,8 +304,10 @@ export class NotificationsService {
     users: IUser[],
     message: NotificationMessage,
   ): Promise<NotificationResult> {
-    this.logger.debug(`Processing notification for ${users.length} users: ${message.title}`);
-    
+    this.logger.debug(
+      `Processing notification for ${users.length} users: ${message.title}`,
+    );
+
     const eligibleUsers = this.filterEligibleUsers(users, message.type);
     const results: NotificationResult = {
       success: true,
@@ -267,30 +316,40 @@ export class NotificationsService {
       errors: [],
     };
 
-    this.logger.log(`${eligibleUsers.length} of ${users.length} users eligible for notification: ${message.title}`);
+    this.logger.log(
+      `${eligibleUsers.length} of ${users.length} users eligible for notification: ${message.title}`,
+    );
 
     if (eligibleUsers.length === 0) {
-      this.logger.warn(`No eligible users found for notification: ${message.title}`);
+      this.logger.warn(
+        `No eligible users found for notification: ${message.title}`,
+      );
       return results;
     }
 
     const formattedMessage = this.formatMessage(message);
     const telegramOptions = this.buildTelegramOptions(message.options);
 
-    this.logger.debug(`Formatted message preview: ${formattedMessage.substring(0, 100)}...`);
+    this.logger.debug(
+      `Formatted message preview: ${formattedMessage.substring(0, 100)}...`,
+    );
 
     // Send notifications in batches to avoid rate limiting
     const batchSize = 30; // Telegram rate limit is ~30 messages per second
     const totalBatches = Math.ceil(eligibleUsers.length / batchSize);
-    
-    this.logger.log(`Sending notifications in ${totalBatches} batches of ${batchSize} messages each`);
+
+    this.logger.log(
+      `Sending notifications in ${totalBatches} batches of ${batchSize} messages each`,
+    );
 
     for (let i = 0; i < eligibleUsers.length; i += batchSize) {
       const batch = eligibleUsers.slice(i, i + batchSize);
       const batchNumber = Math.floor(i / batchSize) + 1;
-      
-      this.logger.debug(`Processing batch ${batchNumber}/${totalBatches} with ${batch.length} users`);
-      
+
+      this.logger.debug(
+        `Processing batch ${batchNumber}/${totalBatches} with ${batch.length} users`,
+      );
+
       const batchPromises = batch.map(async (user) => {
         try {
           if (!user.telegramAuth?.telegramId) {
@@ -304,7 +363,9 @@ export class NotificationsService {
           );
 
           results.sentCount++;
-          this.logger.debug(`✓ Notification sent to user ${user._id} (Telegram: ${user.telegramAuth.telegramId})`);
+          this.logger.debug(
+            `✓ Notification sent to user ${user._id} (Telegram: ${user.telegramAuth.telegramId})`,
+          );
         } catch (error) {
           results.failedCount++;
           results.errors.push({
@@ -312,7 +373,9 @@ export class NotificationsService {
             telegramId: user.telegramAuth?.telegramId,
             error: error.message,
           });
-          this.logger.error(`✗ Failed to send notification to user ${user._id} (Telegram: ${user.telegramAuth?.telegramId}): ${error.message}`);
+          this.logger.error(
+            `✗ Failed to send notification to user ${user._id} (Telegram: ${user.telegramAuth?.telegramId}): ${error.message}`,
+          );
         }
       });
 
@@ -320,8 +383,10 @@ export class NotificationsService {
 
       // Add delay between batches to respect rate limits
       if (i + batchSize < eligibleUsers.length) {
-        this.logger.debug(`Waiting 1 second before next batch to respect rate limits`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        this.logger.debug(
+          `Waiting 1 second before next batch to respect rate limits`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
 
@@ -329,16 +394,22 @@ export class NotificationsService {
     results.success = results.failedCount === 0;
 
     if (results.success) {
-      this.logger.log(`✓ Notification batch completed successfully - Title: ${message.title}, Sent: ${results.sentCount}`);
+      this.logger.log(
+        `✓ Notification batch completed successfully - Title: ${message.title}, Sent: ${results.sentCount}`,
+      );
     } else {
-      this.logger.warn(`⚠ Notification batch completed with errors - Title: ${message.title}, Sent: ${results.sentCount}, Failed: ${results.failedCount}`);
-      
+      this.logger.warn(
+        `⚠ Notification batch completed with errors - Title: ${message.title}, Sent: ${results.sentCount}, Failed: ${results.failedCount}`,
+      );
+
       // Log first few errors for debugging
       const errorSample = results.errors.slice(0, 3);
-      errorSample.forEach(error => {
-        this.logger.error(`Sample error: User ${error.userId || 'unknown'} - ${error.error}`);
+      errorSample.forEach((error) => {
+        this.logger.error(
+          `Sample error: User ${error.userId || 'unknown'} - ${error.error}`,
+        );
       });
-      
+
       if (results.errors.length > 3) {
         this.logger.error(`... and ${results.errors.length - 3} more errors`);
       }
@@ -358,7 +429,7 @@ export class NotificationsService {
     let activeUsers = 0;
     let telegramLinked = 0;
     let notificationsEnabled = 0;
-    
+
     const eligible = users.filter((user) => {
       // User must be active
       if (!user.isActive) {
@@ -376,7 +447,9 @@ export class NotificationsService {
 
       // User must have Telegram notifications enabled
       if (!user.notificationPreferences?.telegram) {
-        this.logger.debug(`User ${user._id} filtered out - Telegram notifications disabled`);
+        this.logger.debug(
+          `User ${user._id} filtered out - Telegram notifications disabled`,
+        );
         return false;
       }
       notificationsEnabled++;
@@ -387,24 +460,24 @@ export class NotificationsService {
 
       return true;
     });
-    
+
     const filterTime = Date.now() - startTime;
-    
+
     this.logger.debug(
       `User filtering completed in ${filterTime}ms: ` +
-      `${users.length} total → ${activeUsers} active → ${telegramLinked} with Telegram → ` +
-      `${notificationsEnabled} with notifications enabled → ${eligible.length} eligible for ${notificationType}`
+        `${users.length} total → ${activeUsers} active → ${telegramLinked} with Telegram → ` +
+        `${notificationsEnabled} with notifications enabled → ${eligible.length} eligible for ${notificationType}`,
     );
-    
+
     if (eligible.length === 0 && users.length > 0) {
       this.logger.warn(
         `No eligible users for ${notificationType} notification. ` +
-        `Reasons: ${users.length - activeUsers} inactive, ` +
-        `${activeUsers - telegramLinked} without Telegram, ` +
-        `${telegramLinked - notificationsEnabled} with notifications disabled`
+          `Reasons: ${users.length - activeUsers} inactive, ` +
+          `${activeUsers - telegramLinked} without Telegram, ` +
+          `${telegramLinked - notificationsEnabled} with notifications disabled`,
       );
     }
-    
+
     return eligible;
   }
 
@@ -413,7 +486,7 @@ export class NotificationsService {
    */
   private formatMessage(message: NotificationMessage): string {
     const includeIcon = message.options?.includeIcon !== false; // Default to true
-    
+
     if (includeIcon) {
       const typeEmoji = this.getTypeEmoji(message.type);
       return `${typeEmoji} *${message.title}*\n\n${message.body}`;
@@ -453,7 +526,8 @@ export class NotificationsService {
     return {
       parse_mode: options?.parseMode || 'Markdown',
       disable_web_page_preview: options?.disablePreview || false,
-      disable_notification: options?.silent || options?.disableNotification || false,
+      disable_notification:
+        options?.silent || options?.disableNotification || false,
     };
   }
 
@@ -538,15 +612,26 @@ export class NotificationsService {
       priority?: number;
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
     try {
-      this.logger.debug(`Queueing notification for user ${userId}: ${message.title} (priority: ${options?.priority || 'default'})`);
-      const job = await this.notificationQueueService.queueUserNotification(userId, message, options);
-      this.logger.log(`Successfully queued user notification - Job ID: ${job.id}, User: ${userId}, Title: ${message.title}`);
+      this.logger.debug(
+        `Queueing notification for user ${userId}: ${message.title} (priority: ${options?.priority || 'default'})`,
+      );
+      const job = await this.notificationQueueService.queueUserNotification(
+        userId,
+        message,
+        options,
+      );
+      this.logger.log(
+        `Successfully queued user notification - Job ID: ${job.id}, User: ${userId}, Title: ${message.title}`,
+      );
       return job;
     } catch (error) {
-      this.logger.error(`Failed to queue user notification for ${userId}:`, error);
+      this.logger.error(
+        `Failed to queue user notification for ${userId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -561,9 +646,13 @@ export class NotificationsService {
       priority?: number;
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
-    return this.notificationQueueService.queueTelegramUserNotification(telegramId, message, options);
+    return this.notificationQueueService.queueTelegramUserNotification(
+      telegramId,
+      message,
+      options,
+    );
   }
 
   /**
@@ -576,9 +665,13 @@ export class NotificationsService {
       priority?: number;
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
-    return this.notificationQueueService.queueRoleNotification(role, message, options);
+    return this.notificationQueueService.queueRoleNotification(
+      role,
+      message,
+      options,
+    );
   }
 
   /**
@@ -590,9 +683,12 @@ export class NotificationsService {
       priority?: number;
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
-    return this.notificationQueueService.queueBroadcastNotification(message, options);
+    return this.notificationQueueService.queueBroadcastNotification(
+      message,
+      options,
+    );
   }
 
   /**
@@ -604,9 +700,12 @@ export class NotificationsService {
       priority?: number;
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
-    return this.notificationQueueService.queueChannelNotification(message, options);
+    return this.notificationQueueService.queueChannelNotification(
+      message,
+      options,
+    );
   }
 
   /**
@@ -621,13 +720,17 @@ export class NotificationsService {
       priority?: number;
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
-    return this.queueToUser(userId, {
-      type,
-      title,
-      body,
-    }, options);
+    return this.queueToUser(
+      userId,
+      {
+        type,
+        title,
+        body,
+      },
+      options,
+    );
   }
 
   /**
@@ -639,26 +742,35 @@ export class NotificationsService {
     options?: {
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
     this.logger.warn(`Queueing SECURITY ALERT: ${title}`);
     try {
-      const job = await this.queueToRole('admin', {
-        type: NotificationType.SECURITY,
-        title,
-        body,
-        options: {
-          silent: false, // Security alerts should not be silent
+      const job = await this.queueToRole(
+        'admin',
+        {
+          type: NotificationType.SECURITY,
+          title,
+          body,
+          options: {
+            silent: false, // Security alerts should not be silent
+          },
         },
-      }, {
-        priority: 1, // High priority for security alerts
-        attempts: 5, // More retry attempts for security alerts
-        ...options,
-      });
-      this.logger.error(`CRITICAL: Security alert queued successfully - Job ID: ${job.id}, Title: ${title}`);
+        {
+          priority: 1, // High priority for security alerts
+          attempts: 5, // More retry attempts for security alerts
+          ...options,
+        },
+      );
+      this.logger.error(
+        `CRITICAL: Security alert queued successfully - Job ID: ${job.id}, Title: ${title}`,
+      );
       return job;
     } catch (error) {
-      this.logger.error(`CRITICAL: Failed to queue security alert "${title}":`, error);
+      this.logger.error(
+        `CRITICAL: Failed to queue security alert "${title}":`,
+        error,
+      );
       throw error;
     }
   }
@@ -672,16 +784,19 @@ export class NotificationsService {
     options?: {
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
-    return this.queueToAllUsers({
-      type: NotificationType.UPDATE,
-      title,
-      body,
-    }, {
-      priority: 10, // Low priority for system updates
-      ...options,
-    });
+    return this.queueToAllUsers(
+      {
+        type: NotificationType.UPDATE,
+        title,
+        body,
+      },
+      {
+        priority: 10, // Low priority for system updates
+        ...options,
+      },
+    );
   }
 
   /**
@@ -694,7 +809,7 @@ export class NotificationsService {
     options?: {
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
     const message = {
       type: NotificationType.TRADING,
@@ -748,17 +863,27 @@ export class NotificationsService {
       priority?: number;
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
     try {
-      this.logger.debug(`Queueing in-app notification: ${data.title} (type: ${data.type}, target: ${data.targetType})`);
-      
-      const job = await this.notificationQueueService.queueInAppNotification(data, options);
-      
-      this.logger.log(`Successfully queued in-app notification - Job ID: ${job.id}, Title: ${data.title}`);
+      this.logger.debug(
+        `Queueing in-app notification: ${data.title} (type: ${data.type}, target: ${data.targetType})`,
+      );
+
+      const job = await this.notificationQueueService.queueInAppNotification(
+        data,
+        options,
+      );
+
+      this.logger.log(
+        `Successfully queued in-app notification - Job ID: ${job.id}, Title: ${data.title}`,
+      );
       return job;
     } catch (error) {
-      this.logger.error(`Failed to queue in-app notification "${data.title}":`, error);
+      this.logger.error(
+        `Failed to queue in-app notification "${data.title}":`,
+        error,
+      );
       throw error;
     }
   }
@@ -783,21 +908,24 @@ export class NotificationsService {
       expiresAt?: Date;
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
-    return this.queueInAppNotification({
-      type,
-      title,
-      body,
-      targetType: NotificationTargetType.USER,
-      targetDetails: { userId },
-      priority: options?.priority,
-      metadata: options?.metadata,
-      expiresAt: options?.expiresAt,
-    }, {
-      delay: options?.delay,
-      attempts: options?.attempts,
-    });
+    return this.queueInAppNotification(
+      {
+        type,
+        title,
+        body,
+        targetType: NotificationTargetType.USER,
+        targetDetails: { userId },
+        priority: options?.priority,
+        metadata: options?.metadata,
+        expiresAt: options?.expiresAt,
+      },
+      {
+        delay: options?.delay,
+        attempts: options?.attempts,
+      },
+    );
   }
 
   /**
@@ -820,21 +948,24 @@ export class NotificationsService {
       expiresAt?: Date;
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
-    return this.queueInAppNotification({
-      type,
-      title,
-      body,
-      targetType: NotificationTargetType.ROLE,
-      targetDetails: { role },
-      priority: options?.priority,
-      metadata: options?.metadata,
-      expiresAt: options?.expiresAt,
-    }, {
-      delay: options?.delay,
-      attempts: options?.attempts,
-    });
+    return this.queueInAppNotification(
+      {
+        type,
+        title,
+        body,
+        targetType: NotificationTargetType.ROLE,
+        targetDetails: { role },
+        priority: options?.priority,
+        metadata: options?.metadata,
+        expiresAt: options?.expiresAt,
+      },
+      {
+        delay: options?.delay,
+        attempts: options?.attempts,
+      },
+    );
   }
 
   /**
@@ -856,22 +987,25 @@ export class NotificationsService {
       expiresAt?: Date;
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
-    return this.queueInAppNotification({
-      type,
-      title,
-      body,
-      targetType: NotificationTargetType.BROADCAST,
-      targetDetails: {},
-      priority: options?.priority,
-      metadata: options?.metadata,
-      expiresAt: options?.expiresAt,
-    }, {
-      priority: 10, // Lower priority for broadcasts
-      delay: options?.delay,
-      attempts: options?.attempts,
-    });
+    return this.queueInAppNotification(
+      {
+        type,
+        title,
+        body,
+        targetType: NotificationTargetType.BROADCAST,
+        targetDetails: {},
+        priority: options?.priority,
+        metadata: options?.metadata,
+        expiresAt: options?.expiresAt,
+      },
+      {
+        priority: 10, // Lower priority for broadcasts
+        delay: options?.delay,
+        attempts: options?.attempts,
+      },
+    );
   }
 
   /**
@@ -888,7 +1022,7 @@ export class NotificationsService {
       actionText?: string;
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
     return this.queueInAppNotificationForUser(
       userId,
@@ -905,7 +1039,7 @@ export class NotificationsService {
         },
         delay: options?.delay,
         attempts: options?.attempts,
-      }
+      },
     );
   }
 
@@ -919,25 +1053,30 @@ export class NotificationsService {
       targetUser?: string;
       delay?: number;
       attempts?: number;
-    }
+    },
   ) {
-    const targetType = options?.targetUser ? NotificationTargetType.USER : NotificationTargetType.ROLE;
-    const targetDetails = options?.targetUser 
+    const targetType = options?.targetUser
+      ? NotificationTargetType.USER
+      : NotificationTargetType.ROLE;
+    const targetDetails = options?.targetUser
       ? { userId: options.targetUser }
       : { role: 'admin' as const };
 
-    return this.queueInAppNotification({
-      type: NotificationType.SECURITY,
-      title,
-      body,
-      targetType,
-      targetDetails,
-      priority: NotificationPriority.URGENT,
-    }, {
-      priority: 1, // Highest priority for security alerts
-      attempts: 5, // More retry attempts for security alerts
-      delay: options?.delay,
-    });
+    return this.queueInAppNotification(
+      {
+        type: NotificationType.SECURITY,
+        title,
+        body,
+        targetType,
+        targetDetails,
+        priority: NotificationPriority.URGENT,
+      },
+      {
+        priority: 1, // Highest priority for security alerts
+        attempts: 5, // More retry attempts for security alerts
+        delay: options?.delay,
+      },
+    );
   }
 
   /**
@@ -946,17 +1085,23 @@ export class NotificationsService {
   async getQueueStats() {
     try {
       const stats = await this.notificationQueueService.getQueueStats();
-      this.logger.debug(`Queue stats retrieved: waiting=${stats.waiting}, active=${stats.active}, completed=${stats.completed}, failed=${stats.failed}`);
-      
+      this.logger.debug(
+        `Queue stats retrieved: waiting=${stats.waiting}, active=${stats.active}, completed=${stats.completed}, failed=${stats.failed}`,
+      );
+
       // Log warnings for concerning stats
       if (stats.failed > 10) {
-        this.logger.warn(`High number of failed notification jobs: ${stats.failed}`);
+        this.logger.warn(
+          `High number of failed notification jobs: ${stats.failed}`,
+        );
       }
-      
+
       if (stats.waiting > 100) {
-        this.logger.warn(`Large queue backlog detected: ${stats.waiting} jobs waiting`);
+        this.logger.warn(
+          `Large queue backlog detected: ${stats.waiting} jobs waiting`,
+        );
       }
-      
+
       return stats;
     } catch (error) {
       this.logger.error('Failed to retrieve queue statistics:', error);
@@ -1037,7 +1182,9 @@ export class NotificationsService {
     };
   }): Promise<INotification> {
     try {
-      this.logger.debug(`Creating in-app notification: ${data.title} (type: ${data.type}, target: ${data.targetType})`);
+      this.logger.debug(
+        `Creating in-app notification: ${data.title} (type: ${data.type}, target: ${data.targetType})`,
+      );
 
       // Create the notification
       const notification = new this.notificationModel({
@@ -1068,7 +1215,9 @@ export class NotificationsService {
       // Update stats
       await savedNotification.updateStats();
 
-      this.logger.log(`Created in-app notification ${savedNotification._id}: ${data.title}`);
+      this.logger.log(
+        `Created in-app notification ${savedNotification._id}: ${data.title}`,
+      );
       return savedNotification;
     } catch (error) {
       this.logger.error('Failed to create in-app notification:', error);
@@ -1079,13 +1228,17 @@ export class NotificationsService {
   /**
    * Create UserNotification records for notification recipients
    */
-  private async createUserNotificationRecords(notification: INotification): Promise<void> {
+  private async createUserNotificationRecords(
+    notification: INotification,
+  ): Promise<void> {
     let recipients: IUser[] = [];
 
     switch (notification.targetType) {
       case NotificationTargetType.USER:
         if (notification.targetDetails.userId) {
-          const user = await this.userModel.findById(notification.targetDetails.userId);
+          const user = await this.userModel.findById(
+            notification.targetDetails.userId,
+          );
           if (user && user.isActive) {
             recipients = [user];
           }
@@ -1094,7 +1247,9 @@ export class NotificationsService {
 
       case NotificationTargetType.ROLE:
         if (notification.targetDetails.role) {
-          recipients = await this.userModel.findByRole(notification.targetDetails.role);
+          recipients = await this.userModel.findByRole(
+            notification.targetDetails.role,
+          );
         }
         break;
 
@@ -1104,12 +1259,14 @@ export class NotificationsService {
     }
 
     // Filter recipients based on in-app notification preferences
-    const eligibleRecipients = recipients.filter(user => 
-      this.isEligibleForInAppNotification(user, notification.type)
+    const eligibleRecipients = recipients.filter((user) =>
+      this.isEligibleForInAppNotification(user, notification.type),
     );
 
     if (eligibleRecipients.length === 0) {
-      this.logger.warn(`No eligible recipients for in-app notification ${notification._id}`);
+      this.logger.warn(
+        `No eligible recipients for in-app notification ${notification._id}`,
+      );
       return;
     }
 
@@ -1117,7 +1274,7 @@ export class NotificationsService {
     const batchSize = 100;
     for (let i = 0; i < eligibleRecipients.length; i += batchSize) {
       const batch = eligibleRecipients.slice(i, i + batchSize);
-      const userNotifications = batch.map(user => ({
+      const userNotifications = batch.map((user) => ({
         notificationId: notification._id.toString(),
         userId: user._id.toString(),
         isRead: false,
@@ -1129,16 +1286,23 @@ export class NotificationsService {
       }));
 
       await this.userNotificationModel.insertMany(userNotifications);
-      this.logger.debug(`Created ${userNotifications.length} UserNotification records for notification ${notification._id}`);
+      this.logger.debug(
+        `Created ${userNotifications.length} UserNotification records for notification ${notification._id}`,
+      );
     }
 
-    this.logger.log(`Created UserNotification records for ${eligibleRecipients.length} recipients`);
+    this.logger.log(
+      `Created UserNotification records for ${eligibleRecipients.length} recipients`,
+    );
   }
 
   /**
    * Check if user is eligible for in-app notification based on preferences
    */
-  private isEligibleForInAppNotification(user: IUser, notificationType: string): boolean {
+  private isEligibleForInAppNotification(
+    user: IUser,
+    notificationType: string,
+  ): boolean {
     // User must be active
     if (!user.isActive) return false;
 
@@ -1159,23 +1323,30 @@ export class NotificationsService {
       unreadOnly?: boolean;
       types?: string[];
       priority?: string;
-    } = {}
+    } = {},
   ): Promise<{
-    notifications: Array<INotification & { userNotification: IUserNotification }>;
+    notifications: Array<
+      INotification & { userNotification: IUserNotification }
+    >;
     total: number;
     unreadCount: number;
   }> {
     try {
-      const { limit = 50, offset = 0, unreadOnly = false, types, priority } = options;
+      const {
+        limit = 50,
+        offset = 0,
+        unreadOnly = false,
+        types,
+        priority,
+      } = options;
 
-      this.logger.debug(`Getting in-app notifications for user ${userId} (limit: ${limit}, offset: ${offset}, unreadOnly: ${unreadOnly})`);
+      this.logger.debug(
+        `Getting in-app notifications for user ${userId} (limit: ${limit}, offset: ${offset}, unreadOnly: ${unreadOnly})`,
+      );
 
       // Build aggregation pipeline
       const matchConditions: any = {
-        $or: [
-          { 'targetDetails.userId': userId },
-          { targetType: 'broadcast' },
-        ],
+        $or: [{ 'targetDetails.userId': userId }, { targetType: 'broadcast' }],
         isActive: true,
       };
 
@@ -1232,19 +1403,21 @@ export class NotificationsService {
       const total = countResult.length > 0 ? countResult[0].total : 0;
 
       // Add sorting and pagination
-              pipeline.push(
-          { $sort: { createdAt: -1 } } as any,
-          { $skip: offset } as any,
-          { $limit: limit } as any,
-          { $unset: 'userNotifications' } as any
-        );
+      pipeline.push(
+        { $sort: { createdAt: -1 } } as any,
+        { $skip: offset } as any,
+        { $limit: limit } as any,
+        { $unset: 'userNotifications' } as any,
+      );
 
       const notifications = await this.notificationModel.aggregate(pipeline);
 
       // Get unread count
       const unreadCount = await this.getUnreadCountForUser(userId);
 
-      this.logger.debug(`Retrieved ${notifications.length} in-app notifications for user ${userId} (total: ${total}, unread: ${unreadCount})`);
+      this.logger.debug(
+        `Retrieved ${notifications.length} in-app notifications for user ${userId} (total: ${total}, unread: ${unreadCount})`,
+      );
 
       return {
         notifications,
@@ -1252,7 +1425,10 @@ export class NotificationsService {
         unreadCount,
       };
     } catch (error) {
-      this.logger.error(`Failed to get in-app notifications for user ${userId}:`, error);
+      this.logger.error(
+        `Failed to get in-app notifications for user ${userId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -1260,34 +1436,45 @@ export class NotificationsService {
   /**
    * Mark in-app notification as read for user
    */
-  async markInAppNotificationAsRead(notificationId: string, userId: string): Promise<boolean> {
+  async markInAppNotificationAsRead(
+    notificationId: string,
+    userId: string,
+  ): Promise<boolean> {
     try {
-      this.logger.debug(`Marking in-app notification ${notificationId} as read for user ${userId}`);
+      this.logger.debug(
+        `Marking in-app notification ${notificationId} as read for user ${userId}`,
+      );
 
       const result = await this.userNotificationModel.findOneAndUpdate(
         { notificationId, userId },
-        { 
-          isRead: true, 
+        {
+          isRead: true,
           readAt: new Date(),
           $setOnInsert: { isDeleted: false },
         },
-        { upsert: true, new: true }
+        { upsert: true, new: true },
       );
 
       if (result) {
         // Update notification stats
-        const notification = await this.notificationModel.findById(notificationId);
+        const notification =
+          await this.notificationModel.findById(notificationId);
         if (notification) {
           await notification.updateStats();
         }
 
-        this.logger.log(`Marked in-app notification ${notificationId} as read for user ${userId}`);
+        this.logger.log(
+          `Marked in-app notification ${notificationId} as read for user ${userId}`,
+        );
         return true;
       }
 
       return false;
     } catch (error) {
-      this.logger.error(`Failed to mark in-app notification ${notificationId} as read for user ${userId}:`, error);
+      this.logger.error(
+        `Failed to mark in-app notification ${notificationId} as read for user ${userId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -1295,16 +1482,18 @@ export class NotificationsService {
   /**
    * Mark all in-app notifications as read for user
    */
-  async markAllInAppNotificationsAsRead(userId: string, types?: string[]): Promise<number> {
+  async markAllInAppNotificationsAsRead(
+    userId: string,
+    types?: string[],
+  ): Promise<number> {
     try {
-      this.logger.debug(`Marking all in-app notifications as read for user ${userId}`);
+      this.logger.debug(
+        `Marking all in-app notifications as read for user ${userId}`,
+      );
 
       // First, get all notification IDs for the user
       const matchConditions: any = {
-        $or: [
-          { 'targetDetails.userId': userId },
-          { targetType: 'broadcast' },
-        ],
+        $or: [{ 'targetDetails.userId': userId }, { targetType: 'broadcast' }],
         isActive: true,
       };
 
@@ -1312,16 +1501,19 @@ export class NotificationsService {
         matchConditions.type = { $in: types };
       }
 
-      const notifications = await this.notificationModel.find(matchConditions, '_id');
-      const notificationIds = notifications.map(n => n._id.toString());
+      const notifications = await this.notificationModel.find(
+        matchConditions,
+        '_id',
+      );
+      const notificationIds = notifications.map((n) => n._id.toString());
 
       if (notificationIds.length === 0) return 0;
 
       // Update or create UserNotification records
-      const operations = notificationIds.map(notificationId => ({
+      const operations = notificationIds.map((notificationId) => ({
         updateOne: {
           filter: { notificationId, userId },
-          update: { 
+          update: {
             $set: { isRead: true, readAt: new Date() },
             $setOnInsert: { isDeleted: false },
           },
@@ -1332,10 +1524,15 @@ export class NotificationsService {
       const result = await this.userNotificationModel.bulkWrite(operations);
       const updatedCount = result.modifiedCount + result.upsertedCount;
 
-      this.logger.log(`Marked ${updatedCount} in-app notifications as read for user ${userId}`);
+      this.logger.log(
+        `Marked ${updatedCount} in-app notifications as read for user ${userId}`,
+      );
       return updatedCount;
     } catch (error) {
-      this.logger.error(`Failed to mark all in-app notifications as read for user ${userId}:`, error);
+      this.logger.error(
+        `Failed to mark all in-app notifications as read for user ${userId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -1343,28 +1540,38 @@ export class NotificationsService {
   /**
    * Delete in-app notification for user (soft delete)
    */
-  async deleteInAppNotificationForUser(notificationId: string, userId: string): Promise<boolean> {
+  async deleteInAppNotificationForUser(
+    notificationId: string,
+    userId: string,
+  ): Promise<boolean> {
     try {
-      this.logger.debug(`Deleting in-app notification ${notificationId} for user ${userId}`);
+      this.logger.debug(
+        `Deleting in-app notification ${notificationId} for user ${userId}`,
+      );
 
       const result = await this.userNotificationModel.findOneAndUpdate(
         { notificationId, userId },
-        { 
-          isDeleted: true, 
+        {
+          isDeleted: true,
           deletedAt: new Date(),
           $setOnInsert: { isRead: false },
         },
-        { upsert: true, new: true }
+        { upsert: true, new: true },
       );
 
       if (result) {
-        this.logger.log(`Deleted in-app notification ${notificationId} for user ${userId}`);
+        this.logger.log(
+          `Deleted in-app notification ${notificationId} for user ${userId}`,
+        );
         return true;
       }
 
       return false;
     } catch (error) {
-      this.logger.error(`Failed to delete in-app notification ${notificationId} for user ${userId}:`, error);
+      this.logger.error(
+        `Failed to delete in-app notification ${notificationId} for user ${userId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -1372,13 +1579,13 @@ export class NotificationsService {
   /**
    * Get unread count for user
    */
-  async getUnreadCountForUser(userId: string, types?: string[]): Promise<number> {
+  async getUnreadCountForUser(
+    userId: string,
+    types?: string[],
+  ): Promise<number> {
     try {
       const matchConditions: any = {
-        $or: [
-          { 'targetDetails.userId': userId },
-          { targetType: 'broadcast' },
-        ],
+        $or: [{ 'targetDetails.userId': userId }, { targetType: 'broadcast' }],
         isActive: true,
       };
 
@@ -1421,7 +1628,10 @@ export class NotificationsService {
       const result = await this.notificationModel.aggregate(pipeline);
       return result.length > 0 ? result[0].unreadCount : 0;
     } catch (error) {
-      this.logger.error(`Failed to get unread count for user ${userId}:`, error);
+      this.logger.error(
+        `Failed to get unread count for user ${userId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -1462,16 +1672,24 @@ export class NotificationsService {
         this.notificationModel.aggregate([
           {
             $facet: {
-              total: [
-                { $match: { isActive: true } },
-                { $count: 'count' },
-              ],
+              total: [{ $match: { isActive: true } }, { $count: 'count' }],
               totalRead: [
                 { $match: { isActive: true } },
-                { $group: { _id: null, totalRead: { $sum: '$stats.totalRead' }, totalRecipients: { $sum: '$stats.totalRecipients' } } },
+                {
+                  $group: {
+                    _id: null,
+                    totalRead: { $sum: '$stats.totalRead' },
+                    totalRecipients: { $sum: '$stats.totalRecipients' },
+                  },
+                },
               ],
               sent24h: [
-                { $match: { isActive: true, createdAt: { $gte: twentyFourHoursAgo } } },
+                {
+                  $match: {
+                    isActive: true,
+                    createdAt: { $gte: twentyFourHoursAgo },
+                  },
+                },
                 { $count: 'count' },
               ],
               read24h: [
@@ -1484,7 +1702,11 @@ export class NotificationsService {
                   },
                 },
                 { $unwind: '$userNotifications' },
-                { $match: { 'userNotifications.readAt': { $gte: twentyFourHoursAgo } } },
+                {
+                  $match: {
+                    'userNotifications.readAt': { $gte: twentyFourHoursAgo },
+                  },
+                },
                 { $count: 'count' },
               ],
             },
@@ -1504,10 +1726,16 @@ export class NotificationsService {
 
       const stats = recentStats[0];
       const total = stats.total[0]?.count || 0;
-      const totalReadData = stats.totalRead[0] || { totalRead: 0, totalRecipients: 0 };
-      const readPercentage = totalReadData.totalRecipients > 0 
-        ? Math.round((totalReadData.totalRead / totalReadData.totalRecipients) * 100)
-        : 0;
+      const totalReadData = stats.totalRead[0] || {
+        totalRead: 0,
+        totalRecipients: 0,
+      };
+      const readPercentage =
+        totalReadData.totalRecipients > 0
+          ? Math.round(
+              (totalReadData.totalRead / totalReadData.totalRecipients) * 100,
+            )
+          : 0;
 
       const result = {
         total,
@@ -1521,7 +1749,9 @@ export class NotificationsService {
         },
       };
 
-      this.logger.debug(`Retrieved in-app notification statistics: ${JSON.stringify(result)}`);
+      this.logger.debug(
+        `Retrieved in-app notification statistics: ${JSON.stringify(result)}`,
+      );
       return result;
     } catch (error) {
       this.logger.error('Failed to get in-app notification statistics:', error);
@@ -1532,36 +1762,41 @@ export class NotificationsService {
   /**
    * Cleanup old notifications (admin function)
    */
-  async cleanupOldInAppNotifications(daysOld = 30): Promise<{ 
-    deactivatedNotifications: number; 
-    deletedUserNotifications: number; 
+  async cleanupOldInAppNotifications(daysOld = 30): Promise<{
+    deactivatedNotifications: number;
+    deletedUserNotifications: number;
   }> {
     try {
-      this.logger.log(`ADMIN ACTION: Cleaning up in-app notifications older than ${daysOld} days`);
+      this.logger.log(
+        `ADMIN ACTION: Cleaning up in-app notifications older than ${daysOld} days`,
+      );
 
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
       // Deactivate old notifications
       const notificationResult = await this.notificationModel.updateMany(
-        { 
+        {
           createdAt: { $lt: cutoffDate },
           isActive: true,
         },
-        { isActive: false }
+        { isActive: false },
       );
 
       // Delete old UserNotification records
-      const userNotificationResult = await this.userNotificationModel.deleteMany({
-        createdAt: { $lt: cutoffDate },
-      });
+      const userNotificationResult =
+        await this.userNotificationModel.deleteMany({
+          createdAt: { $lt: cutoffDate },
+        });
 
       const result = {
         deactivatedNotifications: notificationResult.modifiedCount || 0,
         deletedUserNotifications: userNotificationResult.deletedCount || 0,
       };
 
-      this.logger.log(`Cleanup completed: ${result.deactivatedNotifications} notifications deactivated, ${result.deletedUserNotifications} user notifications deleted`);
+      this.logger.log(
+        `Cleanup completed: ${result.deactivatedNotifications} notifications deactivated, ${result.deletedUserNotifications} user notifications deleted`,
+      );
       return result;
     } catch (error) {
       this.logger.error('Failed to cleanup old in-app notifications:', error);

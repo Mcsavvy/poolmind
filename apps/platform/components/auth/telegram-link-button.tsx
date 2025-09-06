@@ -2,9 +2,18 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TelegramLoginWidget, type TelegramUser } from './telegram-login-widget';
+import {
+  TelegramLoginWidget,
+  type TelegramUser,
+} from './telegram-login-widget';
 import { useTelegram } from '@/hooks/auth';
 import { Loader2, Unlink2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -59,7 +68,7 @@ export function TelegramLinkButton({
       toast.error(
         error instanceof Error && error.message.includes('already linked')
           ? 'This Telegram account is already linked to another user'
-          : 'Failed to link Telegram account'
+          : 'Failed to link Telegram account',
       );
     } finally {
       setIsLinking(false);
@@ -89,11 +98,20 @@ export function TelegramLinkButton({
     return (
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Image src="/telegram.png" alt="Telegram" width={20} height={20} className="w-8 h-8" />
-              <CardTitle className="text-lg">Telegram Account</CardTitle>
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+              <Image
+                src='/telegram.png'
+                alt='Telegram'
+                width={20}
+                height={20}
+                className='w-8 h-8'
+              />
+              <CardTitle className='text-lg'>Telegram Account</CardTitle>
+              <Badge
+                variant='outline'
+                className='bg-green-50 text-green-700 border-green-200'
+              >
                 Linked
               </Badge>
             </div>
@@ -103,42 +121,44 @@ export function TelegramLinkButton({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 bg-background rounded-lg">
+          <div className='space-y-4'>
+            <div className='flex items-center gap-3 p-3 bg-background rounded-lg'>
               {telegramAuth.photoUrl && (
                 <img
                   src={telegramAuth.photoUrl}
-                  alt="Telegram profile"
-                  className="w-10 h-10 rounded-full"
+                  alt='Telegram profile'
+                  className='w-10 h-10 rounded-full'
                 />
               )}
               <div>
-                <p className="font-medium">
+                <p className='font-medium'>
                   {telegramAuth.firstName} {telegramAuth.lastName}
                 </p>
                 {telegramAuth.username && (
-                  <p className="text-sm text-gray-500">@{telegramAuth.username}</p>
+                  <p className='text-sm text-gray-500'>
+                    @{telegramAuth.username}
+                  </p>
                 )}
               </div>
             </div>
-            <div className="text-xs text-gray-500">
+            <div className='text-xs text-gray-500'>
               Linked on {new Date(telegramAuth.linkedAt).toLocaleDateString()}
             </div>
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={handleUnlink}
               disabled={isUnlinking}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              className='text-red-600 hover:text-red-700 hover:bg-red-50'
             >
               {isUnlinking ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2 className='h-4 w-4 animate-spin mr-2' />
                   Unlinking...
                 </>
               ) : (
                 <>
-                  <Unlink2 className="h-4 w-4 mr-2" />
+                  <Unlink2 className='h-4 w-4 mr-2' />
                   Unlink Account
                 </>
               )}
@@ -152,9 +172,15 @@ export function TelegramLinkButton({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <Image src="/telegram.png" alt="Telegram" width={20} height={20} className="w-8 h-8" />
-          <CardTitle className="text-lg">Link Telegram Account</CardTitle>
+        <div className='flex items-center gap-2'>
+          <Image
+            src='/telegram.png'
+            alt='Telegram'
+            width={20}
+            height={20}
+            className='w-8 h-8'
+          />
+          <CardTitle className='text-lg'>Link Telegram Account</CardTitle>
         </div>
         <CardDescription>
           Link your Telegram account for convenient sign-in access.
@@ -162,37 +188,37 @@ export function TelegramLinkButton({
       </CardHeader>
       <CardContent>
         {showWidget ? (
-          <div className="space-y-4">
-            <div className="p-4 bg-transparent rounded-lg">
+          <div className='space-y-4'>
+            <div className='p-4 bg-transparent rounded-lg'>
               <TelegramLoginWidget
                 botName={botName}
                 onAuth={handleTelegramAuth}
                 onError={handleAuthError}
-                buttonSize="large"
+                buttonSize='large'
                 cornerRadius={6}
-                className="flex justify-center"
+                className='flex justify-center'
               />
             </div>
             {isLinking && (
-              <div className="flex items-center justify-center gap-2 text-[#24A1DE]">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">Linking your account...</span>
+              <div className='flex items-center justify-center gap-2 text-[#24A1DE]'>
+                <Loader2 className='h-4 w-4 animate-spin' />
+                <span className='text-sm'>Linking your account...</span>
               </div>
             )}
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => setShowWidget(false)}
               disabled={isLinking}
-              className="w-full h-10 bg-transparent text-[#24A1DE] border-[#24A1DE] hover:bg-[#24A1DE]/10"
+              className='w-full h-10 bg-transparent text-[#24A1DE] border-[#24A1DE] hover:bg-[#24A1DE]/10'
             >
               Cancel
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="text-sm text-gray-600 space-y-2">
+          <div className='space-y-4'>
+            <div className='text-sm text-gray-600 space-y-2'>
               <p>Benefits of linking your Telegram account:</p>
-              <ul className="list-disc pl-5 space-y-1">
+              <ul className='list-disc pl-5 space-y-1'>
                 <li>Quick and convenient sign-in</li>
                 <li>No need to connect wallet every time</li>
                 <li>Secure authentication via Telegram</li>
@@ -200,9 +226,15 @@ export function TelegramLinkButton({
             </div>
             <Button
               onClick={() => setShowWidget(true)}
-                className="w-full bg-[#24A1DE] hover:bg-[#24A1DE]/80 text-white h-10"
+              className='w-full bg-[#24A1DE] hover:bg-[#24A1DE]/80 text-white h-10'
             >
-              <Image src="/telegram.png" alt="Telegram" width={20} height={20} className="w-8 h-8" />
+              <Image
+                src='/telegram.png'
+                alt='Telegram'
+                width={20}
+                height={20}
+                className='w-8 h-8'
+              />
               Link Telegram Account
             </Button>
           </div>

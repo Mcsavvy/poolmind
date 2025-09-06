@@ -125,7 +125,9 @@ export class UsersController {
     @CurrentUser() user: IUser,
     @Body() updateProfileDto: UpdateUserProfileDto,
   ) {
-    this.logger.log(`📝 Profile update request from user ${user._id} with fields: ${Object.keys(updateProfileDto).join(', ')}`);
+    this.logger.log(
+      `📝 Profile update request from user ${user._id} with fields: ${Object.keys(updateProfileDto).join(', ')}`,
+    );
 
     try {
       // Check for username uniqueness if username is being updated
@@ -133,24 +135,38 @@ export class UsersController {
         updateProfileDto.username &&
         updateProfileDto.username !== user.username
       ) {
-        this.logger.debug(`Checking username uniqueness: ${updateProfileDto.username}`);
+        this.logger.debug(
+          `Checking username uniqueness: ${updateProfileDto.username}`,
+        );
         const existingUser = await this.userModel.findOne({
           username: updateProfileDto.username,
         });
-        if (existingUser && existingUser._id.toString() !== user._id.toString()) {
-          this.logger.warn(`✗ Username ${updateProfileDto.username} already taken by user ${existingUser._id}`);
+        if (
+          existingUser &&
+          existingUser._id.toString() !== user._id.toString()
+        ) {
+          this.logger.warn(
+            `✗ Username ${updateProfileDto.username} already taken by user ${existingUser._id}`,
+          );
           throw new ForbiddenException('Username is already taken');
         }
       }
 
       // Check for email uniqueness if email is being updated
       if (updateProfileDto.email && updateProfileDto.email !== user.email) {
-        this.logger.debug(`Checking email uniqueness: ${updateProfileDto.email}`);
+        this.logger.debug(
+          `Checking email uniqueness: ${updateProfileDto.email}`,
+        );
         const existingUser = await this.userModel.findOne({
           email: updateProfileDto.email,
         });
-        if (existingUser && existingUser._id.toString() !== user._id.toString()) {
-          this.logger.warn(`✗ Email ${updateProfileDto.email} already registered to user ${existingUser._id}`);
+        if (
+          existingUser &&
+          existingUser._id.toString() !== user._id.toString()
+        ) {
+          this.logger.warn(
+            `✗ Email ${updateProfileDto.email} already registered to user ${existingUser._id}`,
+          );
           throw new ForbiddenException('Email is already registered');
         }
       }
@@ -179,7 +195,9 @@ export class UsersController {
         success: true,
       };
     } catch (error) {
-      this.logger.error(`✗ Profile update failed for user ${user._id}: ${error.message}`);
+      this.logger.error(
+        `✗ Profile update failed for user ${user._id}: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -256,14 +274,18 @@ export class UsersController {
     try {
       await user.updateNotificationPreferences(notificationPreferencesDto);
 
-      this.logger.log(`✓ Notification preferences updated successfully for user ${user._id}`);
+      this.logger.log(
+        `✓ Notification preferences updated successfully for user ${user._id}`,
+      );
 
       return {
         notificationPreferences: user.notificationPreferences,
         success: true,
       };
     } catch (error) {
-      this.logger.error(`✗ Notification preferences update failed for user ${user._id}: ${error.message}`);
+      this.logger.error(
+        `✗ Notification preferences update failed for user ${user._id}: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -300,7 +322,9 @@ export class UsersController {
     @CurrentUser() user: IUser,
     @Body() socialLinksDto: UpdateSocialLinksDto,
   ) {
-    this.logger.log(`🔗 Social links update from user ${user._id} with fields: ${Object.keys(socialLinksDto).join(', ')}`);
+    this.logger.log(
+      `🔗 Social links update from user ${user._id} with fields: ${Object.keys(socialLinksDto).join(', ')}`,
+    );
 
     try {
       user.socialLinks = {
@@ -309,14 +333,18 @@ export class UsersController {
       };
       await user.save();
 
-      this.logger.log(`✓ Social links updated successfully for user ${user._id}`);
+      this.logger.log(
+        `✓ Social links updated successfully for user ${user._id}`,
+      );
 
       return {
         socialLinks: user.socialLinks,
         success: true,
       };
     } catch (error) {
-      this.logger.error(`✗ Social links update failed for user ${user._id}: ${error.message}`);
+      this.logger.error(
+        `✗ Social links update failed for user ${user._id}: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -387,14 +415,18 @@ export class UsersController {
         adminUsers: 0,
       };
 
-      this.logger.log(`✓ User statistics retrieved: ${result.totalUsers} total users, ${result.adminUsers} admins`);
+      this.logger.log(
+        `✓ User statistics retrieved: ${result.totalUsers} total users, ${result.adminUsers} admins`,
+      );
 
       return {
         stats: result,
         success: true,
       };
     } catch (error) {
-      this.logger.error(`✗ Failed to retrieve user statistics: ${error.message}`);
+      this.logger.error(
+        `✗ Failed to retrieve user statistics: ${error.message}`,
+      );
       throw error;
     }
   }

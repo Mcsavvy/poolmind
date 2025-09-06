@@ -36,7 +36,9 @@ export function TelegramLoginWidget({
       onAuth(user);
     } catch (error) {
       console.error('Error in Telegram auth callback:', error);
-      onError?.(error instanceof Error ? error.message : 'Authentication failed');
+      onError?.(
+        error instanceof Error ? error.message : 'Authentication failed',
+      );
     }
   };
 
