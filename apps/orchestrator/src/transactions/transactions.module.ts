@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { TransactionsController } from './transactions.controller';
 import { TransactionsService } from './transactions.service';
 import { StacksPollingService } from './stacks-polling.service';
+import { StacksPollingQueueService } from './stacks-polling-queue.service';
+import { StacksPollingProcessorService } from './stacks-polling-processor.service';
 import { PoolMindContractService } from '../lib/contract-service';
 import Transaction from '../lib/models/transaction';
 import User from '../lib/models/user';
@@ -24,11 +26,13 @@ import { NotificationsModule } from '../notifications/notifications.module';
     NotificationsModule,
   ],
   controllers: [TransactionsController],
-  providers: [
-    TransactionsService,
-    StacksPollingService,
-    PoolMindContractService,
-  ],
+          providers: [
+          TransactionsService,
+          StacksPollingQueueService,
+          StacksPollingService,
+          StacksPollingProcessorService,
+          PoolMindContractService,
+        ],
   exports: [
     TransactionsService,
     StacksPollingService,

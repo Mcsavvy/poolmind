@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { createClient } from '@stacks/blockchain-api-client';
 import Queue from 'bull';
 import { TransactionsService } from './transactions.service';
+import { StacksPollingQueueService, StacksPollingJobData, StacksPollingJobResult } from './stacks-polling-queue.service';
 import { ITransaction } from '../lib/models/transaction';
 import { AppConfig } from '../config/env.schema';
 import { defaultUrlFromNetwork, StacksNetworkName } from '@stacks/network';
@@ -67,26 +68,9 @@ interface NetworkInfo {
   node_public_key_hash?: string;
 }
 
-export interface StacksPollingJobData {
-  transactionId: string;
-  txId?: string;
-  retryCount: number;
-  lastCheckedAt: Date;
-}
-
-export interface StacksPollingJobResult {
-  success: boolean;
-  transactionId: string;
-  newStatus?: string;
-  confirmations?: number;
-  error?: string;
-  shouldRetry?: boolean;
-}
-
 @Injectable()
 export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(StacksPollingService.name);
-  private pollingQueue: Queue.Queue<StacksPollingJobData>;
   private stacksApiClient: any;
   private apiBaseUrl: string;
   private intervalTimer: NodeJS.Timeout;
@@ -99,11 +83,11 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly transactionsService: TransactionsService,
     private readonly configService: ConfigService<AppConfig>,
+    private readonly pollingQueueService: StacksPollingQueueService,
   ) {}
 
   async onModuleInit() {
     await this.initializeStacksApi();
-    await this.initializeQueue();
     this.startPollingScheduler();
     
     this.logger.log('🔄 Stacks polling service initialized successfully');
@@ -112,10 +96,6 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy() {
     if (this.intervalTimer) {
       clearInterval(this.intervalTimer);
-    }
-    
-    if (this.pollingQueue) {
-      await this.pollingQueue.close();
     }
     
     this.logger.log('🔄 Stacks polling service shut down');
@@ -163,11 +143,12 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
           'Content-Type': 'application/json',
           'User-Agent': 'PoolMind-Orchestrator/1.0.0',
         },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(5000),
       });
 
       if (!response.ok) {
-        throw new Error(`API test failed: ${response.status} ${response.statusText}`);
+        this.logger.warn(`API test failed: ${response.status} ${response.statusText}`);
+        return;
       }
 
       const networkInfo: NetworkInfo = await response.json();
@@ -179,85 +160,6 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
       this.logger.warn('Failed to test API connection:', error);
       // Don't throw here, as the service might still work
     }
-  }
-
-  /**
-   * Initialize the polling queue
-   */
-  private async initializeQueue() {
-    try {
-      const redisUrl = this.configService.get<string>('redis.url');
-      
-      this.pollingQueue = new Queue('stacks-polling-queue', redisUrl!, {
-        defaultJobOptions: {
-          removeOnComplete: 100, // Keep last 100 completed jobs
-          removeOnFail: 50,      // Keep last 50 failed jobs
-          attempts: 3,           // Retry failed jobs up to 3 times
-          backoff: {
-            type: 'exponential',
-            delay: 5000,         // Start with 5s delay
-          },
-        },
-        settings: {
-          stalledInterval: 60 * 1000,    // Check for stalled jobs every 60 seconds
-          maxStalledCount: 1,             // Maximum number of times a job can be stalled
-        },
-      });
-
-      // Set up job processor
-      this.pollingQueue.process('poll-transaction', this.processPollingJob.bind(this));
-
-      // Set up event handlers
-      this.setupQueueEventHandlers();
-      
-      this.logger.log('✓ Stacks polling queue initialized');
-    } catch (error) {
-      this.logger.error('Failed to initialize polling queue:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Set up queue event handlers
-   */
-  private setupQueueEventHandlers() {
-    this.pollingQueue.on('ready', () => {
-      this.logger.log('Stacks polling queue is ready');
-    });
-
-    this.pollingQueue.on('error', (error) => {
-      this.logger.error('Stacks polling queue error:', error);
-    });
-
-    this.pollingQueue.on('waiting', (jobId) => {
-      this.logger.debug(`Polling job ${jobId} is waiting`);
-    });
-
-    this.pollingQueue.on('active', (job) => {
-      this.logger.debug(`Polling job ${job.id} started processing transaction ${job.data.transactionId}`);
-    });
-
-    this.pollingQueue.on('completed', (job, result: StacksPollingJobResult) => {
-      if (result.success) {
-        this.logger.log(
-          `Polling job ${job.id} completed successfully for transaction ${result.transactionId}` +
-          (result.newStatus ? ` - Status: ${result.newStatus}` : '') +
-          (result.confirmations !== undefined ? ` - Confirmations: ${result.confirmations}` : '')
-        );
-      } else {
-        this.logger.warn(
-          `Polling job ${job.id} completed with issues for transaction ${result.transactionId}: ${result.error}`
-        );
-      }
-    });
-
-    this.pollingQueue.on('failed', (job, err) => {
-      this.logger.error(`Polling job ${job.id} failed for transaction ${job.data.transactionId}:`, err);
-    });
-
-    this.pollingQueue.on('stalled', (job) => {
-      this.logger.warn(`Polling job ${job.id} stalled for transaction ${job.data.transactionId}`);
-    });
   }
 
   // =====================================
@@ -308,7 +210,7 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
       for (const transaction of pendingTransactions) {
         try {
           // Check if this transaction is already in the queue
-          const existingJobs = await this.pollingQueue.getJobs(['waiting', 'active'], 0, -1);
+          const existingJobs = await this.pollingQueueService.getQueue()?.getJobs(['waiting', 'active'], 0, -1);
           const alreadyQueued = existingJobs.some(job => 
             job.data.transactionId === transaction._id.toString()
           );
@@ -414,7 +316,7 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
         lastCheckedAt: transaction.metadata.lastCheckedAt || new Date(),
       };
 
-      const job = await this.pollingQueue.add('poll-transaction', jobData, {
+      const job = await this.pollingQueueService.addJob(jobData, {
         priority,
         delay,
         jobId: `poll-${transaction._id}`, // Prevent duplicate jobs
@@ -434,88 +336,21 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Process a polling job
+   * Get the polling queue instance
    */
-  private async processPollingJob(
-    job: Queue.Job<StacksPollingJobData>
-  ): Promise<StacksPollingJobResult> {
-    const { transactionId, txId, retryCount } = job.data;
-    const startTime = Date.now();
+  getQueue(): Queue.Queue<StacksPollingJobData> | undefined {
+    return this.pollingQueueService.getQueue();
+  }
 
-    try {
-      this.logger.debug(
-        `Processing polling job for transaction ${transactionId}` +
-        (txId ? ` with txId ${txId}` : ' (no txId yet)') +
-        ` (attempt ${retryCount + 1})`
-      );
-
-      // Get the current transaction
-      const transaction = await this.transactionsService.getTransactionById(transactionId);
-      
-      if (!transaction) {
-        return {
-          success: false,
-          transactionId,
-          error: 'Transaction not found',
-          shouldRetry: false,
-        };
-      }
-
-      // If transaction is already complete, no need to poll
-      if (transaction.isComplete()) {
-        this.logger.debug(`Transaction ${transactionId} is already complete (${transaction.status})`);
-        return {
-          success: true,
-          transactionId,
-          newStatus: transaction.status,
-          shouldRetry: false,
-        };
-      }
-
-      let result: StacksPollingJobResult;
-
-      if (transaction.metadata.txId) {
-        // Transaction has been broadcast, check confirmation status
-        result = await this.checkTransactionConfirmation(transaction);
-      } else {
-        // Transaction hasn't been broadcast yet, increment retry
-        result = await this.handleUnbroadcastTransaction(transaction);
-      }
-
-      const duration = Date.now() - startTime;
-      
-      if (result.success) {
-        this.logger.debug(
-          `✓ Polling job completed for transaction ${transactionId} in ${duration}ms` +
-          (result.newStatus ? ` - New status: ${result.newStatus}` : '') +
-          (result.confirmations !== undefined ? ` - Confirmations: ${result.confirmations}` : '')
-        );
-      } else {
-        this.logger.warn(
-          `⚠ Polling job completed with issues for transaction ${transactionId} in ${duration}ms: ${result.error}`
-        );
-      }
-
-      return result;
-
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      this.logger.error(
-        `Failed to process polling job for transaction ${transactionId} in ${duration}ms:`,
-        error
-      );
-
-      return {
-        success: false,
-        transactionId,
-        error: error.message || 'Unknown error',
-        shouldRetry: true,
-      };
-    }
+  /**
+   * Get the API base URL
+   */
+  getApiBaseUrl(): string {
+    return this.apiBaseUrl;
   }
 
   // =====================================
-  // STACKS NETWORK POLLING METHODS
+  // UTILITY METHODS
   // =====================================
 
   /**
@@ -854,12 +689,24 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
    */
   async getQueueStats() {
     try {
+      const queue = this.pollingQueueService.getQueue();
+      if (!queue) {
+        return {
+          waiting: 0,
+          active: 0,
+          completed: 0,
+          failed: 0,
+          delayed: 0,
+          totalJobs: 0,
+        };
+      }
+
       const [waiting, active, completed, failed, delayed] = await Promise.all([
-        this.pollingQueue.getJobs(['waiting'], 0, -1),
-        this.pollingQueue.getJobs(['active'], 0, -1),
-        this.pollingQueue.getJobs(['completed'], 0, 10),
-        this.pollingQueue.getJobs(['failed'], 0, 10),
-        this.pollingQueue.getJobs(['delayed'], 0, -1),
+        queue.getJobs(['waiting'], 0, -1),
+        queue.getJobs(['active'], 0, -1),
+        queue.getJobs(['completed'], 0, 10),
+        queue.getJobs(['failed'], 0, 10),
+        queue.getJobs(['delayed'], 0, -1),
       ]);
 
       return {
