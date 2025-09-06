@@ -16,6 +16,7 @@ import { useCallback } from "react";
 import { config } from "@/lib/config";
 import { useState, useEffect } from "react";
 import { isConnected, getLocalStorage, disconnect, connect, request } from "@stacks/connect";
+import { Loader2 } from "lucide-react";
 
 
 
@@ -143,7 +144,7 @@ export function useWallet() {
   const [connected, setConnected] = useState(false);
   const [data, setData] = useState<{
     address: string;
-    publicKey: string;
+    publicKey?: string;
   } | null>(null);
 
   const loginWithWallet = useCallback(
@@ -154,21 +155,6 @@ export function useWallet() {
           token: response.token,
           expiresAt: response.expiresAt,
           authMethod: "wallet",
-        })
-      );
-      return response;
-    },
-    [client, setSession]
-  );
-
-  const loginWithTelegram = useCallback(
-    async (data: TelegramLoginRequest) => {
-      const response = await _telegramLogin(client, data, (response) =>
-        setSession({
-          user: response.user,
-          token: response.token,
-          expiresAt: response.expiresAt,
-          authMethod: "telegram",
         })
       );
       return response;
@@ -195,12 +181,14 @@ export function useWallet() {
   const connectWallet = useCallback(async () => {
     const [address, publicKey] = await _connectWallet(connected);
     setData({ address, publicKey });
+    setConnected(true);
     return [address, publicKey];
   }, [connected, setData]);
 
   useEffect(() => {
     const checkConnection = () => {
       const connected = isConnected();
+      console.log("Connected:", connected);
 
       if (connected) {
         const userData = getLocalStorage();
@@ -228,6 +216,7 @@ export function useWallet() {
           return;
         }
         setConnected(true);
+        setData({ address: stxAddress});
       } else {
         if (session && session.authMethod === "wallet") {
           console.log("Wallet disconnected");
@@ -260,7 +249,6 @@ export function useWallet() {
     connect: connectWallet,
     disconnect: disconnectWallet,
     loginWithWallet,
-    loginWithTelegram,
     generateNonce,
     generateAuthMessage,
   };
@@ -318,4 +306,40 @@ export function useTelegram() {
     loginWithTelegram,
   };
 }
+
+function WalletConnectionFallback() {
+  return <div className="w-full h-full flex items-center justify-center">
+    <Loader2 className="w-4 h-4 animate-spin" />
+  </div>
+}
+
+export const withWalletAuth = <T extends {
+  isConnected?: boolean;
+  walletAddress?: string;
+  publicKey?: string;
+  connectWallet?: () => Promise<[string, string]>;
+}>(Component: React.ComponentType<T>, Fallback?: React.ComponentType<T>) => {
+  
+  return (props: Omit<T, 'isConnected' | 'walletAddress' | 'publicKey' | 'connectWallet'>) => {
+    const { isConnected, data, connect } = useWallet();
+    
+    // Pass wallet data and connect handler as props to the wrapped component
+    const walletProps = {
+      ...props,
+      isConnected,
+      walletAddress: data?.address,
+      publicKey: data?.publicKey,
+      connectWallet: connect,
+    } as T;
+
+    // If wallet is not connected, show fallback
+    if ((!isConnected || !data) && Fallback) {
+      return <Fallback {...walletProps} />;
+    }
+    
+    return <Component {...walletProps} />;
+  };
+};
+
+
 export default useAuth;
