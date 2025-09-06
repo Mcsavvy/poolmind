@@ -5,7 +5,7 @@ import { useAuthSession } from "./session-provider";
 
 
 export function AuthRefresher() {
-  const { session } = useAuthSession();
+  const { session, clearSession } = useAuthSession();
   const { refreshToken } = useAuth();
   const lastRefreshedExpiry = useRef<number | null>(null);
   const FIVE_MINUTES = 1000 * 60 * 5;
@@ -15,25 +15,35 @@ export function AuthRefresher() {
   useEffect(() => {
     if (!session?.expiresAt) return;
 
+    const expiresAt = session.expiresAt * 1000;
+
     const now = Date.now();
-    const timeUntilRefresh = session.expiresAt - now - FIVE_MINUTES;
+    const timeUntilExpiry = expiresAt - now;
+    const timeUntilRefresh = timeUntilExpiry - FIVE_MINUTES;
 
     const triggerRefresh = () => {
       // Avoid refreshing multiple times for the same expiry value
-      if (lastRefreshedExpiry.current === session.expiresAt) return;
-      lastRefreshedExpiry.current = session.expiresAt;
+      if (lastRefreshedExpiry.current === expiresAt) return;
+      lastRefreshedExpiry.current = expiresAt;
       refreshToken();
     };
 
+    // If token has already expired, refresh immediately
+    if (timeUntilExpiry <= 0) {
+      clearSession();
+      return;
+    }
+
+    // If we're already within the 5-minute threshold, refresh once
     if (timeUntilRefresh <= 0) {
-      // Already within the threshold; refresh once
       triggerRefresh();
       return;
     }
 
+    // Schedule refresh 5 minutes before expiry
     const timer = setTimeout(triggerRefresh, timeUntilRefresh);
     return () => clearTimeout(timer);
-  }, [session?.expiresAt, refreshToken]);
+  }, [session?.expiresAt, refreshToken, clearSession]);
 
   return null;
 }
