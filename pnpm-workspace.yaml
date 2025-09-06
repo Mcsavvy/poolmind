@@ -6,5 +6,6 @@ onlyBuiltDependencies:
   - '@nestjs/core'
   - '@scarf/scarf'
   - '@tailwindcss/oxide'
+  - msgpackr-extract
   - sharp
   - unrs-resolver
