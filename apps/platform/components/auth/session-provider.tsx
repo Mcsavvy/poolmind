@@ -70,7 +70,6 @@ export function loadSession(): ClientSession | null {
 export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
   const [session, setSession] = useState<ClientSession | null>(null);
   const [loading, setLoading] = useState(true);
-  const [walletActive, setWalletActive] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -113,5 +112,17 @@ export function useAuthSession() {
   if (!context) {
     throw new Error('useAuthSession must be used within an AuthSessionProvider');
   }
+  useEffect(() => {
+    if (typeof window !== 'undefined' && Object.prototype.hasOwnProperty.call(window, 'pmSession')) {
+      // @ts-expect-error - window.pmSession is not typed
+      delete window.pmSession;
+    }
+    Object.defineProperty(window, 'pmSession', {
+      get: () => context.session,
+      set: (value) => context.setSession(value),
+      enumerable: true,
+      configurable: true,
+    });
+  }, [context.session, context.setSession]);
   return context;
 }
