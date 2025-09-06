@@ -1,5 +1,4 @@
 'use client';
-import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,21 +8,15 @@ import {
   TrendingDown, 
   Wallet, 
   BarChart3, 
-  Users,
-  Plus,
-  Minus,
-  DollarSign,
   Activity,
   ArrowUpRight,
-  ArrowDownRight,
 } from 'lucide-react';
 import { useAuthSession } from '@/components/auth/session-provider';
 import { usePoolInfo, useUserBalance, useUserStats } from '@/hooks/pool';
 import { useTransactions } from '@/hooks/transactions';
-import { formatSTX, formatPLMD, formatCurrency, formatPercentage, formatRelativeTime } from '@/lib/formatters';
-import DepositModal from '@/components/modals/deposit-modal';
-import WithdrawalModal from '@/components/modals/withdrawal-modal';
-import { TokenAmount, STXIcon, PLMDIcon } from '@/components/ui/token-icon';
+import { formatSTX, formatPLMD, formatCurrency, formatPercentage } from '@/lib/formatters';
+import { WalletConnectedDepositButton, WalletConnectedWithdrawalButton } from '@/components/ui/wallet-connected-buttons';
+import { STXIcon, PLMDIcon } from '@/components/ui/token-icon';
 import { TransactionList } from '@/components/ui/transaction-item';
 import Link from 'next/link';
 
@@ -31,8 +24,6 @@ export default function DashboardPage() {
   const { session } = useAuthSession();
   const user = session?.user;
   
-  const [showDepositModal, setShowDepositModal] = useState(false);
-  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
 
   const { data: poolInfo, isLoading: isLoadingPool } = usePoolInfo();
   const { data: userBalance, isLoading: isLoadingBalance } = useUserBalance();
@@ -70,14 +61,8 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex space-x-2">
-            <Button onClick={() => setShowDepositModal(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Contribute
-            </Button>
-            <Button variant="outline" onClick={() => setShowWithdrawalModal(true)}>
-              <Minus className="h-4 w-4 mr-2" />
-              Burn & Withdraw
-            </Button>
+            <WalletConnectedDepositButton />
+            <WalletConnectedWithdrawalButton />
           </div>
         </div>
 
@@ -343,10 +328,7 @@ export default function DashboardPage() {
                 <p className="text-muted-foreground mb-4">
                   Start by contributing to the arbitrage pool to earn PLMD tokens.
                 </p>
-                <Button onClick={() => setShowDepositModal(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Contribute to Pool
-                </Button>
+                <WalletConnectedDepositButton />
               </div>
             )}
               </CardContent>
@@ -407,15 +389,6 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-      {/* Modals */}
-      <DepositModal
-        open={showDepositModal}
-        onOpenChange={setShowDepositModal}
-      />
-      <WithdrawalModal
-        open={showWithdrawalModal}
-        onOpenChange={setShowWithdrawalModal}
-      />
     </>
   );
 }

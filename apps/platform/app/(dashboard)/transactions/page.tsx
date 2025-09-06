@@ -30,8 +30,7 @@ import {
 import { useTransactions, TransactionQuery } from '@/hooks/transactions';
 import { formatSTX, formatDate, formatTxHash, formatRelativeTime } from '@/lib/formatters';
 import { TransactionList } from '@/components/ui/transaction-item';
-import DepositModal from '@/components/modals/deposit-modal';
-import WithdrawalModal from '@/components/modals/withdrawal-modal';
+import { WalletConnectedDepositButton, WalletConnectedWithdrawalButton } from '@/components/ui/wallet-connected-buttons';
 
 type TransactionStatus = 'pending' | 'broadcast' | 'confirming' | 'confirmed' | 'failed' | 'cancelled';
 type TransactionType = 'deposit' | 'withdrawal';
@@ -61,8 +60,6 @@ export default function TransactionsPage() {
     sortOrder: 'desc',
   });
   const [searchTerm, setSearchTerm] = useState('');
-  const [showDepositModal, setShowDepositModal] = useState(false);
-  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
 
   const { 
     data: transactionData, 
@@ -116,23 +113,8 @@ export default function TransactionsPage() {
               <RefreshCw className="h-4 w-4" />
               <span>Refresh</span>
             </Button>
-            <Button 
-              onClick={() => setShowDepositModal(true)}
-              size="sm"
-              className="flex items-center space-x-1"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Contribute</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowWithdrawalModal(true)}
-              size="sm"
-              className="flex items-center space-x-1"
-            >
-              <Minus className="h-4 w-4" />
-              <span>Burn & Withdraw</span>
-            </Button>
+            <WalletConnectedDepositButton size="sm" />
+            <WalletConnectedWithdrawalButton size="sm" />
           </div>
         </div>
 
@@ -331,15 +313,6 @@ export default function TransactionsPage() {
       </Card>
     </div>
 
-      {/* Modals */}
-      <DepositModal
-        open={showDepositModal}
-        onOpenChange={setShowDepositModal}
-      />
-      <WithdrawalModal
-        open={showWithdrawalModal}
-        onOpenChange={setShowWithdrawalModal}
-      />
     </>
   );
 }

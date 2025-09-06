@@ -9,12 +9,9 @@ import { Wallet, Plus, Minus, TrendingUp, TrendingDown, Loader2 } from 'lucide-r
 import { usePoolInfo, useUserBalance, useUserStats } from '@/hooks/pool';
 import { formatSTX, formatPLMD, formatPercentage, formatCurrency } from '@/lib/formatters';
 import { TokenAmount, STXIcon, PLMDIcon } from '@/components/ui/token-icon';
-import DepositModal from '@/components/modals/deposit-modal';
-import WithdrawalModal from '@/components/modals/withdrawal-modal';
+import { WalletConnectedDepositButton, WalletConnectedWithdrawalButton } from '@/components/ui/wallet-connected-buttons';
 
 export default function WalletPage() {
-  const [showDepositModal, setShowDepositModal] = useState(false);
-  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
 
   const { data: poolInfo, isLoading: isLoadingPool } = usePoolInfo();
   const { data: userBalance, isLoading: isLoadingBalance } = useUserBalance();
@@ -47,21 +44,8 @@ export default function WalletPage() {
         </div>
       </div>
           <div className="flex space-x-2">
-                        <Button 
-              onClick={() => setShowDepositModal(true)}
-              className="flex items-center space-x-2"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Contribute</span>
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => setShowWithdrawalModal(true)}
-              className="flex items-center space-x-2"
-            >
-              <Minus className="h-4 w-4" />
-              <span>Burn & Withdraw</span>
-            </Button>
+            <WalletConnectedDepositButton />
+            <WalletConnectedWithdrawalButton />
           </div>
         </div>
 
@@ -249,15 +233,6 @@ export default function WalletPage() {
         )}
     </div>
 
-      {/* Modals */}
-      <DepositModal
-        open={showDepositModal}
-        onOpenChange={setShowDepositModal}
-      />
-      <WithdrawalModal
-        open={showWithdrawalModal}
-        onOpenChange={setShowWithdrawalModal}
-      />
     </>
   );
 }
