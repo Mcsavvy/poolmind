@@ -19,30 +19,30 @@ export default function WalletPage() {
 
   // Mock USD prices for now - in production would come from price feed
   const stxPrice = 1.5; // $1.50 per STX
-  
+
   const stxBalanceUSD = userBalance ? (Number(userBalance.stxBalance) / 1_000_000) * stxPrice : 0;
   const poolShareUSD = userBalance ? (Number(userBalance.poolShareValue) / 1_000_000) * stxPrice : 0;
-  
+
   // Calculate P&L percentage if we have stats
   const pnlPercentage = userStats && Number(userStats.totalDeposited) > 0
     ? (Number(userStats.unrealizedPnL) / Number(userStats.totalDeposited))
     : 0;
-  
+
   const pnlFormatted = formatPercentage(pnlPercentage);
 
   return (
     <>
-    <div className="flex flex-col space-y-8">
+      <div className="flex flex-col space-y-8">
         <div className="flex items-center justify-between">
-      <div className="flex items-center space-x-2">
-        <Wallet className="h-8 w-8" />
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Wallet</h1>
-          <p className="text-muted-foreground">
+          <div className="flex items-center space-x-2">
+            <Wallet className="h-8 w-8" />
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Wallet</h1>
+              <p className="text-muted-foreground">
                 Manage your STX balance and pool investments
-          </p>
-        </div>
-      </div>
+              </p>
+            </div>
+          </div>
           <div className="flex space-x-2">
             <WalletConnectedDepositButton />
             <WalletConnectedWithdrawalButton />
@@ -81,8 +81,8 @@ export default function WalletPage() {
             </CardContent>
           </Card>
 
-        <Card>
-          <CardHeader>
+          <Card>
+            <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <PLMDIcon size={20} />
@@ -91,8 +91,8 @@ export default function WalletPage() {
                 <Badge variant="default" className="text-xs">PLMD</Badge>
               </CardTitle>
               <CardDescription>Your PLMD tokens in the pool</CardDescription>
-          </CardHeader>
-          <CardContent>
+            </CardHeader>
+            <CardContent>
               {isLoadingBalance ? (
                 <div className="space-y-2">
                   <Skeleton className="h-8 w-32" />
@@ -103,17 +103,17 @@ export default function WalletPage() {
                   <div className="text-3xl font-bold">
                     {formatPLMD(userBalance?.plmdBalance || '0')} PLMD
                   </div>
-            <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
+                  <div className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
                     <STXIcon size={14} />
                     ≈ {formatSTX(userBalance?.poolShareValue || '0')} STX
-            </p>
+                  </div>
                 </>
               )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
+          <Card>
+            <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Pool Value
                 <Badge variant="outline" className="text-xs">USD</Badge>
@@ -196,11 +196,11 @@ export default function WalletPage() {
 
         {/* Performance Stats */}
         {!isLoadingStats && userStats && Number(userStats.totalDeposited) > 0 && (
-      <Card>
-        <CardHeader>
+          <Card>
+            <CardHeader>
               <CardTitle>Your Performance</CardTitle>
               <CardDescription>Overview of your pool investment performance</CardDescription>
-        </CardHeader>
+            </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
@@ -228,10 +228,10 @@ export default function WalletPage() {
                   </p>
                 </div>
               </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
         )}
-    </div>
+      </div>
 
     </>
   );

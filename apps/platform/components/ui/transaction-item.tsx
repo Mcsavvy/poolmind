@@ -247,16 +247,16 @@ export function TransactionItem({
               {formatSTX(amount)} STX
             </div>
             {tokensReceived && (
-              <p className="text-xs text-green-600 flex items-center justify-end gap-1 mt-1">
+              <div className="text-xs text-green-600 flex items-center justify-end gap-1 mt-1">
                 Received: <PLMDIcon size={12} />
                 {formatPLMD(tokensReceived)} PLMD
-              </p>
+              </div>
             )}
             {entryFeeAmount && (
-              <p className="text-xs text-red-500 flex items-center justify-end gap-1">
+              <div className="text-xs text-red-500 flex items-center justify-end gap-1">
                 Fee: <STXIcon size={10} />
                 {formatSTX(entryFeeAmount)} STX
-              </p>
+              </div>
             )}
           </div>
         ) : (
@@ -270,10 +270,10 @@ export function TransactionItem({
               {formatSTX(amount)} STX
             </div>
             {exitFeeAmount && (
-              <p className="text-xs text-red-500 flex items-center justify-end gap-1">
+              <div className="text-xs text-red-500 flex items-center justify-end gap-1">
                 Fee: <STXIcon size={10} />
                 {formatSTX(exitFeeAmount)} STX
-              </p>
+              </div>
             )}
           </div>
         )}

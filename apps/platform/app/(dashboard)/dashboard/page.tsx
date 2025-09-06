@@ -108,10 +108,10 @@ export default function DashboardPage() {
                   <div className="text-2xl font-bold">
                     {formatCurrency(poolShareUSD)}
                   </div>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <div className="text-xs text-muted-foreground flex items-center gap-1">
                     <PLMDIcon size={12} />
                     {formatPLMD(userBalance?.plmdBalance || '0')} PLMD
-                  </p>
+                  </div>
                 </>
               )}
             </CardContent>
@@ -130,12 +130,12 @@ export default function DashboardPage() {
                   <div className="text-2xl font-bold">
                     {Number(poolInfo?.nav || '1').toFixed(6)}
                   </div>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <div className="text-xs text-muted-foreground flex items-center gap-1">
                     <STXIcon size={12} />
                     STX per
                     <PLMDIcon size={12} />
                     PLMD token
-                  </p>
+                  </div>
                 </>
               )}
             </CardContent>
@@ -158,10 +158,10 @@ export default function DashboardPage() {
                   <div className={`text-2xl font-bold ${pnlFormatted.colorClass}`}>
                     {pnlFormatted.formatted}
                   </div>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <div className="text-xs text-muted-foreground flex items-center gap-1">
                     <STXIcon size={12} />
                     {formatSTX(userStats?.unrealizedPnL || '0')} STX
-                  </p>
+                  </div>
                 </>
               )}
             </CardContent>
