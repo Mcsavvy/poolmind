@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # Orchestrator API
+  orchestrator:
+    build:
+      context: .
+      dockerfile: apps/orchestrator/Dockerfile
+    container_name: poolmind-orchestrator-prod
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URI: ${DATABASE_URI}
+      DATABASE_NAME: ${DATABASE_NAME}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      STACKS_NETWORK: ${STACKS_NETWORK:-mainnet}
+      POOLMIND_CONTRACT_ADDRESS: ${POOLMIND_CONTRACT_ADDRESS}
+      POOLMIND_CONTRACT_NAME: ${POOLMIND_CONTRACT_NAME}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+      TELEGRAM_CHANNEL_ID: ${TELEGRAM_CHANNEL_ID}
+      TELEGRAM_GROUP_LINK: ${TELEGRAM_GROUP_LINK}
+      TELEGRAM_CHANNEL_LINK: ${TELEGRAM_CHANNEL_LINK}
+      REDIS_URL: ${REDIS_URL}
+    networks:
+      - poolmind-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/docs', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Platform Frontend
+  platform:
+    build:
+      context: .
+      dockerfile: apps/platform/Dockerfile
+    container_name: poolmind-platform-prod
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_STACKS_NETWORK: ${NEXT_PUBLIC_STACKS_NETWORK:-mainnet}
+      NEXT_PUBLIC_POOLMIND_CONTRACT_ADDRESS: ${NEXT_PUBLIC_POOLMIND_CONTRACT_ADDRESS}
+      NEXT_PUBLIC_POOLMIND_CONTRACT_NAME: ${NEXT_PUBLIC_POOLMIND_CONTRACT_NAME}
+    depends_on:
+      orchestrator:
+        condition: service_healthy
+    networks:
+      - poolmind-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  poolmind-network:
+    driver: bridge

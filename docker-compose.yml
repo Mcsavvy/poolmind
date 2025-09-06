@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # MongoDB for local development
+  mongodb:
+    image: mongo:7.0
+    container_name: poolmind-mongodb-dev
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: poolmind_dev
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - poolmind-network
+
+  # Redis for local development
+  redis:
+    image: redis:7.2-alpine
+    container_name: poolmind-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - poolmind-network
+
+  # Orchestrator API
+  orchestrator:
+    build:
+      context: .
+      dockerfile: apps/orchestrator/Dockerfile
+    container_name: poolmind-orchestrator-dev
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URI: mongodb://admin:password@mongodb:27017/poolmind_dev?authSource=admin
+      DATABASE_NAME: poolmind_dev
+      CORS_ORIGINS: http://localhost:3000,http://localhost:80
+      JWT_SECRET: your-super-secret-jwt-key-for-development-only-change-in-production
+      JWT_EXPIRES_IN: 7d
+      STACKS_NETWORK: testnet
+      POOLMIND_CONTRACT_ADDRESS: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+      POOLMIND_CONTRACT_NAME: poolmind-v1-2
+      TELEGRAM_BOT_TOKEN: your-telegram-bot-token
+      TELEGRAM_BOT_USERNAME: your-bot-username
+      TELEGRAM_CHANNEL_ID: your-channel-id
+      TELEGRAM_GROUP_LINK: https://t.me/your-group
+      TELEGRAM_CHANNEL_LINK: https://t.me/your-channel
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - poolmind-network
+    volumes:
+      - ./apps/orchestrator:/app/apps/orchestrator
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/orchestrator/node_modules
+
+  # Platform Frontend
+  platform:
+    build:
+      context: .
+      dockerfile: apps/platform/Dockerfile
+    container_name: poolmind-platform-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_STACKS_NETWORK: testnet
+      NEXT_PUBLIC_POOLMIND_CONTRACT_ADDRESS: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+      NEXT_PUBLIC_POOLMIND_CONTRACT_NAME: poolmind-v1-2
+    depends_on:
+      - orchestrator
+    networks:
+      - poolmind-network
+    volumes:
+      - ./apps/platform:/app/apps/platform
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/platform/node_modules
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  poolmind-network:
+    driver: bridge
