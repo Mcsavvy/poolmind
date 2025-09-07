@@ -353,7 +353,7 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
       const job = await this.pollingQueueService.addJob(jobData, {
         priority,
         delay,
-        jobId: `poll-${transaction._id}`, // Prevent duplicate jobs
+        jobId: `poll-${transaction._id}-${Date.now()}`, // Unique job ID with timestamp
       });
 
       this.logger.debug(

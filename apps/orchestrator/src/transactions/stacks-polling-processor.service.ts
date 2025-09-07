@@ -480,7 +480,7 @@ export class StacksPollingProcessorService implements OnModuleInit {
       await this.pollingQueueService.addJob(updatedData, {
         delay,
         priority: job.opts.priority || 10,
-        jobId: `poll-${updatedData.transactionId}`,
+        jobId: `poll-${updatedData.transactionId}-${Date.now()}`, // Unique job ID with timestamp
       });
 
       this.logger.debug(
