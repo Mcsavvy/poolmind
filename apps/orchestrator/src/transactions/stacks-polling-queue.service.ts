@@ -50,8 +50,13 @@ export class StacksPollingQueueService
   private initializeQueueAsync() {
     try {
       const redisUrl = this.configService.get<string>('redis.url');
+      // mask the password and host
+      const maskedRedisUrl = redisUrl?.replace(
+        /^(redis:\/\/)([^:]+):([^:]+)@([^:]+):(\d+)$/,
+        '$1****:****@****:****',
+      );
       this.logger.log(
-        `🔍 Initializing Stacks polling queue with Redis URL: ${redisUrl}`,
+        `🔍 Initializing Stacks polling queue with Redis URL: ${maskedRedisUrl}`,
       );
 
       this.pollingQueue = new Queue('stacks-polling-queue', redisUrl!, {
