@@ -12,7 +12,7 @@ import {
 import { useClient } from '@/hooks/api';
 import { AxiosInstance } from 'axios';
 import { useAuthSession } from '@/components/auth/session-provider';
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { config } from '@/lib/config';
 import { useState, useEffect } from 'react';
 import {
@@ -193,11 +193,11 @@ export function useWallet() {
     address: string;
     publicKey?: string;
   } | null>(null);
-  const domain = useRef(config.apiUrl);
+  const [domain, setDomain] = useState(config.apiUrl);
 
   // Update domain when window.location.origin changes
   useEffect(() => {
-    domain.current = window.location.origin;
+    setDomain(window.location.origin);
   }, []);
 
   const loginWithWallet = useCallback(
@@ -225,7 +225,11 @@ export function useWallet() {
 
   const generateAuthMessage = useCallback(
     async (walletAddress: string) => {
-      const response = await _generateAuthMessage(client, walletAddress, domain.current);
+      const response = await _generateAuthMessage(
+        client,
+        walletAddress,
+        domain,
+      );
       return response;
     },
     [client, domain],
