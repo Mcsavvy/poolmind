@@ -12,7 +12,7 @@ import {
 import { useClient } from '@/hooks/api';
 import { AxiosInstance } from 'axios';
 import { useAuthSession } from '@/components/auth/session-provider';
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { config } from '@/lib/config';
 import { useState, useEffect } from 'react';
 import {
@@ -130,6 +130,7 @@ async function _generateNonce(
 async function _generateAuthMessage(
   client: AxiosInstance,
   walletAddress: string,
+  domain: string,
 ): Promise<string> {
   try {
     const response = await _generateNonce(client, { walletAddress });
@@ -140,7 +141,7 @@ async function _generateAuthMessage(
     const timestamp = new Date().toISOString();
     const randomNonce = Math.random().toString(36).substring(2);
     let message = 'Sign this message to authenticate with PoolMind\n';
-    message += `\nDomain: ${config.nextAuthUrl}`;
+    message += `\nDomain: ${domain}`;
     message += `\nWallet Address: ${walletAddress}`;
     message += `\nTimestamp: ${timestamp}`;
     message += `\nNonce: ${randomNonce}`;
@@ -192,6 +193,12 @@ export function useWallet() {
     address: string;
     publicKey?: string;
   } | null>(null);
+  const domain = useRef(config.apiUrl);
+
+  // Update domain when window.location.origin changes
+  useEffect(() => {
+    domain.current = window.location.origin;
+  }, []);
 
   const loginWithWallet = useCallback(
     async (data: LoginRequest) => {
@@ -218,10 +225,10 @@ export function useWallet() {
 
   const generateAuthMessage = useCallback(
     async (walletAddress: string) => {
-      const response = await _generateAuthMessage(client, walletAddress);
+      const response = await _generateAuthMessage(client, walletAddress, domain.current);
       return response;
     },
-    [client],
+    [client, domain],
   );
 
   const connectWallet = useCallback(async () => {
