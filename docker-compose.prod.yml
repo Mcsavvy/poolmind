@@ -9,10 +9,10 @@ services:
     container_name: poolmind-orchestrator-prod
     restart: unless-stopped
     ports:
-      - '3001:3001'
+      - '30002:3000'
     environment:
       NODE_ENV: production
-      PORT: 3001
+      PORT: 3000
       DATABASE_URI: ${DATABASE_URI}
       DATABASE_NAME: ${DATABASE_NAME}
       CORS_ORIGINS: ${CORS_ORIGINS}
@@ -27,8 +27,6 @@ services:
       TELEGRAM_GROUP_LINK: ${TELEGRAM_GROUP_LINK}
       TELEGRAM_CHANNEL_LINK: ${TELEGRAM_CHANNEL_LINK}
       REDIS_URL: ${REDIS_URL}
-    networks:
-      - poolmind-network
     healthcheck:
       test:
         [
@@ -61,7 +59,7 @@ services:
     container_name: poolmind-platform-prod
     restart: unless-stopped
     ports:
-      - '3000:3000'
+      - '30003:3000'
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
@@ -77,8 +75,6 @@ services:
     depends_on:
       orchestrator:
         condition: service_healthy
-    networks:
-      - poolmind-network
     healthcheck:
       test:
         [
@@ -91,7 +87,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
-networks:
-  poolmind-network:
-    driver: bridge
