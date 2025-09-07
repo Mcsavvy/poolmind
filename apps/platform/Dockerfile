@@ -46,7 +46,9 @@ ENV NEXT_PUBLIC_POOLMIND_CONTRACT_NAME=$NEXT_PUBLIC_POOLMIND_CONTRACT_NAME
 # Copy source code
 COPY . .
 
-# Build the application
+# Build shared packages first, then the platform
+RUN pnpm build --filter=@poolmind/shared-types
+RUN pnpm build --filter=@poolmind/shared-utils
 RUN pnpm build --filter=@poolmind/platform
 
 # Production stage
@@ -71,10 +73,12 @@ COPY apps/platform/package.json ./apps/platform/
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod
 
-# Copy built application from build stage
+# Copy built application and shared packages from build stage
 COPY --from=build --chown=nextjs:nodejs /app/apps/platform/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /app/apps/platform/.next/static ./apps/platform/.next/static
 COPY --from=build --chown=nextjs:nodejs /app/apps/platform/public ./apps/platform/public
+COPY --from=build --chown=nextjs:nodejs /app/packages/shared/types/dist ./packages/shared/types/dist
+COPY --from=build --chown=nextjs:nodejs /app/packages/shared/utils/dist ./packages/shared/utils/dist
 
 # Switch to non-root user
 USER nextjs
