@@ -97,9 +97,15 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     await this.initializeStacksApi();
-    this.startPollingScheduler();
 
-    this.logger.log('🔄 Stacks polling service initialized successfully');
+    // Add a small delay to ensure processor service has time to initialize
+    setTimeout(() => {
+      this.startPollingScheduler();
+    }, 5000); // 5 second delay
+
+    this.logger.log(
+      '🔄 Stacks polling service initialized - scheduler will start in 5 seconds',
+    );
   }
 
   async onModuleDestroy() {
@@ -237,7 +243,7 @@ export class StacksPollingService implements OnModuleInit, OnModuleDestroy {
 
           if (alreadyQueued) {
             this.logger.debug(
-              `Transaction ${transaction._id} already queued for polling`,
+              `Transaction ${transaction._id} already queued for polling (found ${existingJobs.length} existing jobs)`,
             );
             skipped++;
             continue;

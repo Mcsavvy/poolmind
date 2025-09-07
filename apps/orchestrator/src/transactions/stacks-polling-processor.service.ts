@@ -68,6 +68,10 @@ export class StacksPollingProcessorService implements OnModuleInit {
     this.logger.log('✅ Redis connection confirmed for processor');
 
     try {
+      this.logger.log(
+        '🔧 Setting up job processor for poll-transaction jobs...',
+      );
+
       // Set up the job processor
       queue.process(
         'poll-transaction',
@@ -79,6 +83,8 @@ export class StacksPollingProcessorService implements OnModuleInit {
           return this.processPollingJob(job);
         },
       );
+
+      this.logger.log('🔧 Job processor registration completed successfully');
 
       // Add queue event listeners for debugging
       queue.on('waiting', (jobId) => {
@@ -107,20 +113,43 @@ export class StacksPollingProcessorService implements OnModuleInit {
           const waiting = await queue.getJobs(['waiting'], 0, 10);
           const active = await queue.getJobs(['active'], 0, 10);
           const delayed = await queue.getJobs(['delayed'], 0, 10);
+          const completed = await queue.getJobs(['completed'], 0, 5);
+          const failed = await queue.getJobs(['failed'], 0, 5);
 
           this.logger.log(
-            `🔍 Queue status - Waiting: ${waiting.length}, Active: ${active.length}, Delayed: ${delayed.length}`,
+            `🔍 Queue status - Waiting: ${waiting.length}, Active: ${active.length}, Delayed: ${delayed.length}, Completed: ${completed.length}, Failed: ${failed.length}`,
           );
 
           if (waiting.length > 0) {
             this.logger.log(
-              `📋 Waiting jobs: ${waiting.map((j) => j.id).join(', ')}`,
+              `📋 Waiting jobs: ${waiting.map((j) => `${j.id}(${j.data?.transactionId})`).join(', ')}`,
+            );
+
+            // Try to trigger processing of the first waiting job
+            this.logger.log(
+              '🔧 Attempting to manually trigger job processing...',
+            );
+          }
+
+          if (failed.length > 0) {
+            this.logger.warn(
+              `❌ Recent failed jobs: ${failed.map((j) => `${j.id}(${j.failedReason})`).join(', ')}`,
             );
           }
         } catch (err) {
           this.logger.error('Failed to get queue status:', err);
         }
       }, 2000); // Check after 2 seconds
+
+      // Additional debug: Check processor count
+      setTimeout(async () => {
+        try {
+          const processors = await queue.getJobCounts();
+          this.logger.log(`🔧 Queue job counts:`, processors);
+        } catch (err) {
+          this.logger.error('Failed to get job counts:', err);
+        }
+      }, 3000);
     } catch (error) {
       this.logger.error('❌ Failed to initialize polling processor:', error);
     }

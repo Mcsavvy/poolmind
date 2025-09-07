@@ -162,6 +162,16 @@ export class StacksPollingQueueService
     data: StacksPollingJobData,
     options?: any,
   ): Promise<Queue.Job<StacksPollingJobData>> {
-    return this.pollingQueue.add('poll-transaction', data, options);
+    this.logger.log(
+      `🎯 Adding job to queue: poll-transaction for transaction ${data.transactionId}, jobId: ${options?.jobId}`,
+    );
+
+    const job = await this.pollingQueue.add('poll-transaction', data, options);
+
+    this.logger.log(
+      `✅ Job added successfully: ${job.id} for transaction ${data.transactionId}`,
+    );
+
+    return job;
   }
 }
