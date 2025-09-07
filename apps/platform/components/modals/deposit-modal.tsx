@@ -24,12 +24,8 @@ import { useAuthSession } from '@/components/auth/session-provider';
 import { usePoolInfo } from '@/hooks/pool';
 import { useCreateDeposit, useTransactionTracker } from '@/hooks/transactions';
 import { depositToPool } from '@/lib/stacks';
-import {
-  formatSTX,
-  formatPLMD,
-  calculateDepositShares,
-} from '@/lib/formatters';
-import { STXIcon, PLMDIcon } from '@/components/ui/token-icon';
+import { formatSTX, calculateDepositShares } from '@/lib/formatters';
+import { STXIcon } from '@/components/ui/token-icon';
 import { toast } from 'sonner';
 
 interface DepositModalProps {
@@ -232,7 +228,7 @@ export default function DepositModal({
                   Deposit Preview
                 </CardTitle>
                 <CardDescription>
-                  What you'll receive for depositing {amount} STX
+                  What you&apos;ll receive for depositing {amount} STX
                 </CardDescription>
               </CardHeader>
               <CardContent className='space-y-3'>
@@ -276,9 +272,9 @@ export default function DepositModal({
                   Important Notice:
                 </p>
                 <p>
-                  By depositing, you agree to the pool's terms. Your funds will
-                  be used for arbitrage trading, which involves risk. The value
-                  of your PLMD tokens will fluctuate based on trading
+                  By depositing, you agree to the pool&apos;s terms. Your funds
+                  will be used for arbitrage trading, which involves risk. The
+                  value of your PLMD tokens will fluctuate based on trading
                   performance.
                 </p>
               </div>

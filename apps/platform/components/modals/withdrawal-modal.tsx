@@ -32,7 +32,7 @@ import {
   formatPLMD,
   calculateWithdrawalAmount,
 } from '@/lib/formatters';
-import { STXIcon, PLMDIcon } from '@/components/ui/token-icon';
+import { PLMDIcon } from '@/components/ui/token-icon';
 import { toast } from 'sonner';
 
 interface WithdrawalModalProps {
@@ -258,7 +258,7 @@ export default function WithdrawalModal({
                   Withdrawal Preview
                 </CardTitle>
                 <CardDescription>
-                  What you'll receive for withdrawing {amount} PLMD
+                  What you&apos;ll receive for withdrawing {amount} PLMD
                 </CardDescription>
               </CardHeader>
               <CardContent className='space-y-3'>
@@ -277,7 +277,7 @@ export default function WithdrawalModal({
                 <Separator />
                 <div className='flex justify-between'>
                   <span className='text-muted-foreground'>
-                    STX You'll Receive
+                    STX You&apos;ll Receive
                   </span>
                   <span className='font-bold text-green-600'>
                     {withdrawalPreview.netAmountFormatted} STX

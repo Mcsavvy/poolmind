@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, ReactNode, useState } from 'react';
+import { useEffect, ReactNode } from 'react';
 import FullPageLoader from '@/components/ui/full-page-loader';
 import { useAuthSession } from '@/components/auth/session-provider';
 
@@ -39,7 +39,7 @@ export default function ProtectedRoute({
       router.push('/auth/unauthorized');
       return;
     }
-  }, [router, requiredRole, fallbackUrl, session, loading]);
+  }, [router, requiredRole, fallbackUrl, session, loading, pathname]);
 
   if (loading) {
     return (

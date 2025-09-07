@@ -12,9 +12,6 @@ import {
   Clock,
   Users,
   Lock,
-  BarChart3,
-  Smartphone,
-  CheckCircle,
   Coins,
 } from 'lucide-react';
 

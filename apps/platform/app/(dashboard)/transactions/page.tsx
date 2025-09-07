@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
@@ -19,27 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  History,
-  Search,
-  Filter,
-  RefreshCw,
-  ArrowUpDown,
-  ExternalLink,
-  Plus,
-  Minus,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-} from 'lucide-react';
+import { History, Search, Filter, RefreshCw, XCircle } from 'lucide-react';
 import { useTransactions, TransactionQuery } from '@/hooks/transactions';
-import {
-  formatSTX,
-  formatDate,
-  formatTxHash,
-  formatRelativeTime,
-} from '@/lib/formatters';
 import { TransactionList } from '@/components/ui/transaction-item';
 import {
   WalletConnectedDepositButton,
@@ -55,23 +35,6 @@ type TransactionStatus =
   | 'cancelled';
 type TransactionType = 'deposit' | 'withdrawal';
 
-const STATUS_COLORS = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  broadcast: 'bg-blue-100 text-blue-800',
-  confirming: 'bg-purple-100 text-purple-800',
-  confirmed: 'bg-green-100 text-green-800',
-  failed: 'bg-red-100 text-red-800',
-  cancelled: 'bg-gray-100 text-gray-800',
-} as const;
-
-const STATUS_ICONS = {
-  pending: Clock,
-  broadcast: ArrowUpDown,
-  confirming: AlertCircle,
-  confirmed: CheckCircle,
-  failed: XCircle,
-  cancelled: XCircle,
-} as const;
 export default function TransactionsPage() {
   const [query, setQuery] = useState<Partial<TransactionQuery>>({
     page: 1,
@@ -102,11 +65,6 @@ export default function TransactionsPage() {
 
   const handlePageChange = (newPage: number) => {
     setQuery(prev => ({ ...prev, page: newPage }));
-  };
-
-  const StatusIcon = ({ status }: { status: TransactionStatus }) => {
-    const Icon = STATUS_ICONS[status];
-    return <Icon className='h-4 w-4' />;
   };
 
   return (
@@ -295,10 +253,7 @@ export default function TransactionsPage() {
                     : "You haven't made any transactions yet."}
                 </p>
                 <div className='flex space-x-2'>
-                  <Button onClick={() => setShowDepositModal(true)}>
-                    <Plus className='h-4 w-4 mr-2' />
-                    Make Your First Deposit
-                  </Button>
+                  <WalletConnectedDepositButton size='sm' />
                   {(query.type || query.status || query.search) && (
                     <Button
                       variant='outline'

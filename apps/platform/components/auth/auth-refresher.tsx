@@ -42,7 +42,7 @@ export function AuthRefresher() {
     // Schedule refresh 5 minutes before expiry
     const timer = setTimeout(triggerRefresh, timeUntilRefresh);
     return () => clearTimeout(timer);
-  }, [session?.expiresAt, refreshToken, clearSession]);
+  }, [session?.expiresAt, refreshToken, clearSession, FIVE_MINUTES]);
 
   return null;
 }

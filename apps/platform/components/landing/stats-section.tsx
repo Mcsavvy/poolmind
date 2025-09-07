@@ -306,7 +306,8 @@ export default function StatsSection() {
             Platform Statistics
           </h2>
           <p className='text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed'>
-            Real-time insights into PoolMind's performance and user activity.
+            Real-time insights into PoolMind&apos;s performance and user
+            activity.
           </p>
         </div>
 

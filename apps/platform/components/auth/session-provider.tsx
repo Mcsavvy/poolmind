@@ -147,6 +147,6 @@ export function useAuthSession() {
       enumerable: true,
       configurable: true,
     });
-  }, [context.session, context.setSession]);
+  }, [context]);
   return context;
 }

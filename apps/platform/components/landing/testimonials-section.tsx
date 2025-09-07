@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { motion, useInView, AnimatePresence } from 'framer-motion';
+import { useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -105,7 +105,7 @@ const TestimonialCard = ({
             transition={{ delay: delay + 0.5, duration: 0.5 }}
           >
             <p className='text-foreground text-lg leading-relaxed italic'>
-              "{quote}"
+              &ldquo;{quote}&rdquo;
             </p>
           </motion.div>
 
@@ -290,7 +290,7 @@ export default function TestimonialsSection() {
             transition={{ delay: 0.6, duration: 0.8 }}
           >
             Join thousands of satisfied investors who are earning with
-            PoolMind's automated arbitrage platform.
+            PoolMind&apos;s automated arbitrage platform.
           </motion.p>
         </motion.div>
 

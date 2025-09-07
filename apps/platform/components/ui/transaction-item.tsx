@@ -96,12 +96,6 @@ const getRequiredConfirmations = (transaction: Transaction): number => {
   return transaction.metadata?.requiredConfirmations || 6;
 };
 
-const getTransactionBlockHeight = (
-  transaction: Transaction,
-): number | undefined => {
-  return transaction.metadata?.blockHeight;
-};
-
 const getTransactionNetwork = (transaction: Transaction): string => {
   return transaction.metadata?.network || 'testnet';
 };

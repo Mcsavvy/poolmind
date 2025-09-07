@@ -19,8 +19,6 @@ import {
   Settings,
   LogOut,
   Shield,
-  CreditCard,
-  Bell,
   Loader2,
   LayoutDashboard,
 } from 'lucide-react';
@@ -58,21 +56,6 @@ export default function UserProfileDropdown() {
       console.error('Sign out error:', error);
       setIsSigningOut(false);
     }
-  };
-
-  const getInitials = (name?: string, walletAddress?: string) => {
-    if (name) {
-      return name
-        .split(' ')
-        .map(n => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-    }
-    if (walletAddress) {
-      return walletAddress.slice(0, 2).toUpperCase();
-    }
-    return 'U';
   };
 
   const formatWalletAddress = (address: string) => {

@@ -5,7 +5,6 @@ import { ReactNode, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Wave from 'react-wavify';
 import { Coins, TrendingUp, Activity, Zap } from 'lucide-react';
-import Image from 'next/image';
 
 interface FullPageLoaderProps {
   text?: string;
@@ -55,7 +54,7 @@ const FloatingCryptoIcon = ({
   </motion.div>
 );
 
-export function FullPageLoader({ text, className, icon }: FullPageLoaderProps) {
+export function FullPageLoader({ text, className }: FullPageLoaderProps) {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [progress, setProgress] = useState(0);
 

@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { BarChart3, TrendingUp, TrendingDown } from 'lucide-react';
+import { BarChart3, TrendingUp } from 'lucide-react';
 
 export default function AnalyticsPage() {
   return (

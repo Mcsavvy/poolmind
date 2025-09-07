@@ -124,10 +124,12 @@ export function TelegramLinkButton({
           <div className='space-y-4'>
             <div className='flex items-center gap-3 p-3 bg-background rounded-lg'>
               {telegramAuth.photoUrl && (
-                <img
+                <Image
                   src={telegramAuth.photoUrl}
-                  alt='Telegram profile'
+                  alt={`${telegramAuth.firstName} ${telegramAuth.lastName}'s Telegram profile`}
                   className='w-10 h-10 rounded-full'
+                  width={40}
+                  height={40}
                 />
               )}
               <div>

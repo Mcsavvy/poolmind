@@ -37,7 +37,7 @@ export default function SignInPage() {
       });
       router.push(next || '/');
     }
-  }, [session, next]);
+  }, [session, next, router]);
 
   const handleTelegramAuth = async (user: TelegramUser) => {
     try {

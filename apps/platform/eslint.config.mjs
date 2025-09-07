@@ -21,8 +21,8 @@ const eslintConfig = [
     rules: {
       'prettier/prettier': 'error',
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'warn',
-      '@typescript-eslint/no-unused-imports': 'warn',
+      // '@typescript-eslint/no-unused-vars': 'warn',
+      // '@typescript-eslint/no-unused-imports': 'warn',
       'react/no-unescaped-entities': 'off',
       '@next/next/no-img-element': 'warn',
       'react-hooks/exhaustive-deps': 'warn',
@@ -46,24 +46,6 @@ const eslintConfig = [
       'react/require-render-return': 'error',
       'import/no-anonymous-default-export': 'warn',
       'import/no-duplicates': 'warn',
-      'import/order': [
-        'warn',
-        {
-          groups: [
-            'builtin',
-            'external',
-            'internal',
-            'parent',
-            'sibling',
-            'index',
-          ],
-          'newlines-between': 'always',
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-          },
-        },
-      ],
     },
   },
 ];

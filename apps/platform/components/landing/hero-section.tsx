@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { ArrowRight, Play, Coins, ShieldCheck, ChartLine } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';

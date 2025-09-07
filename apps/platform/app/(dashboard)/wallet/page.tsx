@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -8,17 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import {
-  Wallet,
-  Plus,
-  Minus,
-  TrendingUp,
-  TrendingDown,
-  Loader2,
-} from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown } from 'lucide-react';
 import { usePoolInfo, useUserBalance, useUserStats } from '@/hooks/pool';
 import {
   formatSTX,
@@ -26,7 +17,7 @@ import {
   formatPercentage,
   formatCurrency,
 } from '@/lib/formatters';
-import { TokenAmount, STXIcon, PLMDIcon } from '@/components/ui/token-icon';
+import { STXIcon, PLMDIcon } from '@/components/ui/token-icon';
 import {
   WalletConnectedDepositButton,
   WalletConnectedWithdrawalButton,

@@ -1,5 +1,4 @@
 'use client';
-import { redirect } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -11,14 +10,14 @@ import { Badge } from '@/components/ui/badge';
 import { TelegramLinkButton } from '@/components/auth/telegram-link-button';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Settings, Wallet, MessageCircle } from 'lucide-react';
+import { Settings, Wallet } from 'lucide-react';
 import ProtectedRoute from '@/components/auth/protected-route';
 import { config } from '@/lib/config';
 import Image from 'next/image';
 import { useAuthSession } from '@/components/auth/session-provider';
 
 export default function ProfilePage() {
-  const { session, loading } = useAuthSession();
+  const { session } = useAuthSession();
 
   const user = session!.user;
   const isLinked = !!user.telegramAuth;

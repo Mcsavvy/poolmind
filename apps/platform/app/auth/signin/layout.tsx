@@ -1,5 +1,4 @@
-import { ReactNode } from 'react';
-import { Suspense } from 'react';
+import { ReactNode, Suspense } from 'react';
 import FullPageLoader from '@/components/ui/full-page-loader';
 
 export const metadata = {

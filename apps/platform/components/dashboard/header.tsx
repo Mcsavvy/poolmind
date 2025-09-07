@@ -26,13 +26,13 @@ export default function DashboardHeader() {
     error,
     fetchNotifications,
     handleMarkAsRead,
-    handleDelete,
     handleBulkAction,
   } = useNotificationManager();
 
   // Fetch notifications on component mount
   useEffect(() => {
     fetchNotifications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array - only run once on mount
 
   const getNotificationIcon = (priority: string) => {

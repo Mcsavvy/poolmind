@@ -25,7 +25,6 @@ interface WalletConnectedDepositButtonProps {
 
 const DepositButton = ({
   isConnected,
-  walletAddress,
   connectWallet,
   variant = 'default',
   size = 'default',
@@ -85,7 +84,6 @@ interface WalletConnectedWithdrawalButtonProps {
 
 const WithdrawalButton = ({
   isConnected,
-  walletAddress,
   connectWallet,
   variant = 'outline',
   size = 'default',

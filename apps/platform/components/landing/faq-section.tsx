@@ -11,7 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { HelpCircle, ArrowRight, MessageCircle, Coins } from 'lucide-react';
+import { HelpCircle, MessageCircle, Coins } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { config } from '@/lib/config';
@@ -254,8 +254,8 @@ export default function FAQSection() {
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
             transition={{ delay: 0.6, duration: 0.8 }}
           >
-            Everything you need to know about PoolMind's automated arbitrage
-            platform.
+            Everything you need to know about PoolMind&apos;s automated
+            arbitrage platform.
           </motion.p>
         </motion.div>
 
